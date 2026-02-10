@@ -30,7 +30,9 @@ import { Switch } from "@/components/ui/switch";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import StepIndicator from "@/components/StepIndicator";
-import { generateProtocol, saveReport, type ReportData } from "@/lib/protocol";
+import { generateProtocol } from "@/lib/protocol";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const STEPS = ["Tipo", "Local", "Denunciado", "Descrição", "Extras", "Confirmar"];
 
@@ -85,27 +87,33 @@ const ReportForm = () => {
 
   const handleSubmit = async () => {
     const proto = await generateProtocol();
-    setProtocol(proto);
-    const report: ReportData = {
+    
+    const { error } = await supabase.from("reports").insert({
       protocol: proto,
-      isAnonymous,
+      is_anonymous: isAnonymous,
       type: form.type,
       date: form.date,
       location: form.location,
-      sector: form.sector,
-      shift: form.shift,
-      accusedName: form.accusedName,
-      accusedRole: form.accusedRole,
+      sector: form.sector || null,
+      shift: form.shift || null,
+      accused_name: form.accusedName || null,
+      accused_role: form.accusedRole || null,
       description: form.description,
-      hasWitnesses: form.hasWitnesses,
-      witnessInfo: form.witnessInfo,
-      wantsFollowUp: form.wantsFollowUp,
-      contactInfo: form.contactInfo,
-      identityName: isAnonymous ? undefined : form.identityName,
-      identityRole: isAnonymous ? undefined : form.identityRole,
-      createdAt: new Date().toISOString(),
-    };
-    saveReport(report);
+      has_witnesses: form.hasWitnesses,
+      witness_info: form.witnessInfo || null,
+      wants_follow_up: form.wantsFollowUp,
+      contact_info: form.contactInfo || null,
+      identity_name: isAnonymous ? null : (form.identityName || null),
+      identity_role: isAnonymous ? null : (form.identityRole || null),
+    } as any);
+
+    if (error) {
+      console.error("Error saving report:", error);
+      toast.error("Erro ao registrar denúncia. Tente novamente.");
+      return;
+    }
+
+    setProtocol(proto);
     setStep(6);
   };
 

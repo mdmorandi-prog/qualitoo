@@ -1,22 +1,50 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Search, FileSearch, Clock, CheckCircle2, AlertCircle } from "lucide-react";
+import { Search, FileSearch, Clock, CheckCircle2, AlertCircle, Archive } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { findReport, type ReportData } from "@/lib/protocol";
+import { supabase } from "@/integrations/supabase/client";
+
+interface ReportResult {
+  protocol: string;
+  is_anonymous: boolean;
+  type: string;
+  date: string;
+  location: string;
+  status: string;
+  created_at: string;
+}
+
+const statusLabels: Record<string, { label: string; icon: any; color: string }> = {
+  nova: { label: "Recebida - Aguardando análise", icon: Clock, color: "bg-warning/10 text-warning" },
+  em_analise: { label: "Em análise pelo Comitê de Ética", icon: Clock, color: "bg-accent/10 text-accent" },
+  concluida: { label: "Concluída", icon: CheckCircle2, color: "bg-safe/10 text-safe" },
+  arquivada: { label: "Arquivada", icon: Archive, color: "bg-muted text-muted-foreground" },
+};
 
 const TrackReport = () => {
   const [protocolInput, setProtocolInput] = useState("");
-  const [result, setResult] = useState<ReportData | null | undefined>(undefined);
+  const [result, setResult] = useState<ReportResult | null | undefined>(undefined);
+  const [loading, setLoading] = useState(false);
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
     const clean = protocolInput.trim().toUpperCase();
     if (!clean) return;
-    const report = findReport(clean);
-    setResult(report ?? null);
+    setLoading(true);
+
+    const { data, error } = await supabase.rpc("lookup_report_by_protocol", {
+      p_protocol: clean,
+    });
+
+    if (error || !data || (data as any[]).length === 0) {
+      setResult(null);
+    } else {
+      setResult((data as any[])[0] as ReportResult);
+    }
+    setLoading(false);
   };
 
   return (
@@ -57,9 +85,9 @@ const TrackReport = () => {
                 className="font-mono uppercase tracking-wider"
                 maxLength={12}
               />
-              <Button onClick={handleSearch} className="gap-2 shrink-0">
+              <Button onClick={handleSearch} className="gap-2 shrink-0" disabled={loading}>
                 <Search className="h-4 w-4" />
-                Buscar
+                {loading ? "..." : "Buscar"}
               </Button>
             </div>
 
@@ -91,18 +119,23 @@ const TrackReport = () => {
                 </div>
                 <div className="space-y-3 rounded-lg border bg-background p-4">
                   <Row label="Protocolo" value={result.protocol} />
-                  <Row label="Modo" value={result.isAnonymous ? "Anônimo" : "Identificado"} />
+                  <Row label="Modo" value={result.is_anonymous ? "Anônimo" : "Identificado"} />
                   <Row label="Tipo" value={result.type} />
                   <Row label="Data da Ocorrência" value={result.date} />
                   <Row label="Local" value={result.location} />
-                  <Row label="Registrado em" value={new Date(result.createdAt).toLocaleDateString("pt-BR")} />
+                  <Row label="Registrado em" value={new Date(result.created_at).toLocaleDateString("pt-BR")} />
                 </div>
-                <div className="flex items-center gap-2 rounded-lg bg-warning/10 p-3">
-                  <Clock className="h-4 w-4 text-warning" />
-                  <span className="text-sm text-muted-foreground">
-                    Status: <strong className="text-foreground">Em análise pelo Comitê de Ética</strong>
-                  </span>
-                </div>
+                {(() => {
+                  const s = statusLabels[result.status] ?? statusLabels.nova;
+                  return (
+                    <div className={`flex items-center gap-2 rounded-lg p-3 ${s.color}`}>
+                      <s.icon className="h-4 w-4" />
+                      <span className="text-sm">
+                        Status: <strong className="text-foreground">{s.label}</strong>
+                      </span>
+                    </div>
+                  );
+                })()}
               </motion.div>
             )}
           </div>
