@@ -14,16 +14,148 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      reports: {
+        Row: {
+          accused_name: string | null
+          accused_role: string | null
+          admin_notes: string | null
+          assigned_to: string | null
+          contact_info: string | null
+          created_at: string
+          date: string
+          description: string
+          has_witnesses: boolean
+          id: string
+          identity_name: string | null
+          identity_role: string | null
+          is_anonymous: boolean
+          location: string
+          protocol: string
+          sector: string | null
+          shift: string | null
+          status: Database["public"]["Enums"]["report_status"]
+          type: string
+          updated_at: string
+          wants_follow_up: boolean
+          witness_info: string | null
+        }
+        Insert: {
+          accused_name?: string | null
+          accused_role?: string | null
+          admin_notes?: string | null
+          assigned_to?: string | null
+          contact_info?: string | null
+          created_at?: string
+          date: string
+          description: string
+          has_witnesses?: boolean
+          id?: string
+          identity_name?: string | null
+          identity_role?: string | null
+          is_anonymous?: boolean
+          location: string
+          protocol: string
+          sector?: string | null
+          shift?: string | null
+          status?: Database["public"]["Enums"]["report_status"]
+          type: string
+          updated_at?: string
+          wants_follow_up?: boolean
+          witness_info?: string | null
+        }
+        Update: {
+          accused_name?: string | null
+          accused_role?: string | null
+          admin_notes?: string | null
+          assigned_to?: string | null
+          contact_info?: string | null
+          created_at?: string
+          date?: string
+          description?: string
+          has_witnesses?: boolean
+          id?: string
+          identity_name?: string | null
+          identity_role?: string | null
+          is_anonymous?: boolean
+          location?: string
+          protocol?: string
+          sector?: string | null
+          shift?: string | null
+          status?: Database["public"]["Enums"]["report_status"]
+          type?: string
+          updated_at?: string
+          wants_follow_up?: boolean
+          witness_info?: string | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      lookup_report_by_protocol: {
+        Args: { p_protocol: string }
+        Returns: {
+          created_at: string
+          date: string
+          is_anonymous: boolean
+          location: string
+          protocol: string
+          status: Database["public"]["Enums"]["report_status"]
+          type: string
+        }[]
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "analyst"
+      report_status: "nova" | "em_analise" | "concluida" | "arquivada"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +282,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "analyst"],
+      report_status: ["nova", "em_analise", "concluida", "arquivada"],
+    },
   },
 } as const
