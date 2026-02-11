@@ -250,6 +250,46 @@ export const EventsTrendChart = () => {
   );
 };
 
+export const IndicatorsVsTargetChart = () => {
+  const [data, setData] = useState<{ name: string; valor: number; meta: number }[]>([]);
+
+  useEffect(() => {
+    const load = async () => {
+      const [indRes, measRes] = await Promise.all([
+        supabase.from("quality_indicators").select("id, name, target_value").eq("is_active", true),
+        supabase.from("indicator_measurements").select("indicator_id, value, period_date").order("period_date", { ascending: false }),
+      ]);
+      const inds = (indRes.data as any[]) ?? [];
+      const meas = (measRes.data as any[]) ?? [];
+      const result = inds.slice(0, 8).map((ind: any) => {
+        const lastMeas = meas.find((m: any) => m.indicator_id === ind.id);
+        return { name: ind.name.length > 15 ? ind.name.slice(0, 15) + "…" : ind.name, valor: lastMeas?.value ?? 0, meta: ind.target_value };
+      });
+      setData(result);
+    };
+    load();
+  }, []);
+
+  if (data.length === 0) return <ChartPlaceholder label="Indicadores vs Meta" />;
+
+  return (
+    <div className="rounded-xl border bg-card p-5 shadow-[var(--card-shadow)]">
+      <h4 className="mb-4 text-sm font-bold text-foreground">Indicadores vs Meta</h4>
+      <ResponsiveContainer width="100%" height={220}>
+        <BarChart data={data} barGap={2}>
+          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+          <XAxis dataKey="name" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} interval={0} angle={-20} textAnchor="end" height={50} />
+          <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+          <Tooltip {...tooltipStyle} />
+          <Legend wrapperStyle={{ fontSize: 11 }} />
+          <Bar dataKey="valor" name="Valor Atual" fill={COLORS.primary} radius={[4, 4, 0, 0]} />
+          <Bar dataKey="meta" name="Meta" fill={COLORS.safe} radius={[4, 4, 0, 0]} />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+};
+
 const ChartPlaceholder = ({ label }: { label: string }) => (
   <div className="flex h-[280px] items-center justify-center rounded-xl border bg-card p-5 shadow-[var(--card-shadow)]">
     <div className="text-center">

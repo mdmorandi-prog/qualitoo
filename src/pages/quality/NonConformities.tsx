@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, Search, Eye, ArrowRight } from "lucide-react";
+import { Plus, Search, Eye, ArrowRight, Target, Crosshair } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -84,6 +84,36 @@ const NonConformities = () => {
     const { error } = await supabase.from("non_conformities").update({ [field]: value } as any).eq("id", id);
     if (error) toast.error("Erro ao salvar");
     else { toast.success("Salvo!"); fetch(); }
+  };
+
+  const createCapaFromNc = async (nc: NC) => {
+    if (!user) return;
+    const { error } = await supabase.from("capas").insert({
+      title: `CAPA - ${nc.title}`,
+      description: nc.description,
+      origin_type: "non_conformity",
+      origin_id: nc.id,
+      origin_title: nc.title,
+      sector: nc.sector,
+      created_by: user.id,
+    } as any);
+    if (error) { toast.error("Erro ao criar CAPA"); console.error(error); }
+    else { toast.success("CAPA criada a partir da NC!"); setDetailOpen(false); }
+  };
+
+  const createActionPlanFromNc = async (nc: NC) => {
+    if (!user) return;
+    const { error } = await supabase.from("action_plans").insert({
+      title: `Plano - ${nc.title}`,
+      what: nc.corrective_action || nc.description,
+      why: `Tratamento da NC: ${nc.title}`,
+      origin_type: "non_conformity",
+      origin_id: nc.id,
+      sector: nc.sector,
+      created_by: user.id,
+    } as any);
+    if (error) { toast.error("Erro ao criar Plano"); console.error(error); }
+    else { toast.success("Plano de Ação criado a partir da NC!"); setDetailOpen(false); }
   };
 
   const filtered = ncs
@@ -184,6 +214,14 @@ const NonConformities = () => {
                 <div className="grid gap-2"><Label className="text-xs font-semibold">Causa Raiz</Label><Textarea defaultValue={selected.root_cause ?? ""} onBlur={e => updateField(selected.id, "root_cause", e.target.value)} placeholder="Análise de causa raiz..." /></div>
                 <div className="grid gap-2"><Label className="text-xs font-semibold">Ação Corretiva</Label><Textarea defaultValue={selected.corrective_action ?? ""} onBlur={e => updateField(selected.id, "corrective_action", e.target.value)} placeholder="Ação corretiva..." /></div>
                 <div className="grid gap-2"><Label className="text-xs font-semibold">Ação Preventiva</Label><Textarea defaultValue={selected.preventive_action ?? ""} onBlur={e => updateField(selected.id, "preventive_action", e.target.value)} placeholder="Ação preventiva..." /></div>
+              </div>
+              <div className="flex gap-2 border-t pt-4">
+                <Button variant="outline" size="sm" className="flex-1 gap-2" onClick={() => createCapaFromNc(selected)}>
+                  <Target className="h-4 w-4" /> Criar CAPA
+                </Button>
+                <Button variant="outline" size="sm" className="flex-1 gap-2" onClick={() => createActionPlanFromNc(selected)}>
+                  <Crosshair className="h-4 w-4" /> Criar Plano de Ação
+                </Button>
               </div>
             </div>
           )}
