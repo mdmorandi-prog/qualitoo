@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Plus, Search, Eye, FileCheck, FileClock, FileX } from "lucide-react";
+import { useEffect, useState, useRef } from "react";
+import { Plus, Search, Eye, Upload, FileUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -32,6 +32,46 @@ const statusConfig: Record<DocStatus, { label: string; color: string }> = {
   obsoleto: { label: "Obsoleto", color: "bg-destructive/10 text-destructive" },
 };
 
+const parseDocumentHeader = (text: string, fileName: string) => {
+  const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
+  const result: Partial<typeof initialForm> = {};
+
+  // Try to extract code from filename (e.g., POP-001_Titulo.pdf)
+  const codeMatch = fileName.match(/^([A-Z]{2,5}[-_]\d{2,4})/i);
+  if (codeMatch) result.code = codeMatch[1].replace("_", "-").toUpperCase();
+
+  // Try to extract category from code prefix
+  if (result.code) {
+    const prefix = result.code.split(/[-_]/)[0].toUpperCase();
+    const catMap: Record<string, string> = { POP: "POP", IT: "IT", MAN: "Manual", POL: "Política", PRO: "Procedimento" };
+    if (catMap[prefix]) result.category = catMap[prefix];
+  }
+
+  // Title: first meaningful line or cleaned filename
+  if (lines.length > 0) {
+    const firstLine = lines[0];
+    if (firstLine.length > 3 && firstLine.length < 200) result.title = firstLine;
+  }
+  if (!result.title) {
+    result.title = fileName.replace(/\.[^.]+$/, "").replace(/^[A-Z]{2,5}[-_]\d{2,4}[-_]?/i, "").replace(/[-_]/g, " ").trim();
+  }
+
+  // Description: second line if short enough
+  if (lines.length > 1 && lines[1].length < 300) result.description = lines[1];
+
+  // Content: remaining text
+  if (lines.length > 2) result.content = lines.slice(2).join("\n");
+  else if (lines.length > 0) result.content = text;
+
+  // Try to find sector mentions
+  const sectorMatch = text.match(/(?:setor|departamento|área)[:\s]+([^\n,;]+)/i);
+  if (sectorMatch) result.sector = sectorMatch[1].trim();
+
+  return result;
+};
+
+const initialForm = { title: "", code: "", description: "", category: "", sector: "", content: "", valid_until: "" };
+
 const Documents = () => {
   const { user } = useAuth();
   const [docs, setDocs] = useState<Doc[]>([]);
@@ -41,10 +81,11 @@ const Documents = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selected, setSelected] = useState<Doc | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [fileUrl, setFileUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [form, setForm] = useState({
-    title: "", code: "", description: "", category: "", sector: "", content: "", valid_until: "",
-  });
+  const [form, setForm] = useState({ ...initialForm });
 
   useEffect(() => { fetch(); }, []);
 
@@ -56,15 +97,62 @@ const Documents = () => {
     setLoading(false);
   };
 
+  const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    setImporting(true);
+
+    try {
+      // Upload file to storage
+      const filePath = `${user.id}/${Date.now()}_${file.name}`;
+      const { error: uploadError } = await supabase.storage.from("documents").upload(filePath, file);
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage.from("documents").getPublicUrl(filePath);
+      setFileUrl(urlData.publicUrl);
+
+      // Read text content for auto-fill
+      let text = "";
+      if (file.type === "text/plain" || file.name.endsWith(".txt") || file.name.endsWith(".md")) {
+        text = await file.text();
+      } else if (file.type === "text/csv" || file.name.endsWith(".csv")) {
+        text = await file.text();
+      } else {
+        // For PDF/DOCX etc., just use filename for parsing
+        text = "";
+      }
+
+      const parsed = parseDocumentHeader(text, file.name);
+      setForm(f => ({
+        ...f,
+        title: parsed.title || f.title,
+        code: parsed.code || f.code,
+        description: parsed.description || f.description,
+        category: parsed.category || f.category,
+        sector: parsed.sector || f.sector,
+        content: parsed.content || f.content,
+      }));
+
+      toast.success("Arquivo importado! Campos preenchidos automaticamente.");
+    } catch (err) {
+      console.error(err);
+      toast.error("Erro ao importar arquivo");
+    } finally {
+      setImporting(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
   const handleCreate = async () => {
     if (!form.title || !user) { toast.error("Título obrigatório"); return; }
     const { error } = await supabase.from("quality_documents").insert({
       title: form.title, code: form.code || null, description: form.description || null,
       category: form.category || null, sector: form.sector || null,
       content: form.content || null, valid_until: form.valid_until || null, created_by: user.id,
+      file_url: fileUrl,
     } as any);
     if (error) { toast.error("Erro ao criar"); console.error(error); }
-    else { toast.success("Documento criado!"); setDialogOpen(false); setForm({ title: "", code: "", description: "", category: "", sector: "", content: "", valid_until: "" }); fetch(); }
+    else { toast.success("Documento criado!"); setDialogOpen(false); setForm({ ...initialForm }); setFileUrl(null); fetch(); }
   };
 
   const updateStatus = async (id: string, status: DocStatus) => {
@@ -91,6 +179,30 @@ const Documents = () => {
           <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
             <DialogHeader><DialogTitle className="font-display">Criar Documento</DialogTitle></DialogHeader>
             <div className="grid gap-4 py-4">
+              {/* Import button */}
+              <div className="rounded-lg border-2 border-dashed border-muted-foreground/25 p-4 text-center">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".pdf,.doc,.docx,.txt,.md,.csv,.xls,.xlsx"
+                  className="hidden"
+                  onChange={handleImportFile}
+                />
+                <FileUp className="mx-auto h-8 w-8 text-muted-foreground/50" />
+                <p className="mt-2 text-sm text-muted-foreground">Importe um documento existente para preencher os campos automaticamente</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-2 gap-2"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={importing}
+                >
+                  <Upload className="h-4 w-4" />
+                  {importing ? "Importando..." : "Importar Arquivo"}
+                </Button>
+                {fileUrl && <p className="mt-2 text-xs text-safe">✓ Arquivo anexado</p>}
+              </div>
+
               <div className="grid gap-2"><Label>Título *</Label><Input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} /></div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2"><Label>Código</Label><Input value={form.code} onChange={e => setForm(f => ({ ...f, code: e.target.value }))} placeholder="POP-001" /></div>
