@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { UserPlus, Trash2, Save, Shield, Users2 } from "lucide-react";
+import { UserPlus, Trash2, Save, Shield, Users2, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,6 +42,8 @@ const UserManagement = () => {
   const [createOpen, setCreateOpen] = useState(false);
   const [editingModules, setEditingModules] = useState<string | null>(null);
   const [selectedModules, setSelectedModules] = useState<string[]>([]);
+  const [resetPasswordFor, setResetPasswordFor] = useState<string | null>(null);
+  const [newPasswordValue, setNewPasswordValue] = useState("");
   const { toast } = useToast();
 
   // Create form state
@@ -117,6 +119,21 @@ const UserManagement = () => {
     await callEdge({ action: "update_role", user_id: userId, role });
     toast({ title: "Perfil atualizado" });
     loadUsers();
+  };
+
+  const handleResetPassword = async (userId: string) => {
+    if (!newPasswordValue || newPasswordValue.length < 6) {
+      toast({ title: "A senha deve ter no mínimo 6 caracteres", variant: "destructive" });
+      return;
+    }
+    const { data, error } = await callEdge({ action: "reset_password", user_id: userId, new_password: newPasswordValue });
+    if (error || data?.error) {
+      toast({ title: "Erro ao redefinir senha", description: data?.error || "Tente novamente", variant: "destructive" });
+    } else {
+      toast({ title: "Senha redefinida com sucesso" });
+      setResetPasswordFor(null);
+      setNewPasswordValue("");
+    }
   };
 
   const toggleNewModule = (key: string) => {
@@ -280,9 +297,38 @@ const UserManagement = () => {
                   </TableCell>
                   <TableCell>
                     {u.username !== "admin" && (
-                      <Button variant="ghost" size="sm" onClick={() => handleDeleteUser(u.id)} className="text-destructive hover:text-destructive">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <div className="flex items-center gap-1">
+                        <Dialog open={resetPasswordFor === u.id} onOpenChange={(open) => { if (!open) { setResetPasswordFor(null); setNewPasswordValue(""); } }}>
+                          <DialogTrigger asChild>
+                            <Button variant="ghost" size="sm" onClick={() => setResetPasswordFor(u.id)} title="Redefinir senha">
+                              <KeyRound className="h-4 w-4" />
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="sm:max-w-sm">
+                            <DialogHeader>
+                              <DialogTitle>Redefinir Senha — {u.display_name || u.username}</DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-4 pt-2">
+                              <div>
+                                <Label className="text-xs font-semibold">Nova Senha</Label>
+                                <Input
+                                  type="password"
+                                  value={newPasswordValue}
+                                  onChange={e => setNewPasswordValue(e.target.value)}
+                                  placeholder="Mínimo 6 caracteres"
+                                  className="mt-1"
+                                />
+                              </div>
+                              <Button onClick={() => handleResetPassword(u.id)} className="w-full gap-2">
+                                <KeyRound className="h-4 w-4" /> Redefinir Senha
+                              </Button>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+                        <Button variant="ghost" size="sm" onClick={() => handleDeleteUser(u.id)} className="text-destructive hover:text-destructive">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     )}
                   </TableCell>
                 </TableRow>
