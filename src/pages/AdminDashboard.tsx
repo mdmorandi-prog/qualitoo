@@ -14,6 +14,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import NotificationsPanel from "@/components/NotificationsPanel";
 import { supabase } from "@/integrations/supabase/client";
 import { NcTrendChart, RiskDistributionChart, ActionPlansChart, EventsTrendChart, IndicatorsVsTargetChart, type DateFilter } from "@/components/dashboard/DashboardCharts";
+import { MaturityRadarChart } from "@/components/dashboard/MaturityRadarChart";
 import { exportDashboardPdf } from "@/lib/exportPdf";
 
 import AdverseEvents from "@/pages/quality/AdverseEvents";
@@ -354,6 +355,7 @@ const DashboardSummary = ({ onNavigate }: { onNavigate: (tab: string) => void })
 
       {/* Charts Section */}
       <div className="grid gap-4 lg:grid-cols-2">
+        <MaturityRadarChart />
         <NcTrendChart filter={dateFilter} />
         <RiskDistributionChart />
         <ActionPlansChart filter={dateFilter} />
