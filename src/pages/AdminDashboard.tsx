@@ -13,6 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
 import NotificationsPanel from "@/components/NotificationsPanel";
+import { useDashboardAlerts } from "@/hooks/useDashboardAlerts";
 import { supabase } from "@/integrations/supabase/client";
 import { NcTrendChart, RiskDistributionChart, ActionPlansChart, EventsTrendChart, IndicatorsVsTargetChart, type DateFilter } from "@/components/dashboard/DashboardCharts";
 import { MaturityRadarChart } from "@/components/dashboard/MaturityRadarChart";
@@ -59,6 +60,7 @@ const contentMap: Record<string, React.FC> = {
 
 const AdminDashboard = () => {
   const { user, signOut, isAdmin, isAnalyst, loading: authLoading } = useAuth();
+  useDashboardAlerts();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [searchParams, setSearchParams] = useSearchParams();
