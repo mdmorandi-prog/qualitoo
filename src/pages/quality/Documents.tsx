@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
-import { Plus, Search, Eye, Upload, FileUp, AlertTriangle, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Plus, Search, Eye, Upload, FileUp, AlertTriangle, ArrowRight, CheckCircle2, FileText, Lock } from "lucide-react";
+import PdfWatermarkViewer from "@/components/documents/PdfWatermarkViewer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -126,8 +127,24 @@ const parseDocumentHeader = (text: string, fileName: string) => {
 
 const initialForm = { title: "", code: "", description: "", category: "", sector: "", content: "", valid_until: "" };
 
+// Workflow permission rules: who can transition to each status
+const workflowPermissions: Record<DocStatus, { from: DocStatus[]; requiredRole: "admin" | "analyst" | "any" }> = {
+  rascunho: { from: [], requiredRole: "any" }, // initial state
+  em_revisao: { from: ["rascunho"], requiredRole: "any" },
+  aprovado: { from: ["em_revisao"], requiredRole: "admin" },
+  obsoleto: { from: ["aprovado"], requiredRole: "admin" },
+};
+
+const canTransition = (currentStatus: DocStatus, newStatus: DocStatus, isAdmin: boolean, isAnalyst: boolean): boolean => {
+  if (currentStatus === newStatus) return true;
+  const rule = workflowPermissions[newStatus];
+  if (!rule.from.includes(currentStatus)) return false;
+  if (rule.requiredRole === "admin" && !isAdmin) return false;
+  return true;
+};
+
 const Documents = () => {
-  const { user } = useAuth();
+  const { user, isAdmin, isAnalyst } = useAuth();
   const [docs, setDocs] = useState<Doc[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -138,6 +155,8 @@ const Documents = () => {
   const [importing, setImporting] = useState(false);
   const [fileUrl, setFileUrl] = useState<string | null>(null);
   const [isSigned, setIsSigned] = useState(false);
+  const [pdfViewerOpen, setPdfViewerOpen] = useState(false);
+  const [pdfViewerDoc, setPdfViewerDoc] = useState<Doc | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState({ ...initialForm });
@@ -198,9 +217,19 @@ const Documents = () => {
     else { toast.success("Documento criado!"); setDialogOpen(false); setForm({ ...initialForm }); setFileUrl(null); setIsSigned(false); fetchData(); }
   };
 
-  const updateStatus = async (id: string, status: DocStatus) => {
-    const update: any = { status };
-    if (status === "aprovado") { update.approved_by = user?.id; update.approved_at = new Date().toISOString(); }
+  const updateStatus = async (id: string, newStatus: DocStatus) => {
+    const doc = docs.find(d => d.id === id);
+    if (!doc) return;
+    if (!canTransition(doc.status, newStatus, isAdmin, isAnalyst)) {
+      toast.error(
+        newStatus === "aprovado" || newStatus === "obsoleto"
+          ? "Apenas administradores podem aprovar ou obsolescer documentos."
+          : `Transição inválida: ${statusConfig[doc.status].label} → ${statusConfig[newStatus].label}`
+      );
+      return;
+    }
+    const update: any = { status: newStatus };
+    if (newStatus === "aprovado") { update.approved_by = user?.id; update.approved_at = new Date().toISOString(); }
     const { error } = await supabase.from("quality_documents").update(update).eq("id", id);
     if (error) toast.error("Erro");
     else { toast.success("Status atualizado"); fetchData(); }
@@ -330,7 +359,19 @@ const Documents = () => {
                 <TableCell>
                   <Select value={d.status} onValueChange={v => updateStatus(d.id, v as DocStatus)}>
                     <SelectTrigger className="h-8 w-32"><SelectValue /></SelectTrigger>
-                    <SelectContent>{Object.entries(statusConfig).map(([k, v]) => <SelectItem key={k} value={k}>{v.label}</SelectItem>)}</SelectContent>
+                    <SelectContent>
+                      {Object.entries(statusConfig).map(([k, v]) => {
+                        const allowed = canTransition(d.status, k as DocStatus, isAdmin, isAnalyst);
+                        return (
+                          <SelectItem key={k} value={k} disabled={!allowed}>
+                            <span className="flex items-center gap-1">
+                              {!allowed && <Lock className="h-3 w-3 text-muted-foreground" />}
+                              {v.label}
+                            </span>
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
                   </Select>
                 </TableCell>
                 <TableCell>
@@ -340,7 +381,14 @@ const Documents = () => {
                   }
                 </TableCell>
                 <TableCell className="text-xs text-muted-foreground">{d.valid_until ? new Date(d.valid_until).toLocaleDateString("pt-BR") : "—"}</TableCell>
-                <TableCell><Button variant="ghost" size="sm" onClick={() => { setSelected(d); setDetailOpen(true); }}><Eye className="h-4 w-4" /></Button></TableCell>
+                <TableCell className="flex gap-1">
+                  <Button variant="ghost" size="sm" onClick={() => { setSelected(d); setDetailOpen(true); }}><Eye className="h-4 w-4" /></Button>
+                  {d.file_url && (
+                    <Button variant="ghost" size="sm" onClick={() => { setPdfViewerDoc(d); setPdfViewerOpen(true); }} title="Visualizar com marca d'água">
+                      <FileText className="h-4 w-4" />
+                    </Button>
+                  )}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -388,6 +436,15 @@ const Documents = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {pdfViewerDoc && (
+        <PdfWatermarkViewer
+          open={pdfViewerOpen}
+          onOpenChange={setPdfViewerOpen}
+          fileUrl={pdfViewerDoc.file_url!}
+          title={`${pdfViewerDoc.code ? pdfViewerDoc.code + " - " : ""}${pdfViewerDoc.title}`}
+        />
+      )}
     </div>
   );
 };
