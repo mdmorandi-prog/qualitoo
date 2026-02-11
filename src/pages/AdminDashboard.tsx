@@ -12,6 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
 import NotificationsPanel from "@/components/NotificationsPanel";
 import { supabase } from "@/integrations/supabase/client";
+import { NcTrendChart, RiskDistributionChart, ActionPlansChart, EventsTrendChart } from "@/components/dashboard/DashboardCharts";
 
 import AdverseEvents from "@/pages/quality/AdverseEvents";
 import Capas from "@/pages/quality/Capas";
@@ -318,6 +319,14 @@ const DashboardSummary = ({ onNavigate }: { onNavigate: (tab: string) => void })
             <p className="mt-0.5 text-[10px] text-muted-foreground">{c.sub}</p>
           </button>
         ))}
+      </div>
+
+      {/* Charts Section */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        <NcTrendChart />
+        <RiskDistributionChart />
+        <ActionPlansChart />
+        <EventsTrendChart />
       </div>
 
       <div className="rounded-xl border bg-card p-6 shadow-[var(--card-shadow)]">
