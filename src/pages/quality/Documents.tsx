@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { Plus, Search, Eye, Upload, FileUp } from "lucide-react";
+import { Plus, Search, Eye, Upload, FileUp, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -22,7 +22,8 @@ type DocStatus = "rascunho" | "em_revisao" | "aprovado" | "obsoleto";
 interface Doc {
   id: string; title: string; code: string | null; description: string | null;
   category: string | null; sector: string | null; version: number;
-  status: DocStatus; content: string | null; valid_until: string | null; created_at: string;
+  status: DocStatus; content: string | null; valid_until: string | null;
+  created_at: string; is_signed: boolean; file_url: string | null;
 }
 
 const statusConfig: Record<DocStatus, { label: string; color: string }> = {
@@ -34,17 +35,32 @@ const statusConfig: Record<DocStatus, { label: string; color: string }> = {
 
 const parseDocumentHeader = (text: string, fileName: string) => {
   const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
-  const result: Partial<typeof initialForm> = {};
+  const result: Partial<typeof initialForm> & { is_signed?: boolean } = {};
 
-  // Try to extract code from filename (e.g., POP-001_Titulo.pdf)
+  // Extract code from filename (e.g., POP-001_Titulo.pdf)
   const codeMatch = fileName.match(/^([A-Z]{2,5}[-_]\d{2,4})/i);
   if (codeMatch) result.code = codeMatch[1].replace("_", "-").toUpperCase();
 
-  // Try to extract category from code prefix
+  // Extract category from code prefix or from title/content
+  const catMap: Record<string, string> = {
+    POP: "POP", IT: "IT", MAN: "Manual", POL: "Política", PRO: "Procedimento",
+    REG: "Registro", FOR: "Formulário", FLU: "Fluxograma", NOR: "Norma",
+  };
   if (result.code) {
     const prefix = result.code.split(/[-_]/)[0].toUpperCase();
-    const catMap: Record<string, string> = { POP: "POP", IT: "IT", MAN: "Manual", POL: "Política", PRO: "Procedimento" };
     if (catMap[prefix]) result.category = catMap[prefix];
+  }
+  // Also search in text for category keywords
+  if (!result.category) {
+    const catMatch = text.match(/(?:tipo|categoria|documento)[:\s]*(POP|IT|Manual|Política|Procedimento|Registro|Formulário|Fluxograma|Norma)/i);
+    if (catMatch) result.category = catMatch[1];
+  }
+  // Search in title/filename for category
+  if (!result.category) {
+    const fnUpper = fileName.toUpperCase();
+    for (const [key, val] of Object.entries(catMap)) {
+      if (fnUpper.includes(key)) { result.category = val; break; }
+    }
   }
 
   // Title: first meaningful line or cleaned filename
@@ -56,6 +72,24 @@ const parseDocumentHeader = (text: string, fileName: string) => {
     result.title = fileName.replace(/\.[^.]+$/, "").replace(/^[A-Z]{2,5}[-_]\d{2,4}[-_]?/i, "").replace(/[-_]/g, " ").trim();
   }
 
+  // Sector: search in text for sector/department mentions
+  const sectorPatterns = [
+    /(?:setor|departamento|área|unidade)[:\s]+([^\n,;]+)/i,
+    /(?:setor|departamento|área|unidade)\s*[-–]\s*([^\n,;]+)/i,
+  ];
+  for (const pattern of sectorPatterns) {
+    const match = text.match(pattern);
+    if (match) { result.sector = match[1].trim(); break; }
+  }
+  // Also check in title/filename for common sectors
+  if (!result.sector) {
+    const sectorKeywords = ["UTI", "Centro Cirúrgico", "Enfermagem", "Farmácia", "Laboratório", "Radiologia", "Administrativo", "RH", "CME", "Emergência", "Ambulatório"];
+    const combined = (fileName + " " + (lines[0] || "")).toUpperCase();
+    for (const s of sectorKeywords) {
+      if (combined.includes(s.toUpperCase())) { result.sector = s; break; }
+    }
+  }
+
   // Description: second line if short enough
   if (lines.length > 1 && lines[1].length < 300) result.description = lines[1];
 
@@ -63,9 +97,44 @@ const parseDocumentHeader = (text: string, fileName: string) => {
   if (lines.length > 2) result.content = lines.slice(2).join("\n");
   else if (lines.length > 0) result.content = text;
 
-  // Try to find sector mentions
-  const sectorMatch = text.match(/(?:setor|departamento|área)[:\s]+([^\n,;]+)/i);
-  if (sectorMatch) result.sector = sectorMatch[1].trim();
+  // Validity: search in footer/last lines for date patterns
+  const footerLines = lines.slice(-10);
+  const fullText = text;
+  const validityPatterns = [
+    /(?:validade|válido até|vigência|vencimento|data de expiração)[:\s]*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/i,
+    /(?:validade|válido até|vigência)[:\s]*(\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2})/i,
+  ];
+  for (const pattern of validityPatterns) {
+    const match = fullText.match(pattern);
+    if (match) {
+      const dateStr = match[1];
+      // Try to parse as dd/mm/yyyy or yyyy-mm-dd
+      let parsed: Date | null = null;
+      if (dateStr.includes("/")) {
+        const parts = dateStr.split("/");
+        if (parts[2]?.length === 4) parsed = new Date(`${parts[2]}-${parts[1].padStart(2, "0")}-${parts[0].padStart(2, "0")}`);
+        else if (parts[0]?.length === 4) parsed = new Date(dateStr.replace(/\//g, "-"));
+      } else {
+        parsed = new Date(dateStr);
+      }
+      if (parsed && !isNaN(parsed.getTime())) {
+        result.valid_until = parsed.toISOString().split("T")[0];
+      }
+      break;
+    }
+  }
+
+  // Signature detection: check if document mentions signatures
+  const signaturePatterns = [
+    /assinado?\s*(por|digitalmente|eletronicamente)/i,
+    /assinatura[:\s]/i,
+    /responsável[:\s]+\S+/i,
+    /aprovado\s+por[:\s]+\S+/i,
+    /____+/,
+    /assinatura\s*digital/i,
+    /certificado\s*digital/i,
+  ];
+  result.is_signed = signaturePatterns.some(p => p.test(fullText));
 
   return result;
 };
@@ -83,6 +152,7 @@ const Documents = () => {
   const [detailOpen, setDetailOpen] = useState(false);
   const [importing, setImporting] = useState(false);
   const [fileUrl, setFileUrl] = useState<string | null>(null);
+  const [isSigned, setIsSigned] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState({ ...initialForm });
@@ -131,7 +201,9 @@ const Documents = () => {
         category: parsed.category || f.category,
         sector: parsed.sector || f.sector,
         content: parsed.content || f.content,
+        valid_until: parsed.valid_until || f.valid_until,
       }));
+      setIsSigned(parsed.is_signed ?? false);
 
       toast.success("Arquivo importado! Campos preenchidos automaticamente.");
     } catch (err) {
@@ -149,10 +221,10 @@ const Documents = () => {
       title: form.title, code: form.code || null, description: form.description || null,
       category: form.category || null, sector: form.sector || null,
       content: form.content || null, valid_until: form.valid_until || null, created_by: user.id,
-      file_url: fileUrl,
+      file_url: fileUrl, is_signed: isSigned,
     } as any);
     if (error) { toast.error("Erro ao criar"); console.error(error); }
-    else { toast.success("Documento criado!"); setDialogOpen(false); setForm({ ...initialForm }); setFileUrl(null); fetch(); }
+    else { toast.success("Documento criado!"); setDialogOpen(false); setForm({ ...initialForm }); setFileUrl(null); setIsSigned(false); fetch(); }
   };
 
   const updateStatus = async (id: string, status: DocStatus) => {
@@ -231,12 +303,13 @@ const Documents = () => {
         </Select>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-5">
         {[
           { label: "Total", value: docs.length, color: "text-foreground" },
           { label: "Aprovados", value: docs.filter(d => d.status === "aprovado").length, color: "text-safe" },
           { label: "Em Revisão", value: docs.filter(d => d.status === "em_revisao").length, color: "text-warning" },
           { label: "Obsoletos", value: docs.filter(d => d.status === "obsoleto").length, color: "text-destructive" },
+          { label: "Não Assinados", value: docs.filter(d => !d.is_signed && d.status !== "obsoleto").length, color: "text-destructive" },
         ].map((s, i) => (
           <div key={i} className="rounded-xl border bg-card p-4 shadow-[var(--card-shadow)]">
             <p className="text-xs text-muted-foreground">{s.label}</p>
@@ -245,16 +318,29 @@ const Documents = () => {
         ))}
       </div>
 
+      {/* Unsigned documents alert card */}
+      {docs.filter(d => !d.is_signed && d.status !== "obsoleto").length > 0 && (
+        <div className="flex items-start gap-3 rounded-xl border border-warning/30 bg-warning/5 p-4">
+          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-warning" />
+          <div>
+            <p className="text-sm font-semibold text-foreground">Documentos sem assinatura detectados</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {docs.filter(d => !d.is_signed && d.status !== "obsoleto").map(d => d.code || d.title).join(", ")}
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="rounded-xl border bg-card shadow-[var(--card-shadow)]">
         <Table>
           <TableHeader><TableRow>
-            <TableHead>Código</TableHead><TableHead>Título</TableHead><TableHead>Versão</TableHead><TableHead>Status</TableHead><TableHead>Validade</TableHead><TableHead>Ações</TableHead>
+            <TableHead>Código</TableHead><TableHead>Título</TableHead><TableHead>Versão</TableHead><TableHead>Status</TableHead><TableHead>Assinado</TableHead><TableHead>Validade</TableHead><TableHead>Ações</TableHead>
           </TableRow></TableHeader>
           <TableBody>
-            {loading ? <TableRow><TableCell colSpan={6} className="py-8 text-center text-muted-foreground">Carregando...</TableCell></TableRow>
-            : filtered.length === 0 ? <TableRow><TableCell colSpan={6} className="py-8 text-center text-muted-foreground">Nenhum documento.</TableCell></TableRow>
+            {loading ? <TableRow><TableCell colSpan={7} className="py-8 text-center text-muted-foreground">Carregando...</TableCell></TableRow>
+            : filtered.length === 0 ? <TableRow><TableCell colSpan={7} className="py-8 text-center text-muted-foreground">Nenhum documento.</TableCell></TableRow>
             : filtered.map(d => (
-              <TableRow key={d.id}>
+              <TableRow key={d.id} className={!d.is_signed && d.status !== "obsoleto" ? "bg-warning/5" : ""}>
                 <TableCell className="font-mono text-xs font-semibold">{d.code || "—"}</TableCell>
                 <TableCell className="font-medium">{d.title}</TableCell>
                 <TableCell className="text-sm">v{d.version}</TableCell>
@@ -263,6 +349,12 @@ const Documents = () => {
                     <SelectTrigger className="h-8 w-32"><SelectValue /></SelectTrigger>
                     <SelectContent>{Object.entries(statusConfig).map(([k, v]) => <SelectItem key={k} value={k}>{v.label}</SelectItem>)}</SelectContent>
                   </Select>
+                </TableCell>
+                <TableCell>
+                  {d.is_signed
+                    ? <span className="rounded-full bg-safe/10 px-2 py-0.5 text-xs font-medium text-safe">Sim</span>
+                    : <span className="inline-flex items-center gap-1 rounded-full bg-warning/10 px-2 py-0.5 text-xs font-medium text-warning"><AlertTriangle className="h-3 w-3" /> Não</span>
+                  }
                 </TableCell>
                 <TableCell className="text-xs text-muted-foreground">{d.valid_until ? new Date(d.valid_until).toLocaleDateString("pt-BR") : "—"}</TableCell>
                 <TableCell><Button variant="ghost" size="sm" onClick={() => { setSelected(d); setDetailOpen(true); }}><Eye className="h-4 w-4" /></Button></TableCell>
@@ -277,11 +369,18 @@ const Documents = () => {
           <DialogHeader><DialogTitle className="font-display">{selected?.code ? `${selected.code} - ` : ""}{selected?.title}</DialogTitle></DialogHeader>
           {selected && (
             <div className="space-y-4">
-              <div className="flex gap-3 text-sm">
+              <div className="flex flex-wrap gap-3 text-sm">
                 <span className={`rounded-full px-2 py-1 text-xs font-medium ${statusConfig[selected.status].color}`}>{statusConfig[selected.status].label}</span>
                 <span className="text-muted-foreground">Versão {selected.version}</span>
                 {selected.valid_until && <span className="text-muted-foreground">Validade: {new Date(selected.valid_until).toLocaleDateString("pt-BR")}</span>}
+                {selected.is_signed
+                  ? <span className="rounded-full bg-safe/10 px-2 py-1 text-xs font-medium text-safe">✓ Assinado</span>
+                  : <span className="inline-flex items-center gap-1 rounded-full bg-warning/10 px-2 py-1 text-xs font-medium text-warning"><AlertTriangle className="h-3 w-3" /> Não Assinado</span>
+                }
               </div>
+              {selected.category && <p className="text-xs text-muted-foreground">Categoria: <span className="font-medium text-foreground">{selected.category}</span></p>}
+              {selected.sector && <p className="text-xs text-muted-foreground">Setor: <span className="font-medium text-foreground">{selected.sector}</span></p>}
+              {selected.file_url && <a href={selected.file_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-primary hover:underline"><FileUp className="h-3 w-3" /> Ver arquivo original</a>}
               {selected.description && <div className="rounded-lg bg-secondary/50 p-3"><p className="text-sm text-foreground">{selected.description}</p></div>}
               {selected.content && <div className="rounded-lg border p-4"><pre className="whitespace-pre-wrap text-sm text-foreground">{selected.content}</pre></div>}
             </div>

@@ -635,6 +635,7 @@ export type Database = {
           description: string | null
           file_url: string | null
           id: string
+          is_signed: boolean
           sector: string | null
           status: Database["public"]["Enums"]["doc_status"]
           title: string
@@ -653,6 +654,7 @@ export type Database = {
           description?: string | null
           file_url?: string | null
           id?: string
+          is_signed?: boolean
           sector?: string | null
           status?: Database["public"]["Enums"]["doc_status"]
           title: string
@@ -671,6 +673,7 @@ export type Database = {
           description?: string | null
           file_url?: string | null
           id?: string
+          is_signed?: boolean
           sector?: string | null
           status?: Database["public"]["Enums"]["doc_status"]
           title?: string
