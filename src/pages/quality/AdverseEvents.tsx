@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, AlertTriangle, Search, Eye } from "lucide-react";
+import { Plus, AlertTriangle, Search, Eye, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -117,6 +117,21 @@ const AdverseEvents = () => {
     const { error } = await supabase.from("adverse_events").update({ status } as any).eq("id", id);
     if (error) toast.error("Erro ao atualizar status");
     else { toast.success("Status atualizado"); fetchEvents(); }
+  };
+
+  const createCapaFromEvent = async (event: AdverseEvent) => {
+    if (!user) return;
+    const { error } = await supabase.from("capas").insert({
+      title: `CAPA - ${event.title}`,
+      description: event.description,
+      origin_type: "adverse_event",
+      origin_id: event.id,
+      origin_title: event.title,
+      sector: event.sector,
+      created_by: user.id,
+    } as any);
+    if (error) { toast.error("Erro ao criar CAPA"); console.error(error); }
+    else { toast.success("CAPA criada a partir do Evento Adverso!"); setDetailOpen(false); }
   };
 
   const filtered = events
@@ -337,6 +352,11 @@ const AdverseEvents = () => {
               <div className="flex justify-between pt-2">
                 <span className="text-muted-foreground">Notificado por</span>
                 <span className="font-medium">{selectedEvent.reported_by}</span>
+              </div>
+              <div className="border-t pt-4">
+                <Button variant="outline" size="sm" className="w-full gap-2" onClick={() => createCapaFromEvent(selectedEvent)}>
+                  <Target className="h-4 w-4" /> Criar CAPA a partir deste Evento
+                </Button>
               </div>
             </div>
           )}

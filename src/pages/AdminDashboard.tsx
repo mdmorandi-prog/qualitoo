@@ -4,6 +4,7 @@ import {
   Shield, LogOut, LayoutDashboard, AlertTriangle, BarChart3, FileText,
   ClipboardCheck, Target, GraduationCap, FishSymbol, ShieldAlert,
   TriangleAlert, Crosshair, BookOpen, Users2, Menu, X, PanelLeftClose, PanelLeft,
+  Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +13,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
 import NotificationsPanel from "@/components/NotificationsPanel";
 import { supabase } from "@/integrations/supabase/client";
-import { NcTrendChart, RiskDistributionChart, ActionPlansChart, EventsTrendChart } from "@/components/dashboard/DashboardCharts";
+import { NcTrendChart, RiskDistributionChart, ActionPlansChart, EventsTrendChart, IndicatorsVsTargetChart } from "@/components/dashboard/DashboardCharts";
+import { exportDashboardPdf } from "@/lib/exportPdf";
 
 import AdverseEvents from "@/pages/quality/AdverseEvents";
 import Capas from "@/pages/quality/Capas";
@@ -306,9 +308,14 @@ const DashboardSummary = ({ onNavigate }: { onNavigate: (tab: string) => void })
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="font-display text-2xl font-bold text-foreground">Resumo Executivo</h2>
-        <p className="text-sm text-muted-foreground">Visão consolidada do Sistema de Gestão da Qualidade</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="font-display text-2xl font-bold text-foreground">Resumo Executivo</h2>
+          <p className="text-sm text-muted-foreground">Visão consolidada do Sistema de Gestão da Qualidade</p>
+        </div>
+        <Button variant="outline" size="sm" className="gap-2" onClick={() => { exportDashboardPdf(); }}>
+          <Download className="h-4 w-4" /> Exportar PDF
+        </Button>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
@@ -327,6 +334,7 @@ const DashboardSummary = ({ onNavigate }: { onNavigate: (tab: string) => void })
         <RiskDistributionChart />
         <ActionPlansChart />
         <EventsTrendChart />
+        <IndicatorsVsTargetChart />
       </div>
 
       <div className="rounded-xl border bg-card p-6 shadow-[var(--card-shadow)]">

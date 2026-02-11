@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, Search, Eye } from "lucide-react";
+import { Plus, Search, Eye, Crosshair } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -79,6 +79,21 @@ const Audits = () => {
     const { error } = await supabase.from("audits").update({ [field]: value } as any).eq("id", id);
     if (error) toast.error("Erro");
     else { toast.success("Salvo"); fetch(); }
+  };
+
+  const createActionPlanFromAudit = async (audit: Audit) => {
+    if (!user) return;
+    const { error } = await supabase.from("action_plans").insert({
+      title: `Plano - ${audit.title}`,
+      what: audit.findings || audit.description || "",
+      why: `Achados da auditoria: ${audit.title}`,
+      origin_type: "audit",
+      origin_id: audit.id,
+      sector: audit.sector,
+      created_by: user.id,
+    } as any);
+    if (error) { toast.error("Erro ao criar Plano"); console.error(error); }
+    else { toast.success("Plano de Ação criado a partir da Auditoria!"); setDetailOpen(false); }
   };
 
   const filtered = audits.filter(a => !search || a.title.toLowerCase().includes(search.toLowerCase()));
@@ -164,6 +179,11 @@ const Audits = () => {
               <div className="grid gap-3">
                 <div className="grid gap-2"><Label className="text-xs font-semibold">Achados</Label><Textarea defaultValue={selected.findings ?? ""} onBlur={e => updateField(selected.id, "findings", e.target.value)} placeholder="Registre os achados da auditoria..." /></div>
                 <div className="grid gap-2"><Label className="text-xs font-semibold">Conclusão</Label><Textarea defaultValue={selected.conclusion ?? ""} onBlur={e => updateField(selected.id, "conclusion", e.target.value)} placeholder="Conclusão da auditoria..." /></div>
+              </div>
+              <div className="border-t pt-4">
+                <Button variant="outline" size="sm" className="w-full gap-2" onClick={() => createActionPlanFromAudit(selected)}>
+                  <Crosshair className="h-4 w-4" /> Criar Plano de Ação a partir desta Auditoria
+                </Button>
               </div>
             </div>
           )}
