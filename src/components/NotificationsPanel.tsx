@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Bell, CheckCheck, AlertTriangle, Clock, FileText, Shield } from "lucide-react";
+import { Bell, CheckCheck, AlertTriangle, Clock, FileText, Shield, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -8,6 +8,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useSearchParams } from "react-router-dom";
 
 interface Notification {
   id: string;
@@ -27,8 +28,21 @@ interface SystemAlert {
   module: string;
 }
 
+const moduleTabMap: Record<string, string> = {
+  non_conformities: "ncs",
+  documents: "documentos",
+  trainings: "treinamentos",
+  audits: "auditorias",
+  adverse_events: "eventos",
+  action_plans: "planos",
+  risks: "riscos",
+  capas: "capa",
+  indicators: "indicadores",
+};
+
 const NotificationsPanel = () => {
   const { user } = useAuth();
+  const [, setSearchParams] = useSearchParams();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [alerts, setAlerts] = useState<SystemAlert[]>([]);
   const [open, setOpen] = useState(false);
@@ -53,104 +67,48 @@ const NotificationsPanel = () => {
 
   const generateSystemAlerts = async () => {
     const newAlerts: SystemAlert[] = [];
+    const now = new Date();
+    const thirtyDays = new Date();
+    thirtyDays.setDate(now.getDate() + 30);
+    const sevenDays = new Date();
+    sevenDays.setDate(now.getDate() + 7);
 
-    // Check for overdue NCs
-    const { data: ncs } = await supabase
-      .from("non_conformities")
-      .select("id, title, deadline, status")
-      .neq("status", "concluida")
-      .not("deadline", "is", null);
+    const [ncRes, docRes, trainRes, audRes, evRes] = await Promise.all([
+      supabase.from("non_conformities").select("id, title, deadline, status").neq("status", "concluida").not("deadline", "is", null),
+      supabase.from("quality_documents").select("id, title, valid_until").eq("status", "aprovado").not("valid_until", "is", null),
+      supabase.from("trainings").select("id, title, expiry_date").not("expiry_date", "is", null),
+      supabase.from("audits").select("id, title, scheduled_date, status").eq("status", "planejada"),
+      supabase.from("adverse_events").select("id, severity, status").in("status", ["notificado"]),
+    ]);
 
-    if (ncs) {
-      const overdue = ncs.filter(nc => nc.deadline && new Date(nc.deadline) < new Date());
-      if (overdue.length > 0) {
-        newAlerts.push({
-          type: "danger", icon: AlertTriangle,
-          title: `${overdue.length} NC(s) com prazo vencido`,
-          message: `Existem não conformidades com prazo expirado que precisam de atenção.`,
-          module: "non_conformities",
-        });
-      }
+    const ncs = (ncRes.data as any[]) ?? [];
+    const overdue = ncs.filter(nc => nc.deadline && new Date(nc.deadline) < now);
+    if (overdue.length > 0) {
+      newAlerts.push({ type: "danger", icon: AlertTriangle, title: `${overdue.length} NC(s) com prazo vencido`, message: "Não conformidades com prazo expirado precisam de atenção.", module: "non_conformities" });
     }
 
-    // Check for documents expiring soon
-    const thirtyDaysFromNow = new Date();
-    thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
-    const { data: docs } = await supabase
-      .from("quality_documents")
-      .select("id, title, valid_until")
-      .eq("status", "aprovado")
-      .not("valid_until", "is", null);
-
-    if (docs) {
-      const expiring = docs.filter(d => d.valid_until && new Date(d.valid_until) < thirtyDaysFromNow);
-      if (expiring.length > 0) {
-        newAlerts.push({
-          type: "warning", icon: FileText,
-          title: `${expiring.length} documento(s) perto do vencimento`,
-          message: `Documentos que vencem nos próximos 30 dias precisam de revisão.`,
-          module: "documents",
-        });
-      }
+    const docs = (docRes.data as any[]) ?? [];
+    const expiringDocs = docs.filter(d => d.valid_until && new Date(d.valid_until) < thirtyDays);
+    if (expiringDocs.length > 0) {
+      newAlerts.push({ type: "warning", icon: FileText, title: `${expiringDocs.length} documento(s) perto do vencimento`, message: "Documentos que vencem nos próximos 30 dias.", module: "documents" });
     }
 
-    // Check trainings expiring
-    const { data: trainings } = await supabase
-      .from("trainings")
-      .select("id, title, expiry_date")
-      .not("expiry_date", "is", null);
-
-    if (trainings) {
-      const expiring = trainings.filter(t => t.expiry_date && new Date(t.expiry_date) < thirtyDaysFromNow);
-      if (expiring.length > 0) {
-        newAlerts.push({
-          type: "warning", icon: Clock,
-          title: `${expiring.length} treinamento(s) a vencer`,
-          message: `Certificações de treinamentos que vencem em breve.`,
-          module: "trainings",
-        });
-      }
+    const trains = (trainRes.data as any[]) ?? [];
+    const expiringTrains = trains.filter(t => t.expiry_date && new Date(t.expiry_date) < thirtyDays && new Date(t.expiry_date) > now);
+    if (expiringTrains.length > 0) {
+      newAlerts.push({ type: "warning", icon: Clock, title: `${expiringTrains.length} treinamento(s) a vencer`, message: "Certificações que vencem em breve.", module: "trainings" });
     }
 
-    // Check upcoming audits
-    const sevenDaysFromNow = new Date();
-    sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
-    const { data: audits } = await supabase
-      .from("audits")
-      .select("id, title, scheduled_date, status")
-      .eq("status", "planejada");
-
-    if (audits) {
-      const upcoming = audits.filter(a => {
-        const d = new Date(a.scheduled_date);
-        return d >= new Date() && d <= sevenDaysFromNow;
-      });
-      if (upcoming.length > 0) {
-        newAlerts.push({
-          type: "info", icon: Shield,
-          title: `${upcoming.length} auditoria(s) nos próximos 7 dias`,
-          message: `Auditorias planejadas para esta semana.`,
-          module: "audits",
-        });
-      }
+    const audits = (audRes.data as any[]) ?? [];
+    const upcoming = audits.filter(a => { const d = new Date(a.scheduled_date); return d >= now && d <= sevenDays; });
+    if (upcoming.length > 0) {
+      newAlerts.push({ type: "info", icon: Shield, title: `${upcoming.length} auditoria(s) nos próximos 7 dias`, message: "Auditorias planejadas para esta semana.", module: "audits" });
     }
 
-    // Check adverse events pending investigation
-    const { data: events } = await supabase
-      .from("adverse_events")
-      .select("id, severity, status")
-      .in("status", ["notificado"]);
-
-    if (events) {
-      const critical = events.filter(e => e.severity === "grave" || e.severity === "sentinela");
-      if (critical.length > 0) {
-        newAlerts.push({
-          type: "danger", icon: AlertTriangle,
-          title: `${critical.length} evento(s) grave(s) sem investigação`,
-          message: `Eventos adversos graves/sentinela aguardando investigação.`,
-          module: "adverse_events",
-        });
-      }
+    const events = (evRes.data as any[]) ?? [];
+    const critical = events.filter(e => e.severity === "grave" || e.severity === "sentinela");
+    if (critical.length > 0) {
+      newAlerts.push({ type: "danger", icon: AlertTriangle, title: `${critical.length} evento(s) grave(s) sem investigação`, message: "Eventos adversos graves aguardando investigação.", module: "adverse_events" });
     }
 
     setAlerts(newAlerts);
@@ -158,12 +116,16 @@ const NotificationsPanel = () => {
 
   const markAllRead = async () => {
     if (!user) return;
-    await supabase
-      .from("notifications")
-      .update({ is_read: true } as any)
-      .eq("user_id", user.id)
-      .eq("is_read", false);
+    await supabase.from("notifications").update({ is_read: true } as any).eq("user_id", user.id).eq("is_read", false);
     fetchNotifications();
+  };
+
+  const navigateToModule = (module: string) => {
+    const tab = moduleTabMap[module];
+    if (tab) {
+      setSearchParams({ tab });
+      setOpen(false);
+    }
   };
 
   const unreadCount = notifications.filter(n => !n.is_read).length + alerts.length;
@@ -190,31 +152,38 @@ const NotificationsPanel = () => {
           )}
         </div>
         <ScrollArea className="max-h-80">
-          {/* System Alerts */}
           {alerts.map((alert, i) => (
-            <div key={`alert-${i}`} className={`border-b px-4 py-3 ${alert.type === "danger" ? "bg-destructive/5" : alert.type === "warning" ? "bg-warning/5" : "bg-accent/5"}`}>
+            <button
+              key={`alert-${i}`}
+              onClick={() => navigateToModule(alert.module)}
+              className={`w-full border-b px-4 py-3 text-left transition-colors hover:bg-muted/50 ${alert.type === "danger" ? "bg-destructive/5" : alert.type === "warning" ? "bg-warning/5" : "bg-accent/5"}`}
+            >
               <div className="flex items-start gap-3">
-                <alert.icon className={`mt-0.5 h-4 w-4 ${alert.type === "danger" ? "text-destructive" : alert.type === "warning" ? "text-warning" : "text-accent"}`} />
-                <div>
+                <alert.icon className={`mt-0.5 h-4 w-4 shrink-0 ${alert.type === "danger" ? "text-destructive" : alert.type === "warning" ? "text-warning" : "text-accent"}`} />
+                <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium text-foreground">{alert.title}</p>
                   <p className="text-xs text-muted-foreground">{alert.message}</p>
                 </div>
+                <ExternalLink className="mt-0.5 h-3 w-3 shrink-0 text-muted-foreground" />
               </div>
-            </div>
+            </button>
           ))}
 
-          {/* User Notifications */}
           {notifications.length === 0 && alerts.length === 0 ? (
             <div className="px-4 py-8 text-center">
               <Bell className="mx-auto mb-2 h-8 w-8 text-muted-foreground/30" />
               <p className="text-sm text-muted-foreground">Nenhuma notificação</p>
             </div>
           ) : notifications.map(n => (
-            <div key={n.id} className={`border-b px-4 py-3 ${!n.is_read ? "bg-primary/5" : ""}`}>
+            <button
+              key={n.id}
+              onClick={() => n.module && navigateToModule(n.module)}
+              className={`w-full border-b px-4 py-3 text-left transition-colors hover:bg-muted/50 ${!n.is_read ? "bg-primary/5" : ""}`}
+            >
               <p className="text-sm font-medium text-foreground">{n.title}</p>
               <p className="text-xs text-muted-foreground">{n.message}</p>
               <p className="mt-1 text-[10px] text-muted-foreground">{new Date(n.created_at).toLocaleString("pt-BR")}</p>
-            </div>
+            </button>
           ))}
         </ScrollArea>
       </PopoverContent>
