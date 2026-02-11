@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Shield, LogOut, LayoutDashboard, AlertTriangle, BarChart3, FileText,
   ClipboardCheck, Target, GraduationCap, FishSymbol, ShieldAlert,
-  TriangleAlert, Crosshair, BookOpen, Users2, Menu, X,
+  TriangleAlert, Crosshair, BookOpen, Users2, Menu, X, PanelLeftClose, PanelLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -56,6 +56,7 @@ const AdminDashboard = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get("tab") || "resumo";
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/admin/login");
@@ -63,6 +64,7 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     setSidebarOpen(!isMobile);
+    if (isMobile) setCollapsed(false);
   }, [isMobile]);
 
   const handleLogout = async () => { await signOut(); navigate("/admin/login"); };
@@ -94,32 +96,40 @@ const AdminDashboard = () => {
     <div className="flex min-h-screen w-full bg-background">
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-transform duration-300 ${
+        className={`fixed inset-y-0 left-0 z-40 flex flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-all duration-300 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } lg:relative lg:translate-x-0`}
+        } ${collapsed && !isMobile ? "w-16" : "w-64"} lg:relative lg:translate-x-0`}
       >
         {/* Sidebar Header */}
-        <div className="flex h-16 shrink-0 items-center justify-between border-b border-sidebar-border px-4">
-          <div className="flex items-center gap-2.5">
+        <div className={`flex h-16 shrink-0 items-center border-b border-sidebar-border ${collapsed && !isMobile ? "justify-center px-2" : "justify-between px-4"}`}>
+          {collapsed && !isMobile ? (
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary">
               <Shield className="h-4 w-4 text-sidebar-primary-foreground" />
             </div>
-            <div className="flex flex-col">
-              <span className="text-sm font-semibold leading-tight">SGQ Hospitalar</span>
-              <Badge className="mt-0.5 w-fit border-0 bg-sidebar-accent text-[10px] text-sidebar-accent-foreground">
-                {isAdmin ? "Admin" : "Analista"}
-              </Badge>
-            </div>
-          </div>
-          {isMobile && (
-            <Button variant="ghost" size="sm" onClick={() => setSidebarOpen(false)} className="text-sidebar-foreground hover:bg-sidebar-accent">
-              <X className="h-5 w-5" />
-            </Button>
+          ) : (
+            <>
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary">
+                  <Shield className="h-4 w-4 text-sidebar-primary-foreground" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-sm font-semibold leading-tight">SGQ Hospitalar</span>
+                  <Badge className="mt-0.5 w-fit border-0 bg-sidebar-accent text-[10px] text-sidebar-accent-foreground">
+                    {isAdmin ? "Admin" : "Analista"}
+                  </Badge>
+                </div>
+              </div>
+              {isMobile && (
+                <Button variant="ghost" size="sm" onClick={() => setSidebarOpen(false)} className="text-sidebar-foreground hover:bg-sidebar-accent">
+                  <X className="h-5 w-5" />
+                </Button>
+              )}
+            </>
           )}
         </div>
 
         {/* Sidebar Nav */}
-        <ScrollArea className="flex-1 px-3 py-4">
+        <ScrollArea className={`flex-1 py-4 ${collapsed && !isMobile ? "px-2" : "px-3"}`}>
           <nav className="space-y-1">
             {tabs.map(t => {
               const isActive = activeTab === t.key;
@@ -127,14 +137,17 @@ const AdminDashboard = () => {
                 <button
                   key={t.key}
                   onClick={() => setTab(t.key)}
-                  className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+                  title={collapsed && !isMobile ? t.label : undefined}
+                  className={`flex w-full items-center rounded-lg transition-colors ${
+                    collapsed && !isMobile ? "justify-center px-2 py-2.5" : "gap-3 px-3 py-2.5"
+                  } text-sm font-medium ${
                     isActive
                       ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
                       : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                   }`}
                 >
                   <t.icon className="h-4 w-4 shrink-0" />
-                  <span className="truncate">{t.label}</span>
+                  {!(collapsed && !isMobile) && <span className="truncate">{t.label}</span>}
                 </button>
               );
             })}
@@ -142,13 +155,27 @@ const AdminDashboard = () => {
         </ScrollArea>
 
         {/* Sidebar Footer */}
-        <div className="shrink-0 border-t border-sidebar-border p-3">
+        <div className={`shrink-0 border-t border-sidebar-border ${collapsed && !isMobile ? "p-2" : "p-3"}`}>
+          {!isMobile && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setCollapsed(!collapsed)}
+              className={`mb-1 text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground ${
+                collapsed ? "w-full justify-center" : "w-full justify-start gap-2"
+              }`}
+            >
+              {collapsed ? <PanelLeft className="h-4 w-4" /> : <><PanelLeftClose className="h-4 w-4" /> <span className="text-xs">Recolher</span></>}
+            </Button>
+          )}
           <Button
             variant="ghost"
             onClick={handleLogout}
-            className="w-full justify-start gap-2 text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+            className={`text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground ${
+              collapsed && !isMobile ? "w-full justify-center" : "w-full justify-start gap-2"
+            }`}
           >
-            <LogOut className="h-4 w-4" /> Sair
+            <LogOut className="h-4 w-4" /> {!(collapsed && !isMobile) && "Sair"}
           </Button>
         </div>
       </aside>
