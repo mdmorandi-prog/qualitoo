@@ -17,12 +17,6 @@ const Header = () => {
         </Link>
         <nav className="flex items-center gap-4">
           <Link
-            to="/consultar"
-            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Consultar Protocolo
-          </Link>
-          <Link
             to="/admin/login"
             className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-secondary/50 px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
           >

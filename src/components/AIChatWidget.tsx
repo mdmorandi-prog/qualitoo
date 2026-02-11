@@ -11,7 +11,7 @@ const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
 const AIChatWidget = () => {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Msg[]>([
-    { role: "assistant", content: "Olá! Sou o assistente do Canal de Denúncias. Posso esclarecer dúvidas sobre assédio moral, seus direitos e o processo de denúncia. Como posso ajudar?" },
+    { role: "assistant", content: "Olá! Sou o assistente do SGQ Hospitalar. Posso ajudar com dúvidas sobre gestão da qualidade, processos, indicadores e acreditação. Como posso ajudar?" },
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -129,7 +129,7 @@ const AIChatWidget = () => {
             <div className="flex items-center justify-between bg-primary px-4 py-3 text-primary-foreground">
               <div className="flex items-center gap-2">
                 <Bot className="h-5 w-5" />
-                <span className="text-sm font-semibold">Assistente de Compliance</span>
+                <span className="text-sm font-semibold">Assistente SGQ</span>
               </div>
               <button onClick={() => setOpen(false)} className="rounded p-1 hover:bg-white/10">
                 <X className="h-4 w-4" />
