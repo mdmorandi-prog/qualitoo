@@ -83,6 +83,74 @@ export type Database = {
         }
         Relationships: []
       }
+      adverse_events: {
+        Row: {
+          capa_id: string | null
+          created_at: string
+          description: string
+          event_date: string
+          event_type: Database["public"]["Enums"]["event_type"]
+          id: string
+          immediate_actions: string | null
+          location: string | null
+          patient_involved: boolean
+          patient_outcome: string | null
+          reported_by: string
+          responsible_id: string | null
+          sector: string | null
+          severity: Database["public"]["Enums"]["event_severity"]
+          status: Database["public"]["Enums"]["event_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          capa_id?: string | null
+          created_at?: string
+          description: string
+          event_date: string
+          event_type?: Database["public"]["Enums"]["event_type"]
+          id?: string
+          immediate_actions?: string | null
+          location?: string | null
+          patient_involved?: boolean
+          patient_outcome?: string | null
+          reported_by: string
+          responsible_id?: string | null
+          sector?: string | null
+          severity?: Database["public"]["Enums"]["event_severity"]
+          status?: Database["public"]["Enums"]["event_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          capa_id?: string | null
+          created_at?: string
+          description?: string
+          event_date?: string
+          event_type?: Database["public"]["Enums"]["event_type"]
+          id?: string
+          immediate_actions?: string | null
+          location?: string | null
+          patient_involved?: boolean
+          patient_outcome?: string | null
+          reported_by?: string
+          responsible_id?: string | null
+          sector?: string | null
+          severity?: Database["public"]["Enums"]["event_severity"]
+          status?: Database["public"]["Enums"]["event_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adverse_events_capa_id_fkey"
+            columns: ["capa_id"]
+            isOneToOne: false
+            referencedRelation: "capas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_findings: {
         Row: {
           audit_id: string
@@ -187,6 +255,170 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      capas: {
+        Row: {
+          capa_type: Database["public"]["Enums"]["capa_type"]
+          corrective_action: string | null
+          created_at: string
+          created_by: string
+          deadline: string | null
+          description: string
+          five_whys: Json | null
+          id: string
+          is_effective: boolean | null
+          ishikawa_data: Json | null
+          origin_id: string | null
+          origin_title: string | null
+          origin_type: string | null
+          preventive_action: string | null
+          responsible_id: string | null
+          root_cause_analysis: string | null
+          sector: string | null
+          status: Database["public"]["Enums"]["capa_status"]
+          title: string
+          updated_at: string
+          verification_date: string | null
+          verification_method: string | null
+          verification_result: string | null
+        }
+        Insert: {
+          capa_type?: Database["public"]["Enums"]["capa_type"]
+          corrective_action?: string | null
+          created_at?: string
+          created_by: string
+          deadline?: string | null
+          description: string
+          five_whys?: Json | null
+          id?: string
+          is_effective?: boolean | null
+          ishikawa_data?: Json | null
+          origin_id?: string | null
+          origin_title?: string | null
+          origin_type?: string | null
+          preventive_action?: string | null
+          responsible_id?: string | null
+          root_cause_analysis?: string | null
+          sector?: string | null
+          status?: Database["public"]["Enums"]["capa_status"]
+          title: string
+          updated_at?: string
+          verification_date?: string | null
+          verification_method?: string | null
+          verification_result?: string | null
+        }
+        Update: {
+          capa_type?: Database["public"]["Enums"]["capa_type"]
+          corrective_action?: string | null
+          created_at?: string
+          created_by?: string
+          deadline?: string | null
+          description?: string
+          five_whys?: Json | null
+          id?: string
+          is_effective?: boolean | null
+          ishikawa_data?: Json | null
+          origin_id?: string | null
+          origin_title?: string | null
+          origin_type?: string | null
+          preventive_action?: string | null
+          responsible_id?: string | null
+          root_cause_analysis?: string | null
+          sector?: string | null
+          status?: Database["public"]["Enums"]["capa_status"]
+          title?: string
+          updated_at?: string
+          verification_date?: string | null
+          verification_method?: string | null
+          verification_result?: string | null
+        }
+        Relationships: []
+      }
+      competencies: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_mandatory: boolean
+          name: string
+          related_training_ids: string[] | null
+          required_for_roles: string[] | null
+          sector: string | null
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_mandatory?: boolean
+          name: string
+          related_training_ids?: string[] | null
+          required_for_roles?: string[] | null
+          sector?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_mandatory?: boolean
+          name?: string
+          related_training_ids?: string[] | null
+          required_for_roles?: string[] | null
+          sector?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      competency_evaluations: {
+        Row: {
+          competency_id: string
+          created_at: string
+          employee_name: string
+          employee_role: string | null
+          evaluated_by: string
+          evaluation_date: string
+          id: string
+          level: number
+          notes: string | null
+          sector: string | null
+        }
+        Insert: {
+          competency_id: string
+          created_at?: string
+          employee_name: string
+          employee_role?: string | null
+          evaluated_by: string
+          evaluation_date?: string
+          id?: string
+          level?: number
+          notes?: string | null
+          sector?: string | null
+        }
+        Update: {
+          competency_id?: string
+          created_at?: string
+          employee_name?: string
+          employee_role?: string | null
+          evaluated_by?: string
+          evaluation_date?: string
+          id?: string
+          level?: number
+          notes?: string | null
+          sector?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competency_evaluations_competency_id_fkey"
+            columns: ["competency_id"]
+            isOneToOne: false
+            referencedRelation: "competencies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       indicator_measurements: {
         Row: {
@@ -331,6 +563,42 @@ export type Database = {
           status?: Database["public"]["Enums"]["nc_status"]
           title?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string
+          module: string | null
+          reference_id: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message: string
+          module?: string | null
+          reference_id?: string | null
+          title: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          module?: string | null
+          reference_id?: string | null
+          title?: string
+          type?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -689,7 +957,26 @@ export type Database = {
     Enums: {
       app_role: "admin" | "analyst"
       audit_status: "planejada" | "em_andamento" | "concluida" | "cancelada"
+      capa_status:
+        | "identificacao"
+        | "analise_causa"
+        | "plano_acao"
+        | "implementacao"
+        | "verificacao_eficacia"
+        | "encerrada"
+      capa_type: "corretiva" | "preventiva" | "melhoria"
       doc_status: "rascunho" | "em_revisao" | "aprovado" | "obsoleto"
+      event_severity: "leve" | "moderado" | "grave" | "sentinela"
+      event_status:
+        | "notificado"
+        | "em_investigacao"
+        | "acao_corretiva"
+        | "encerrado"
+      event_type:
+        | "evento_adverso"
+        | "near_miss"
+        | "incidente"
+        | "queixa_tecnica"
       indicator_frequency:
         | "diario"
         | "semanal"
@@ -835,7 +1122,29 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "analyst"],
       audit_status: ["planejada", "em_andamento", "concluida", "cancelada"],
+      capa_status: [
+        "identificacao",
+        "analise_causa",
+        "plano_acao",
+        "implementacao",
+        "verificacao_eficacia",
+        "encerrada",
+      ],
+      capa_type: ["corretiva", "preventiva", "melhoria"],
       doc_status: ["rascunho", "em_revisao", "aprovado", "obsoleto"],
+      event_severity: ["leve", "moderado", "grave", "sentinela"],
+      event_status: [
+        "notificado",
+        "em_investigacao",
+        "acao_corretiva",
+        "encerrado",
+      ],
+      event_type: [
+        "evento_adverso",
+        "near_miss",
+        "incidente",
+        "queixa_tecnica",
+      ],
       indicator_frequency: [
         "diario",
         "semanal",
