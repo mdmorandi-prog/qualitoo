@@ -14,6 +14,326 @@ export type Database = {
   }
   public: {
     Tables: {
+      action_plans: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          how: string | null
+          how_much: string | null
+          id: string
+          origin_id: string | null
+          origin_type: string | null
+          progress: number | null
+          responsible_id: string | null
+          sector: string | null
+          status: string
+          title: string
+          updated_at: string
+          what: string | null
+          when_end: string | null
+          when_start: string | null
+          where_action: string | null
+          who: string | null
+          why: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          how?: string | null
+          how_much?: string | null
+          id?: string
+          origin_id?: string | null
+          origin_type?: string | null
+          progress?: number | null
+          responsible_id?: string | null
+          sector?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          what?: string | null
+          when_end?: string | null
+          when_start?: string | null
+          where_action?: string | null
+          who?: string | null
+          why?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          how?: string | null
+          how_much?: string | null
+          id?: string
+          origin_id?: string | null
+          origin_type?: string | null
+          progress?: number | null
+          responsible_id?: string | null
+          sector?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          what?: string | null
+          when_end?: string | null
+          when_start?: string | null
+          where_action?: string | null
+          who?: string | null
+          why?: string | null
+        }
+        Relationships: []
+      }
+      audit_findings: {
+        Row: {
+          audit_id: string
+          corrective_action: string | null
+          created_at: string
+          description: string
+          id: string
+          non_conformity_id: string | null
+          severity: Database["public"]["Enums"]["nc_severity"]
+          status: Database["public"]["Enums"]["nc_status"]
+          updated_at: string
+        }
+        Insert: {
+          audit_id: string
+          corrective_action?: string | null
+          created_at?: string
+          description: string
+          id?: string
+          non_conformity_id?: string | null
+          severity?: Database["public"]["Enums"]["nc_severity"]
+          status?: Database["public"]["Enums"]["nc_status"]
+          updated_at?: string
+        }
+        Update: {
+          audit_id?: string
+          corrective_action?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          non_conformity_id?: string | null
+          severity?: Database["public"]["Enums"]["nc_severity"]
+          status?: Database["public"]["Enums"]["nc_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_findings_audit_id_fkey"
+            columns: ["audit_id"]
+            isOneToOne: false
+            referencedRelation: "audits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audit_findings_non_conformity_id_fkey"
+            columns: ["non_conformity_id"]
+            isOneToOne: false
+            referencedRelation: "non_conformities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      audits: {
+        Row: {
+          audit_type: string
+          completed_date: string | null
+          conclusion: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          findings: string | null
+          id: string
+          lead_auditor_id: string | null
+          scheduled_date: string
+          scope: string | null
+          sector: string | null
+          status: Database["public"]["Enums"]["audit_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          audit_type?: string
+          completed_date?: string | null
+          conclusion?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          findings?: string | null
+          id?: string
+          lead_auditor_id?: string | null
+          scheduled_date: string
+          scope?: string | null
+          sector?: string | null
+          status?: Database["public"]["Enums"]["audit_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          audit_type?: string
+          completed_date?: string | null
+          conclusion?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          findings?: string | null
+          id?: string
+          lead_auditor_id?: string | null
+          scheduled_date?: string
+          scope?: string | null
+          sector?: string | null
+          status?: Database["public"]["Enums"]["audit_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      indicator_measurements: {
+        Row: {
+          created_at: string
+          id: string
+          indicator_id: string
+          notes: string | null
+          period_date: string
+          recorded_by: string
+          value: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          indicator_id: string
+          notes?: string | null
+          period_date: string
+          recorded_by: string
+          value: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          indicator_id?: string
+          notes?: string | null
+          period_date?: string
+          recorded_by?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "indicator_measurements_indicator_id_fkey"
+            columns: ["indicator_id"]
+            isOneToOne: false
+            referencedRelation: "quality_indicators"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meeting_minutes: {
+        Row: {
+          action_items: string | null
+          agenda: string | null
+          created_at: string
+          created_by: string
+          decisions: string | null
+          discussions: string | null
+          id: string
+          location: string | null
+          meeting_date: string
+          meeting_type: string | null
+          next_meeting: string | null
+          participants: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          action_items?: string | null
+          agenda?: string | null
+          created_at?: string
+          created_by: string
+          decisions?: string | null
+          discussions?: string | null
+          id?: string
+          location?: string | null
+          meeting_date: string
+          meeting_type?: string | null
+          next_meeting?: string | null
+          participants?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          action_items?: string | null
+          agenda?: string | null
+          created_at?: string
+          created_by?: string
+          decisions?: string | null
+          discussions?: string | null
+          id?: string
+          location?: string | null
+          meeting_date?: string
+          meeting_type?: string | null
+          next_meeting?: string | null
+          participants?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      non_conformities: {
+        Row: {
+          closed_at: string | null
+          corrective_action: string | null
+          created_at: string
+          created_by: string
+          deadline: string | null
+          description: string
+          id: string
+          preventive_action: string | null
+          responsible_id: string | null
+          root_cause: string | null
+          sector: string | null
+          severity: Database["public"]["Enums"]["nc_severity"]
+          status: Database["public"]["Enums"]["nc_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          closed_at?: string | null
+          corrective_action?: string | null
+          created_at?: string
+          created_by: string
+          deadline?: string | null
+          description: string
+          id?: string
+          preventive_action?: string | null
+          responsible_id?: string | null
+          root_cause?: string | null
+          sector?: string | null
+          severity?: Database["public"]["Enums"]["nc_severity"]
+          status?: Database["public"]["Enums"]["nc_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          closed_at?: string | null
+          corrective_action?: string | null
+          created_at?: string
+          created_by?: string
+          deadline?: string | null
+          description?: string
+          id?: string
+          preventive_action?: string | null
+          responsible_id?: string | null
+          root_cause?: string | null
+          sector?: string | null
+          severity?: Database["public"]["Enums"]["nc_severity"]
+          status?: Database["public"]["Enums"]["nc_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -32,6 +352,108 @@ export type Database = {
           display_name?: string | null
           id?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      quality_documents: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          category: string | null
+          code: string | null
+          content: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          sector: string | null
+          status: Database["public"]["Enums"]["doc_status"]
+          title: string
+          updated_at: string
+          valid_until: string | null
+          version: number
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          category?: string | null
+          code?: string | null
+          content?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          sector?: string | null
+          status?: Database["public"]["Enums"]["doc_status"]
+          title: string
+          updated_at?: string
+          valid_until?: string | null
+          version?: number
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          category?: string | null
+          code?: string | null
+          content?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          sector?: string | null
+          status?: Database["public"]["Enums"]["doc_status"]
+          title?: string
+          updated_at?: string
+          valid_until?: string | null
+          version?: number
+        }
+        Relationships: []
+      }
+      quality_indicators: {
+        Row: {
+          created_at: string
+          description: string | null
+          frequency: Database["public"]["Enums"]["indicator_frequency"]
+          id: string
+          is_active: boolean
+          max_acceptable: number | null
+          min_acceptable: number | null
+          name: string
+          responsible_id: string | null
+          sector: string | null
+          target_value: number
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          frequency?: Database["public"]["Enums"]["indicator_frequency"]
+          id?: string
+          is_active?: boolean
+          max_acceptable?: number | null
+          min_acceptable?: number | null
+          name: string
+          responsible_id?: string | null
+          sector?: string | null
+          target_value: number
+          unit?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          frequency?: Database["public"]["Enums"]["indicator_frequency"]
+          id?: string
+          is_active?: boolean
+          max_acceptable?: number | null
+          min_acceptable?: number | null
+          name?: string
+          responsible_id?: string | null
+          sector?: string | null
+          target_value?: number
+          unit?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -110,6 +532,117 @@ export type Database = {
         }
         Relationships: []
       }
+      risks: {
+        Row: {
+          category: string | null
+          created_at: string
+          created_by: string
+          current_controls: string | null
+          description: string | null
+          id: string
+          impact: number
+          mitigation_plan: string | null
+          probability: number
+          responsible: string | null
+          review_date: string | null
+          risk_level: number | null
+          sector: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          created_by: string
+          current_controls?: string | null
+          description?: string | null
+          id?: string
+          impact?: number
+          mitigation_plan?: string | null
+          probability?: number
+          responsible?: string | null
+          review_date?: string | null
+          risk_level?: number | null
+          sector?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          created_by?: string
+          current_controls?: string | null
+          description?: string | null
+          id?: string
+          impact?: number
+          mitigation_plan?: string | null
+          probability?: number
+          responsible?: string | null
+          review_date?: string | null
+          risk_level?: number | null
+          sector?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      trainings: {
+        Row: {
+          category: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          duration_hours: number | null
+          expiry_date: string | null
+          id: string
+          instructor: string | null
+          materials: string | null
+          participants_count: number | null
+          sector: string | null
+          status: string
+          title: string
+          training_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          duration_hours?: number | null
+          expiry_date?: string | null
+          id?: string
+          instructor?: string | null
+          materials?: string | null
+          participants_count?: number | null
+          sector?: string | null
+          status?: string
+          title: string
+          training_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          duration_hours?: number | null
+          expiry_date?: string | null
+          id?: string
+          instructor?: string | null
+          materials?: string | null
+          participants_count?: number | null
+          sector?: string | null
+          status?: string
+          title?: string
+          training_date?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
@@ -155,6 +688,23 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "analyst"
+      audit_status: "planejada" | "em_andamento" | "concluida" | "cancelada"
+      doc_status: "rascunho" | "em_revisao" | "aprovado" | "obsoleto"
+      indicator_frequency:
+        | "diario"
+        | "semanal"
+        | "mensal"
+        | "trimestral"
+        | "anual"
+      indicator_trend: "acima" | "abaixo" | "na_meta"
+      nc_severity: "baixa" | "media" | "alta" | "critica"
+      nc_status:
+        | "aberta"
+        | "em_analise"
+        | "plano_acao"
+        | "em_execucao"
+        | "verificacao"
+        | "concluida"
       report_status: "nova" | "em_analise" | "concluida" | "arquivada"
     }
     CompositeTypes: {
@@ -284,6 +834,25 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "analyst"],
+      audit_status: ["planejada", "em_andamento", "concluida", "cancelada"],
+      doc_status: ["rascunho", "em_revisao", "aprovado", "obsoleto"],
+      indicator_frequency: [
+        "diario",
+        "semanal",
+        "mensal",
+        "trimestral",
+        "anual",
+      ],
+      indicator_trend: ["acima", "abaixo", "na_meta"],
+      nc_severity: ["baixa", "media", "alta", "critica"],
+      nc_status: [
+        "aberta",
+        "em_analise",
+        "plano_acao",
+        "em_execucao",
+        "verificacao",
+        "concluida",
+      ],
       report_status: ["nova", "em_analise", "concluida", "arquivada"],
     },
   },
