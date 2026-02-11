@@ -633,6 +633,7 @@ export type Database = {
           created_at: string
           created_by: string
           description: string | null
+          file_url: string | null
           id: string
           sector: string | null
           status: Database["public"]["Enums"]["doc_status"]
@@ -650,6 +651,7 @@ export type Database = {
           created_at?: string
           created_by: string
           description?: string | null
+          file_url?: string | null
           id?: string
           sector?: string | null
           status?: Database["public"]["Enums"]["doc_status"]
@@ -667,6 +669,7 @@ export type Database = {
           created_at?: string
           created_by?: string
           description?: string | null
+          file_url?: string | null
           id?: string
           sector?: string | null
           status?: Database["public"]["Enums"]["doc_status"]
