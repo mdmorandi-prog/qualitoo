@@ -13,7 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
 import NotificationsPanel from "@/components/NotificationsPanel";
 import { supabase } from "@/integrations/supabase/client";
-import { NcTrendChart, RiskDistributionChart, ActionPlansChart, EventsTrendChart, IndicatorsVsTargetChart } from "@/components/dashboard/DashboardCharts";
+import { NcTrendChart, RiskDistributionChart, ActionPlansChart, EventsTrendChart, IndicatorsVsTargetChart, type DateFilter } from "@/components/dashboard/DashboardCharts";
 import { exportDashboardPdf } from "@/lib/exportPdf";
 
 import AdverseEvents from "@/pages/quality/AdverseEvents";
@@ -218,6 +218,12 @@ const AdminDashboard = () => {
 
 // Dashboard Summary
 const DashboardSummary = ({ onNavigate }: { onNavigate: (tab: string) => void }) => {
+  const sixMonthsAgo = new Date();
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+  const [dateFilter, setDateFilter] = useState<DateFilter>({
+    startDate: sixMonthsAgo.toISOString().split("T")[0],
+    endDate: new Date().toISOString().split("T")[0],
+  });
   const [stats, setStats] = useState({
     ncs_open: 0, ncs_critical: 0,
     indicators_below: 0, indicators_total: 0,
@@ -328,12 +334,30 @@ const DashboardSummary = ({ onNavigate }: { onNavigate: (tab: string) => void })
         ))}
       </div>
 
+      {/* Date Filter */}
+      <div className="flex flex-wrap items-center gap-3 rounded-xl border bg-card p-4 shadow-[var(--card-shadow)]">
+        <span className="text-xs font-semibold text-muted-foreground">Período dos gráficos:</span>
+        <input
+          type="date"
+          value={dateFilter.startDate}
+          onChange={e => setDateFilter(f => ({ ...f, startDate: e.target.value }))}
+          className="rounded-md border bg-background px-2 py-1 text-xs text-foreground"
+        />
+        <span className="text-xs text-muted-foreground">até</span>
+        <input
+          type="date"
+          value={dateFilter.endDate}
+          onChange={e => setDateFilter(f => ({ ...f, endDate: e.target.value }))}
+          className="rounded-md border bg-background px-2 py-1 text-xs text-foreground"
+        />
+      </div>
+
       {/* Charts Section */}
       <div className="grid gap-4 lg:grid-cols-2">
-        <NcTrendChart />
+        <NcTrendChart filter={dateFilter} />
         <RiskDistributionChart />
-        <ActionPlansChart />
-        <EventsTrendChart />
+        <ActionPlansChart filter={dateFilter} />
+        <EventsTrendChart filter={dateFilter} />
         <IndicatorsVsTargetChart />
       </div>
 

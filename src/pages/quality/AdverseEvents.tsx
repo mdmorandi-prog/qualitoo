@@ -121,7 +121,7 @@ const AdverseEvents = () => {
 
   const createCapaFromEvent = async (event: AdverseEvent) => {
     if (!user) return;
-    const { error } = await supabase.from("capas").insert({
+    const { data: capaData, error } = await supabase.from("capas").insert({
       title: `CAPA - ${event.title}`,
       description: event.description,
       origin_type: "adverse_event",
@@ -129,9 +129,20 @@ const AdverseEvents = () => {
       origin_title: event.title,
       sector: event.sector,
       created_by: user.id,
-    } as any);
+    } as any).select("id").maybeSingle();
     if (error) { toast.error("Erro ao criar CAPA"); console.error(error); }
-    else { toast.success("CAPA criada a partir do Evento Adverso!"); setDetailOpen(false); }
+    else {
+      await supabase.from("notifications").insert({
+        user_id: user.id,
+        title: "CAPA criada a partir de Evento Adverso",
+        message: `Uma CAPA foi criada para o evento "${event.title}" (${event.severity}) no setor ${event.sector || "geral"}.`,
+        type: "warning",
+        module: "capa",
+        reference_id: capaData?.id || null,
+      } as any);
+      toast.success("CAPA criada a partir do Evento Adverso!");
+      setDetailOpen(false);
+    }
   };
 
   const filtered = events
