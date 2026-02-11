@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { Plus, Search, Eye, Upload, FileUp, AlertTriangle } from "lucide-react";
+import { Plus, Search, Eye, Upload, FileUp, AlertTriangle, ArrowRight, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -26,22 +26,25 @@ interface Doc {
   created_at: string; is_signed: boolean; file_url: string | null;
 }
 
-const statusConfig: Record<DocStatus, { label: string; color: string }> = {
-  rascunho: { label: "Rascunho", color: "bg-muted text-muted-foreground" },
-  em_revisao: { label: "Em Revisão", color: "bg-warning/10 text-warning" },
-  aprovado: { label: "Aprovado", color: "bg-safe/10 text-safe" },
-  obsoleto: { label: "Obsoleto", color: "bg-destructive/10 text-destructive" },
+const statusConfig: Record<DocStatus, { label: string; color: string; icon: string }> = {
+  rascunho: { label: "Rascunho", color: "bg-muted text-muted-foreground", icon: "📝" },
+  em_revisao: { label: "Em Revisão", color: "bg-warning/10 text-warning", icon: "🔍" },
+  aprovado: { label: "Aprovado", color: "bg-safe/10 text-safe", icon: "✅" },
+  obsoleto: { label: "Obsoleto", color: "bg-destructive/10 text-destructive", icon: "⛔" },
 };
+
+const workflowSteps: { status: DocStatus; label: string; color: string }[] = [
+  { status: "rascunho", label: "Rascunho", color: "border-muted-foreground bg-muted" },
+  { status: "em_revisao", label: "Em Revisão", color: "border-warning bg-warning/10" },
+  { status: "aprovado", label: "Aprovado", color: "border-safe bg-safe/10" },
+  { status: "obsoleto", label: "Obsoleto", color: "border-destructive bg-destructive/10" },
+];
 
 const parseDocumentHeader = (text: string, fileName: string) => {
   const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
   const result: Partial<typeof initialForm> & { is_signed?: boolean } = {};
-
-  // Extract code from filename (e.g., POP-001_Titulo.pdf)
   const codeMatch = fileName.match(/^([A-Z]{2,5}[-_]\d{2,4})/i);
   if (codeMatch) result.code = codeMatch[1].replace("_", "-").toUpperCase();
-
-  // Extract category from code prefix or from title/content
   const catMap: Record<string, string> = {
     POP: "POP", IT: "IT", MAN: "Manual", POL: "Política", PRO: "Procedimento",
     REG: "Registro", FOR: "Formulário", FLU: "Fluxograma", NOR: "Norma",
@@ -50,20 +53,16 @@ const parseDocumentHeader = (text: string, fileName: string) => {
     const prefix = result.code.split(/[-_]/)[0].toUpperCase();
     if (catMap[prefix]) result.category = catMap[prefix];
   }
-  // Also search in text for category keywords
   if (!result.category) {
     const catMatch = text.match(/(?:tipo|categoria|documento)[:\s]*(POP|IT|Manual|Política|Procedimento|Registro|Formulário|Fluxograma|Norma)/i);
     if (catMatch) result.category = catMatch[1];
   }
-  // Search in title/filename for category
   if (!result.category) {
     const fnUpper = fileName.toUpperCase();
     for (const [key, val] of Object.entries(catMap)) {
       if (fnUpper.includes(key)) { result.category = val; break; }
     }
   }
-
-  // Title: first meaningful line or cleaned filename
   if (lines.length > 0) {
     const firstLine = lines[0];
     if (firstLine.length > 3 && firstLine.length < 200) result.title = firstLine;
@@ -71,8 +70,6 @@ const parseDocumentHeader = (text: string, fileName: string) => {
   if (!result.title) {
     result.title = fileName.replace(/\.[^.]+$/, "").replace(/^[A-Z]{2,5}[-_]\d{2,4}[-_]?/i, "").replace(/[-_]/g, " ").trim();
   }
-
-  // Sector: search in text for sector/department mentions
   const sectorPatterns = [
     /(?:setor|departamento|área|unidade)[:\s]+([^\n,;]+)/i,
     /(?:setor|departamento|área|unidade)\s*[-–]\s*([^\n,;]+)/i,
@@ -81,7 +78,6 @@ const parseDocumentHeader = (text: string, fileName: string) => {
     const match = text.match(pattern);
     if (match) { result.sector = match[1].trim(); break; }
   }
-  // Also check in title/filename for common sectors
   if (!result.sector) {
     const sectorKeywords = ["UTI", "Centro Cirúrgico", "Enfermagem", "Farmácia", "Laboratório", "Radiologia", "Administrativo", "RH", "CME", "Emergência", "Ambulatório"];
     const combined = (fileName + " " + (lines[0] || "")).toUpperCase();
@@ -89,16 +85,9 @@ const parseDocumentHeader = (text: string, fileName: string) => {
       if (combined.includes(s.toUpperCase())) { result.sector = s; break; }
     }
   }
-
-  // Description: second line if short enough
   if (lines.length > 1 && lines[1].length < 300) result.description = lines[1];
-
-  // Content: remaining text
   if (lines.length > 2) result.content = lines.slice(2).join("\n");
   else if (lines.length > 0) result.content = text;
-
-  // Validity: search in footer/last lines for date patterns
-  const footerLines = lines.slice(-10);
   const fullText = text;
   const validityPatterns = [
     /(?:validade|válido até|vigência|vencimento|data de expiração)[:\s]*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/i,
@@ -108,7 +97,6 @@ const parseDocumentHeader = (text: string, fileName: string) => {
     const match = fullText.match(pattern);
     if (match) {
       const dateStr = match[1];
-      // Try to parse as dd/mm/yyyy or yyyy-mm-dd
       let parsed: Date | null = null;
       if (dateStr.includes("/")) {
         const parts = dateStr.split("/");
@@ -123,8 +111,6 @@ const parseDocumentHeader = (text: string, fileName: string) => {
       break;
     }
   }
-
-  // Signature detection: check if document mentions signatures
   const signaturePatterns = [
     /assinado?\s*(por|digitalmente|eletronicamente)/i,
     /assinatura[:\s]/i,
@@ -135,7 +121,6 @@ const parseDocumentHeader = (text: string, fileName: string) => {
     /certificado\s*digital/i,
   ];
   result.is_signed = signaturePatterns.some(p => p.test(fullText));
-
   return result;
 };
 
@@ -157,9 +142,9 @@ const Documents = () => {
 
   const [form, setForm] = useState({ ...initialForm });
 
-  useEffect(() => { fetch(); }, []);
+  useEffect(() => { fetchData(); }, []);
 
-  const fetch = async () => {
+  const fetchData = async () => {
     setLoading(true);
     const { data, error } = await supabase.from("quality_documents").select("*").order("created_at", { ascending: false });
     if (error) toast.error("Erro ao carregar");
@@ -171,40 +156,26 @@ const Documents = () => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
     setImporting(true);
-
     try {
-      // Upload file to storage
       const filePath = `${user.id}/${Date.now()}_${file.name}`;
       const { error: uploadError } = await supabase.storage.from("documents").upload(filePath, file);
       if (uploadError) throw uploadError;
-
       const { data: urlData } = supabase.storage.from("documents").getPublicUrl(filePath);
       setFileUrl(urlData.publicUrl);
-
-      // Read text content for auto-fill
       let text = "";
       if (file.type === "text/plain" || file.name.endsWith(".txt") || file.name.endsWith(".md")) {
         text = await file.text();
       } else if (file.type === "text/csv" || file.name.endsWith(".csv")) {
         text = await file.text();
-      } else {
-        // For PDF/DOCX etc., just use filename for parsing
-        text = "";
       }
-
       const parsed = parseDocumentHeader(text, file.name);
       setForm(f => ({
-        ...f,
-        title: parsed.title || f.title,
-        code: parsed.code || f.code,
-        description: parsed.description || f.description,
-        category: parsed.category || f.category,
-        sector: parsed.sector || f.sector,
-        content: parsed.content || f.content,
+        ...f, title: parsed.title || f.title, code: parsed.code || f.code,
+        description: parsed.description || f.description, category: parsed.category || f.category,
+        sector: parsed.sector || f.sector, content: parsed.content || f.content,
         valid_until: parsed.valid_until || f.valid_until,
       }));
       setIsSigned(parsed.is_signed ?? false);
-
       toast.success("Arquivo importado! Campos preenchidos automaticamente.");
     } catch (err) {
       console.error(err);
@@ -224,7 +195,7 @@ const Documents = () => {
       file_url: fileUrl, is_signed: isSigned,
     } as any);
     if (error) { toast.error("Erro ao criar"); console.error(error); }
-    else { toast.success("Documento criado!"); setDialogOpen(false); setForm({ ...initialForm }); setFileUrl(null); setIsSigned(false); fetch(); }
+    else { toast.success("Documento criado!"); setDialogOpen(false); setForm({ ...initialForm }); setFileUrl(null); setIsSigned(false); fetchData(); }
   };
 
   const updateStatus = async (id: string, status: DocStatus) => {
@@ -232,7 +203,7 @@ const Documents = () => {
     if (status === "aprovado") { update.approved_by = user?.id; update.approved_at = new Date().toISOString(); }
     const { error } = await supabase.from("quality_documents").update(update).eq("id", id);
     if (error) toast.error("Erro");
-    else { toast.success("Status atualizado"); fetch(); }
+    else { toast.success("Status atualizado"); fetchData(); }
   };
 
   const filtered = docs
@@ -251,30 +222,15 @@ const Documents = () => {
           <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
             <DialogHeader><DialogTitle className="font-display">Criar Documento</DialogTitle></DialogHeader>
             <div className="grid gap-4 py-4">
-              {/* Import button */}
               <div className="rounded-lg border-2 border-dashed border-muted-foreground/25 p-4 text-center">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".pdf,.doc,.docx,.txt,.md,.csv,.xls,.xlsx"
-                  className="hidden"
-                  onChange={handleImportFile}
-                />
+                <input ref={fileInputRef} type="file" accept=".pdf,.doc,.docx,.txt,.md,.csv,.xls,.xlsx" className="hidden" onChange={handleImportFile} />
                 <FileUp className="mx-auto h-8 w-8 text-muted-foreground/50" />
                 <p className="mt-2 text-sm text-muted-foreground">Importe um documento existente para preencher os campos automaticamente</p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="mt-2 gap-2"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={importing}
-                >
-                  <Upload className="h-4 w-4" />
-                  {importing ? "Importando..." : "Importar Arquivo"}
+                <Button variant="outline" size="sm" className="mt-2 gap-2" onClick={() => fileInputRef.current?.click()} disabled={importing}>
+                  <Upload className="h-4 w-4" />{importing ? "Importando..." : "Importar Arquivo"}
                 </Button>
                 {fileUrl && <p className="mt-2 text-xs text-safe">✓ Arquivo anexado</p>}
               </div>
-
               <div className="grid gap-2"><Label>Título *</Label><Input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} /></div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2"><Label>Código</Label><Input value={form.code} onChange={e => setForm(f => ({ ...f, code: e.target.value }))} placeholder="POP-001" /></div>
@@ -303,6 +259,34 @@ const Documents = () => {
         </Select>
       </div>
 
+      {/* Document Workflow Pipeline */}
+      <div className="rounded-xl border bg-card p-5 shadow-[var(--card-shadow)]">
+        <h3 className="mb-4 text-sm font-bold text-foreground">Pipeline de Documentos</h3>
+        <div className="flex items-stretch gap-0 overflow-x-auto">
+          {workflowSteps.map((step, idx) => {
+            const count = docs.filter(d => d.status === step.status).length;
+            const isActive = filterStatus === step.status;
+            return (
+              <div key={step.status} className="flex items-stretch">
+                <button
+                  onClick={() => setFilterStatus(filterStatus === step.status ? "all" : step.status)}
+                  className={`relative flex min-w-[120px] flex-1 flex-col items-center justify-center rounded-lg border-2 px-4 py-3 transition-all ${step.color} ${isActive ? "ring-2 ring-primary shadow-md scale-105" : "hover:scale-[1.02]"}`}
+                >
+                  <span className="text-lg">{statusConfig[step.status].icon}</span>
+                  <span className="mt-1 text-xs font-bold text-foreground">{step.label}</span>
+                  <span className="mt-0.5 text-2xl font-bold text-foreground">{count}</span>
+                </button>
+                {idx < workflowSteps.length - 1 && (
+                  <div className="flex items-center px-1.5">
+                    <ArrowRight className="h-4 w-4 text-muted-foreground/40" />
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
       <div className="grid gap-3 sm:grid-cols-5">
         {[
           { label: "Total", value: docs.length, color: "text-foreground" },
@@ -318,7 +302,6 @@ const Documents = () => {
         ))}
       </div>
 
-      {/* Unsigned documents alert card */}
       {docs.filter(d => !d.is_signed && d.status !== "obsoleto").length > 0 && (
         <div className="flex items-start gap-3 rounded-xl border border-warning/30 bg-warning/5 p-4">
           <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-warning" />
@@ -369,6 +352,24 @@ const Documents = () => {
           <DialogHeader><DialogTitle className="font-display">{selected?.code ? `${selected.code} - ` : ""}{selected?.title}</DialogTitle></DialogHeader>
           {selected && (
             <div className="space-y-4">
+              {/* Workflow progress for this document */}
+              <div className="flex items-center gap-1">
+                {workflowSteps.map((step, idx) => {
+                  const stepIdx = workflowSteps.findIndex(s => s.status === selected.status);
+                  const isCompleted = idx < stepIdx;
+                  const isCurrent = idx === stepIdx;
+                  return (
+                    <div key={step.status} className="flex items-center">
+                      <div className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${isCurrent ? step.color + " border-2 font-bold" : isCompleted ? "bg-safe/10 text-safe" : "bg-muted text-muted-foreground/50"}`}>
+                        {isCompleted && <CheckCircle2 className="h-3 w-3" />}
+                        {step.label}
+                      </div>
+                      {idx < workflowSteps.length - 1 && <ArrowRight className="mx-0.5 h-3 w-3 text-muted-foreground/30" />}
+                    </div>
+                  );
+                })}
+              </div>
+
               <div className="flex flex-wrap gap-3 text-sm">
                 <span className={`rounded-full px-2 py-1 text-xs font-medium ${statusConfig[selected.status].color}`}>{statusConfig[selected.status].label}</span>
                 <span className="text-muted-foreground">Versão {selected.version}</span>

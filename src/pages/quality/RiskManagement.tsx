@@ -31,6 +31,13 @@ const riskColor = (level: number) => {
   return "bg-safe/10 text-safe";
 };
 
+const riskBg = (level: number) => {
+  if (level >= 15) return "bg-destructive/70 hover:bg-destructive/80 text-destructive-foreground";
+  if (level >= 10) return "bg-destructive/40 hover:bg-destructive/50 text-foreground";
+  if (level >= 5) return "bg-warning/40 hover:bg-warning/50 text-foreground";
+  return "bg-safe/30 hover:bg-safe/40 text-foreground";
+};
+
 const riskLabel = (level: number) => {
   if (level >= 15) return "Crítico";
   if (level >= 10) return "Alto";
@@ -38,21 +45,26 @@ const riskLabel = (level: number) => {
   return "Baixo";
 };
 
+const probLabels = ["Raro", "Improvável", "Possível", "Provável", "Quase Certo"];
+const impactLabels = ["Insignificante", "Pequeno", "Moderado", "Grande", "Catastrófico"];
+
 const RiskManagement = () => {
   const { user } = useAuth();
   const [risks, setRisks] = useState<Risk[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedCell, setSelectedCell] = useState<{ p: number; i: number } | null>(null);
+  const [cellDialogOpen, setCellDialogOpen] = useState(false);
 
   const [form, setForm] = useState({
     title: "", description: "", category: "", sector: "", probability: "3", impact: "3",
     current_controls: "", mitigation_plan: "", responsible: "",
   });
 
-  useEffect(() => { fetch(); }, []);
+  useEffect(() => { fetchData(); }, []);
 
-  const fetch = async () => {
+  const fetchData = async () => {
     setLoading(true);
     const { data, error } = await supabase.from("risks").select("*").order("risk_level", { ascending: false });
     if (error) toast.error("Erro");
@@ -70,16 +82,18 @@ const RiskManagement = () => {
       responsible: form.responsible || null, created_by: user.id,
     } as any);
     if (error) { toast.error("Erro"); console.error(error); }
-    else { toast.success("Risco registrado!"); setDialogOpen(false); setForm({ title: "", description: "", category: "", sector: "", probability: "3", impact: "3", current_controls: "", mitigation_plan: "", responsible: "" }); fetch(); }
+    else { toast.success("Risco registrado!"); setDialogOpen(false); setForm({ title: "", description: "", category: "", sector: "", probability: "3", impact: "3", current_controls: "", mitigation_plan: "", responsible: "" }); fetchData(); }
   };
 
   const updateStatus = async (id: string, status: string) => {
     const { error } = await supabase.from("risks").update({ status } as any).eq("id", id);
     if (error) toast.error("Erro");
-    else { toast.success("Atualizado"); fetch(); }
+    else { toast.success("Atualizado"); fetchData(); }
   };
 
   const filtered = risks.filter(r => !search || r.title.toLowerCase().includes(search.toLowerCase()));
+
+  const cellRisks = selectedCell ? risks.filter(r => r.probability === selectedCell.p && r.impact === selectedCell.i) : [];
 
   return (
     <div className="space-y-6">
@@ -95,13 +109,13 @@ const RiskManagement = () => {
                 <div className="grid gap-2"><Label>Probabilidade (1-5)</Label>
                   <Select value={form.probability} onValueChange={v => setForm(f => ({ ...f, probability: v }))}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>{[1,2,3,4,5].map(n => <SelectItem key={n} value={String(n)}>{n} - {["Raro","Improvável","Possível","Provável","Quase Certo"][n-1]}</SelectItem>)}</SelectContent>
+                    <SelectContent>{[1,2,3,4,5].map(n => <SelectItem key={n} value={String(n)}>{n} - {probLabels[n-1]}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
                 <div className="grid gap-2"><Label>Impacto (1-5)</Label>
                   <Select value={form.impact} onValueChange={v => setForm(f => ({ ...f, impact: v }))}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>{[1,2,3,4,5].map(n => <SelectItem key={n} value={String(n)}>{n} - {["Insignificante","Pequeno","Moderado","Grande","Catastrófico"][n-1]}</SelectItem>)}</SelectContent>
+                    <SelectContent>{[1,2,3,4,5].map(n => <SelectItem key={n} value={String(n)}>{n} - {impactLabels[n-1]}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
               </div>
@@ -127,28 +141,84 @@ const RiskManagement = () => {
 
       <div className="relative"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar..." className="pl-10" /></div>
 
-      {/* Risk Matrix Preview */}
+      {/* Interactive Risk Heatmap */}
       <div className="rounded-xl border bg-card p-5 shadow-[var(--card-shadow)]">
-        <h3 className="mb-3 text-sm font-bold text-foreground">Matriz de Riscos</h3>
-        <div className="grid grid-cols-6 gap-1 text-center text-[10px]">
-          <div />
-          {[1,2,3,4,5].map(i => <div key={i} className="py-1 font-bold text-muted-foreground">Imp. {i}</div>)}
-          {[5,4,3,2,1].map(p => (
-            <>
-              <div key={`p-${p}`} className="flex items-center justify-center py-2 font-bold text-muted-foreground">P.{p}</div>
-              {[1,2,3,4,5].map(i => {
-                const level = p * i;
-                const count = risks.filter(r => r.probability === p && r.impact === i).length;
-                return (
-                  <div key={`${p}-${i}`} className={`flex items-center justify-center rounded py-2 text-xs font-bold ${riskColor(level)}`}>
-                    {count > 0 ? count : ""}
+        <h3 className="mb-4 text-sm font-bold text-foreground">Matriz de Riscos — Clique para ver detalhes</h3>
+        <div className="overflow-x-auto">
+          <div className="min-w-[400px]">
+            {/* Header row */}
+            <div className="mb-1 grid grid-cols-[80px_repeat(5,1fr)] gap-1">
+              <div className="flex items-end justify-center pb-1">
+                <span className="text-[10px] font-bold text-muted-foreground">P \ I</span>
+              </div>
+              {[1,2,3,4,5].map(i => (
+                <div key={i} className="py-1.5 text-center">
+                  <p className="text-[10px] font-bold text-muted-foreground">{i}</p>
+                  <p className="text-[8px] text-muted-foreground/70">{impactLabels[i-1]}</p>
+                </div>
+              ))}
+            </div>
+            {/* Matrix rows */}
+            {[5,4,3,2,1].map(p => (
+              <div key={p} className="grid grid-cols-[80px_repeat(5,1fr)] gap-1 mb-1">
+                <div className="flex items-center justify-center rounded-l-lg py-2">
+                  <div className="text-center">
+                    <p className="text-[10px] font-bold text-muted-foreground">{p}</p>
+                    <p className="text-[8px] text-muted-foreground/70">{probLabels[p-1]}</p>
                   </div>
-                );
-              })}
-            </>
-          ))}
+                </div>
+                {[1,2,3,4,5].map(i => {
+                  const level = p * i;
+                  const count = risks.filter(r => r.probability === p && r.impact === i).length;
+                  return (
+                    <button
+                      key={`${p}-${i}`}
+                      className={`flex flex-col items-center justify-center rounded-lg py-3 text-xs font-bold transition-all ${riskBg(level)} ${count > 0 ? "ring-2 ring-foreground/10 shadow-md" : ""}`}
+                      onClick={() => { if (count > 0) { setSelectedCell({ p, i }); setCellDialogOpen(true); } }}
+                      title={`${probLabels[p-1]} × ${impactLabels[i-1]} = ${level}`}
+                    >
+                      <span className="text-lg leading-none">{level}</span>
+                      {count > 0 && <span className="mt-0.5 text-[10px] opacity-80">{count} risco{count > 1 ? "s" : ""}</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            ))}
+            {/* Legend */}
+            <div className="mt-3 flex flex-wrap gap-3 text-[10px]">
+              <div className="flex items-center gap-1"><div className="h-3 w-3 rounded bg-safe/30" /> Baixo (1-4)</div>
+              <div className="flex items-center gap-1"><div className="h-3 w-3 rounded bg-warning/40" /> Médio (5-9)</div>
+              <div className="flex items-center gap-1"><div className="h-3 w-3 rounded bg-destructive/40" /> Alto (10-14)</div>
+              <div className="flex items-center gap-1"><div className="h-3 w-3 rounded bg-destructive/70" /> Crítico (15-25)</div>
+            </div>
+          </div>
         </div>
       </div>
+
+      {/* Cell detail dialog */}
+      <Dialog open={cellDialogOpen} onOpenChange={setCellDialogOpen}>
+        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="font-display">
+              {selectedCell && `Riscos — P:${selectedCell.p} × I:${selectedCell.i} = ${selectedCell.p * selectedCell.i}`}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            {cellRisks.map(r => (
+              <div key={r.id} className="rounded-lg border p-3 space-y-1">
+                <p className="font-medium text-sm text-foreground">{r.title}</p>
+                {r.description && <p className="text-xs text-muted-foreground">{r.description}</p>}
+                <div className="flex flex-wrap gap-2 text-[10px]">
+                  {r.category && <span className="rounded-full bg-secondary px-2 py-0.5">{r.category}</span>}
+                  {r.sector && <span className="rounded-full bg-secondary px-2 py-0.5">{r.sector}</span>}
+                  <span className={`rounded-full px-2 py-0.5 ${riskColor(r.risk_level ?? 0)}`}>{r.status}</span>
+                </div>
+                {r.responsible && <p className="text-[10px] text-muted-foreground">Resp: {r.responsible}</p>}
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <div className="grid gap-3 sm:grid-cols-4">
         {[
