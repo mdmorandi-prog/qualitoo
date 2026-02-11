@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
-  Shield, LogOut, LayoutDashboard, AlertTriangle, BarChart3, FileText,
+  LogOut, LayoutDashboard, AlertTriangle, BarChart3, FileText,
   ClipboardCheck, Target, GraduationCap, FishSymbol, ShieldAlert,
   TriangleAlert, Crosshair, BookOpen, Users2, Menu, X, PanelLeftClose, PanelLeft,
-  Download,
+  Download, Shield,
 } from "lucide-react";
+import sgqLogo from "@/assets/sgq-logo.png";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -107,15 +108,11 @@ const AdminDashboard = () => {
         {/* Sidebar Header */}
         <div className={`flex h-16 shrink-0 items-center border-b border-sidebar-border ${collapsed && !isMobile ? "justify-center px-2" : "justify-between px-4"}`}>
           {collapsed && !isMobile ? (
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary">
-              <Shield className="h-4 w-4 text-sidebar-primary-foreground" />
-            </div>
+            <img src={sgqLogo} alt="SGQ" className="h-9 w-9 shrink-0 rounded-lg object-contain" />
           ) : (
             <>
               <div className="flex items-center gap-2.5">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary">
-                  <Shield className="h-4 w-4 text-sidebar-primary-foreground" />
-                </div>
+                <img src={sgqLogo} alt="SGQ" className="h-9 w-9 shrink-0 rounded-lg object-contain" />
                 <div className="flex flex-col">
                   <span className="text-sm font-semibold leading-tight">SGQ Hospitalar</span>
                   <Badge className="mt-0.5 w-fit border-0 bg-sidebar-accent text-[10px] text-sidebar-accent-foreground">
@@ -212,6 +209,9 @@ const AdminDashboard = () => {
             <ActiveContent />
           ) : null}
         </main>
+        <footer className="shrink-0 border-t px-4 py-2 text-center text-[10px] text-muted-foreground">
+          © {new Date().getFullYear()} DM Consultoria em TI Ltda. Todos os direitos reservados.
+        </footer>
       </div>
     </div>
   );
