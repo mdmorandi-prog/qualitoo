@@ -88,7 +88,7 @@ const NonConformities = () => {
 
   const createCapaFromNc = async (nc: NC) => {
     if (!user) return;
-    const { error } = await supabase.from("capas").insert({
+    const { data: capaData, error } = await supabase.from("capas").insert({
       title: `CAPA - ${nc.title}`,
       description: nc.description,
       origin_type: "non_conformity",
@@ -96,9 +96,20 @@ const NonConformities = () => {
       origin_title: nc.title,
       sector: nc.sector,
       created_by: user.id,
-    } as any);
+    } as any).select("id").maybeSingle();
     if (error) { toast.error("Erro ao criar CAPA"); console.error(error); }
-    else { toast.success("CAPA criada a partir da NC!"); setDetailOpen(false); }
+    else {
+      await supabase.from("notifications").insert({
+        user_id: user.id,
+        title: "CAPA criada a partir de NC",
+        message: `Uma CAPA foi criada para a NC "${nc.title}" no setor ${nc.sector || "geral"}.`,
+        type: "info",
+        module: "capa",
+        reference_id: capaData?.id || null,
+      } as any);
+      toast.success("CAPA criada a partir da NC!");
+      setDetailOpen(false);
+    }
   };
 
   const createActionPlanFromNc = async (nc: NC) => {

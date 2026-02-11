@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import {
   BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
@@ -24,7 +24,29 @@ const tooltipStyle = {
   },
 };
 
-export const NcTrendChart = () => {
+export interface DateFilter {
+  startDate: string;
+  endDate: string;
+}
+
+function generateMonthKeys(startDate: string, endDate: string) {
+  const start = new Date(startDate + "T00:00:00");
+  const end = new Date(endDate + "T23:59:59");
+  const months: string[] = [];
+  const d = new Date(start.getFullYear(), start.getMonth(), 1);
+  while (d <= end) {
+    months.push(d.toLocaleDateString("pt-BR", { month: "short", year: "2-digit" }));
+    d.setMonth(d.getMonth() + 1);
+  }
+  return months;
+}
+
+function isInRange(dateStr: string, filter: DateFilter) {
+  const d = new Date(dateStr);
+  return d >= new Date(filter.startDate + "T00:00:00") && d <= new Date(filter.endDate + "T23:59:59");
+}
+
+export const NcTrendChart = ({ filter }: { filter: DateFilter }) => {
   const [data, setData] = useState<{ month: string; abertas: number; concluidas: number }[]>([]);
 
   useEffect(() => {
@@ -32,26 +54,18 @@ export const NcTrendChart = () => {
       const { data: ncs } = await supabase
         .from("non_conformities")
         .select("created_at, status, closed_at");
-
       if (!ncs) return;
 
+      const monthKeys = generateMonthKeys(filter.startDate, filter.endDate);
       const months: Record<string, { abertas: number; concluidas: number }> = {};
-      const now = new Date();
-
-      for (let i = 5; i >= 0; i--) {
-        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        const key = d.toLocaleDateString("pt-BR", { month: "short", year: "2-digit" });
-        months[key] = { abertas: 0, concluidas: 0 };
-      }
+      monthKeys.forEach(k => { months[k] = { abertas: 0, concluidas: 0 }; });
 
       ncs.forEach((nc: any) => {
-        const created = new Date(nc.created_at);
-        const key = created.toLocaleDateString("pt-BR", { month: "short", year: "2-digit" });
+        if (!isInRange(nc.created_at, filter)) return;
+        const key = new Date(nc.created_at).toLocaleDateString("pt-BR", { month: "short", year: "2-digit" });
         if (months[key]) months[key].abertas++;
-
-        if (nc.status === "concluida" && nc.closed_at) {
-          const closed = new Date(nc.closed_at);
-          const cKey = closed.toLocaleDateString("pt-BR", { month: "short", year: "2-digit" });
+        if (nc.status === "concluida" && nc.closed_at && isInRange(nc.closed_at, filter)) {
+          const cKey = new Date(nc.closed_at).toLocaleDateString("pt-BR", { month: "short", year: "2-digit" });
           if (months[cKey]) months[cKey].concluidas++;
         }
       });
@@ -59,13 +73,13 @@ export const NcTrendChart = () => {
       setData(Object.entries(months).map(([month, vals]) => ({ month, ...vals })));
     };
     load();
-  }, []);
+  }, [filter.startDate, filter.endDate]);
 
   if (data.length === 0) return <ChartPlaceholder label="Não Conformidades por Mês" />;
 
   return (
     <div className="rounded-xl border bg-card p-5 shadow-[var(--card-shadow)]">
-      <h4 className="mb-4 text-sm font-bold text-foreground">Não Conformidades — Tendência 6 Meses</h4>
+      <h4 className="mb-4 text-sm font-bold text-foreground">Não Conformidades — Tendência</h4>
       <ResponsiveContainer width="100%" height={220}>
         <BarChart data={data} barGap={2}>
           <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -115,19 +129,8 @@ export const RiskDistributionChart = () => {
       <h4 className="mb-4 text-sm font-bold text-foreground">Distribuição de Riscos</h4>
       <ResponsiveContainer width="100%" height={220}>
         <PieChart>
-          <Pie
-            data={data}
-            cx="50%"
-            cy="50%"
-            innerRadius={50}
-            outerRadius={80}
-            paddingAngle={3}
-            dataKey="value"
-            label={({ name, value }) => `${name}: ${value}`}
-          >
-            {data.map((entry, i) => (
-              <Cell key={i} fill={entry.color} />
-            ))}
+          <Pie data={data} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={3} dataKey="value" label={({ name, value }) => `${name}: ${value}`}>
+            {data.map((entry, i) => (<Cell key={i} fill={entry.color} />))}
           </Pie>
           <Tooltip {...tooltipStyle} />
         </PieChart>
@@ -136,12 +139,12 @@ export const RiskDistributionChart = () => {
   );
 };
 
-export const ActionPlansChart = () => {
+export const ActionPlansChart = ({ filter }: { filter: DateFilter }) => {
   const [data, setData] = useState<{ name: string; value: number; color: string }[]>([]);
 
   useEffect(() => {
     const load = async () => {
-      const { data: plans } = await supabase.from("action_plans").select("status, progress");
+      const { data: plans } = await supabase.from("action_plans").select("status, created_at");
       if (!plans) return;
 
       const statusMap: Record<string, { label: string; color: string }> = {
@@ -151,7 +154,7 @@ export const ActionPlansChart = () => {
       };
 
       const counts: Record<string, number> = {};
-      plans.forEach((p: any) => {
+      plans.filter((p: any) => isInRange(p.created_at, filter)).forEach((p: any) => {
         counts[p.status] = (counts[p.status] || 0) + 1;
       });
 
@@ -166,7 +169,7 @@ export const ActionPlansChart = () => {
       );
     };
     load();
-  }, []);
+  }, [filter.startDate, filter.endDate]);
 
   if (data.length === 0) return <ChartPlaceholder label="Status dos Planos de Ação" />;
 
@@ -175,19 +178,8 @@ export const ActionPlansChart = () => {
       <h4 className="mb-4 text-sm font-bold text-foreground">Planos de Ação — Status</h4>
       <ResponsiveContainer width="100%" height={220}>
         <PieChart>
-          <Pie
-            data={data}
-            cx="50%"
-            cy="50%"
-            innerRadius={50}
-            outerRadius={80}
-            paddingAngle={3}
-            dataKey="value"
-            label={({ name, value }) => `${name}: ${value}`}
-          >
-            {data.map((entry, i) => (
-              <Cell key={i} fill={entry.color} />
-            ))}
+          <Pie data={data} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={3} dataKey="value" label={({ name, value }) => `${name}: ${value}`}>
+            {data.map((entry, i) => (<Cell key={i} fill={entry.color} />))}
           </Pie>
           <Tooltip {...tooltipStyle} />
         </PieChart>
@@ -196,7 +188,7 @@ export const ActionPlansChart = () => {
   );
 };
 
-export const EventsTrendChart = () => {
+export const EventsTrendChart = ({ filter }: { filter: DateFilter }) => {
   const [data, setData] = useState<{ month: string; eventos: number }[]>([]);
 
   useEffect(() => {
@@ -204,46 +196,33 @@ export const EventsTrendChart = () => {
       const { data: events } = await supabase.from("adverse_events").select("event_date");
       if (!events) return;
 
+      const monthKeys = generateMonthKeys(filter.startDate, filter.endDate);
       const months: Record<string, number> = {};
-      const now = new Date();
-
-      for (let i = 5; i >= 0; i--) {
-        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        const key = d.toLocaleDateString("pt-BR", { month: "short", year: "2-digit" });
-        months[key] = 0;
-      }
+      monthKeys.forEach(k => { months[k] = 0; });
 
       events.forEach((e: any) => {
-        const d = new Date(e.event_date);
-        const key = d.toLocaleDateString("pt-BR", { month: "short", year: "2-digit" });
+        if (!isInRange(e.event_date, filter)) return;
+        const key = new Date(e.event_date).toLocaleDateString("pt-BR", { month: "short", year: "2-digit" });
         if (months[key] !== undefined) months[key]++;
       });
 
       setData(Object.entries(months).map(([month, eventos]) => ({ month, eventos })));
     };
     load();
-  }, []);
+  }, [filter.startDate, filter.endDate]);
 
   if (data.length === 0) return <ChartPlaceholder label="Eventos Adversos por Mês" />;
 
   return (
     <div className="rounded-xl border bg-card p-5 shadow-[var(--card-shadow)]">
-      <h4 className="mb-4 text-sm font-bold text-foreground">Eventos Adversos — Tendência 6 Meses</h4>
+      <h4 className="mb-4 text-sm font-bold text-foreground">Eventos Adversos — Tendência</h4>
       <ResponsiveContainer width="100%" height={220}>
         <AreaChart data={data}>
           <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
           <XAxis dataKey="month" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
           <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
           <Tooltip {...tooltipStyle} />
-          <Area
-            type="monotone"
-            dataKey="eventos"
-            name="Eventos"
-            stroke={COLORS.destructive}
-            fill={COLORS.destructive}
-            fillOpacity={0.15}
-            strokeWidth={2}
-          />
+          <Area type="monotone" dataKey="eventos" name="Eventos" stroke={COLORS.destructive} fill={COLORS.destructive} fillOpacity={0.15} strokeWidth={2} />
         </AreaChart>
       </ResponsiveContainer>
     </div>
