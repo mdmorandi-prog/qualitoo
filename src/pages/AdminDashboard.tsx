@@ -4,7 +4,7 @@ import {
   LogOut, LayoutDashboard, AlertTriangle, BarChart3, FileText,
   ClipboardCheck, Target, GraduationCap, FishSymbol, ShieldAlert,
   TriangleAlert, Crosshair, BookOpen, Users2, Menu, X, PanelLeftClose, PanelLeft,
-  Download, Shield,
+  Download, Shield, Settings,
 } from "lucide-react";
 import sgqLogo from "@/assets/sgq-logo.png";
 import { Button } from "@/components/ui/button";
@@ -30,8 +30,9 @@ import ActionPlans from "@/pages/quality/ActionPlans";
 import RiskManagement from "@/pages/quality/RiskManagement";
 import Trainings from "@/pages/quality/Trainings";
 import MeetingMinutes from "@/pages/quality/MeetingMinutes";
+import UserManagement from "@/pages/quality/UserManagement";
 
-const tabs = [
+const allTabs = [
   { key: "resumo", label: "Resumo", icon: LayoutDashboard },
   { key: "ncs", label: "Não Conformidades", icon: AlertTriangle },
   { key: "indicadores", label: "Indicadores", icon: BarChart3 },
@@ -45,13 +46,15 @@ const tabs = [
   { key: "capa", label: "CAPA", icon: Target },
   { key: "causa_raiz", label: "Causa Raiz", icon: FishSymbol },
   { key: "competencias", label: "Competências", icon: Users2 },
-];
+  { key: "usuarios", label: "Usuários", icon: Settings, adminOnly: true },
+] as const;
 
 const contentMap: Record<string, React.FC> = {
   ncs: NonConformities, indicadores: Indicators, documentos: Documents,
   auditorias: Audits, planos: ActionPlans, riscos: RiskManagement,
   treinamentos: Trainings, atas: MeetingMinutes, eventos: AdverseEvents,
   capa: Capas, causa_raiz: RootCauseAnalysis, competencias: CompetencyMatrix,
+  usuarios: UserManagement,
 };
 
 const AdminDashboard = () => {
@@ -62,6 +65,35 @@ const AdminDashboard = () => {
   const activeTab = searchParams.get("tab") || "resumo";
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [collapsed, setCollapsed] = useState(false);
+  const [allowedModules, setAllowedModules] = useState<string[] | null>(null);
+
+  // Fetch module access for non-admin users
+  useEffect(() => {
+    if (!user || isAdmin) {
+      setAllowedModules(null); // Admin sees all
+      return;
+    }
+    supabase
+      .from("user_module_access")
+      .select("module_key")
+      .eq("user_id", user.id)
+      .eq("can_access", true)
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          setAllowedModules(data.map((d: any) => d.module_key));
+        } else {
+          setAllowedModules(null); // No restrictions configured = show all
+        }
+      });
+  }, [user, isAdmin]);
+
+  // Filter tabs based on access
+  const tabs = allTabs.filter(t => {
+    if ("adminOnly" in t && t.adminOnly && !isAdmin) return false;
+    if (isAdmin || !allowedModules) return true;
+    if (t.key === "resumo") return true; // Always show summary
+    return allowedModules.includes(t.key);
+  });
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/admin/login");
@@ -366,7 +398,7 @@ const DashboardSummary = ({ onNavigate }: { onNavigate: (tab: string) => void })
       <div className="rounded-xl border bg-card p-6 shadow-[var(--card-shadow)]">
         <h3 className="mb-4 font-display text-lg font-bold text-foreground">Módulos do SGQ</h3>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {tabs.filter(t => t.key !== "resumo").map((t, i) => (
+          {allTabs.filter(t => t.key !== "resumo" && !("adminOnly" in t && t.adminOnly)).map((t, i) => (
             <button key={i} onClick={() => onNavigate(t.key)} className="flex items-center gap-3 rounded-lg border bg-secondary/30 p-3 text-left transition-colors hover:bg-secondary/60">
               <t.icon className="h-5 w-5 text-primary" />
               <span className="text-sm font-medium text-foreground">{t.label}</span>
