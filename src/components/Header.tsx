@@ -1,18 +1,17 @@
-import { Shield, Lock } from "lucide-react";
+import { Lock } from "lucide-react";
 import { Link } from "react-router-dom";
+import sgqLogo from "@/assets/sgq-logo.png";
 
 const Header = () => {
   return (
     <header className="sticky top-0 z-50 border-b bg-card/80 backdrop-blur-md">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <Link to="/" className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
-            <Shield className="h-5 w-5 text-primary-foreground" />
-          </div>
+          <img src={sgqLogo} alt="SGQ" className="h-10 w-10 rounded-lg object-contain" />
           <div>
-            <span className="text-lg font-semibold text-foreground">Canal de Denúncias</span>
+            <span className="text-lg font-semibold text-foreground">SGQ Hospitalar</span>
             <span className="ml-2 hidden rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-muted-foreground sm:inline-block">
-              NR1 • Lei 14.457/22
+              Gestão da Qualidade
             </span>
           </div>
         </Link>

@@ -1,14 +1,15 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Shield, LogIn, AlertCircle } from "lucide-react";
+import { LogIn, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
+import sgqLogo from "@/assets/sgq-logo.png";
 
 const AdminLogin = () => {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -19,6 +20,8 @@ const AdminLogin = () => {
     e.preventDefault();
     setError("");
     setLoading(true);
+    // Convert username to internal email format
+    const email = username === "admin" ? "admin@sgq.local" : `${username}@sgq.local`;
     const { error } = await signIn(email, password);
     setLoading(false);
     if (error) {
@@ -36,11 +39,13 @@ const AdminLogin = () => {
         className="w-full max-w-sm"
       >
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-primary">
-            <Shield className="h-7 w-7 text-primary-foreground" />
-          </div>
-          <h1 className="font-display text-2xl font-bold text-foreground">Painel Administrativo</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Comitê de Ética • Acesso Restrito</p>
+          <img
+            src={sgqLogo}
+            alt="SGQ Hospitalar"
+            className="mx-auto mb-4 h-16 w-16 rounded-xl object-contain"
+          />
+          <h1 className="font-display text-2xl font-bold text-foreground">SGQ Hospitalar</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Sistema de Gestão da Qualidade</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border bg-card p-6 shadow-[var(--card-shadow)]">
@@ -51,16 +56,20 @@ const AdminLogin = () => {
             </div>
           )}
           <div>
-            <Label htmlFor="email" className="text-sm font-semibold">E-mail</Label>
+            <Label htmlFor="username" className="text-sm font-semibold">Usuário</Label>
             <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@hospital.com"
+              id="username"
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9._-]/g, ""))}
+              placeholder="admin"
               className="mt-1"
               required
+              autoComplete="username"
             />
+            <p className="mt-1 text-[10px] text-muted-foreground">
+              Ex: dmorandi (inicial + sobrenome)
+            </p>
           </div>
           <div>
             <Label htmlFor="password" className="text-sm font-semibold">Senha</Label>
@@ -78,6 +87,10 @@ const AdminLogin = () => {
             {loading ? "Entrando..." : "Entrar"}
           </Button>
         </form>
+
+        <p className="mt-6 text-center text-[10px] text-muted-foreground">
+          © {new Date().getFullYear()} DM Consultoria em TI Ltda. Todos os direitos reservados.
+        </p>
       </motion.div>
     </div>
   );

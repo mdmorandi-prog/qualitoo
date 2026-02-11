@@ -1,4 +1,4 @@
-import { Shield } from "lucide-react";
+import sgqLogo from "@/assets/sgq-logo.png";
 
 const Footer = () => {
   return (
@@ -6,15 +6,15 @@ const Footer = () => {
       <div className="container mx-auto px-4">
         <div className="flex flex-col items-center gap-4 md:flex-row md:justify-between">
           <div className="flex items-center gap-2">
-            <Shield className="h-5 w-5" />
-            <span className="text-sm font-medium">Canal de Denúncias Hospitalar</span>
+            <img src={sgqLogo} alt="SGQ" className="h-5 w-5 rounded object-contain" />
+            <span className="text-sm font-medium">SGQ Hospitalar</span>
           </div>
           <div className="text-center text-xs opacity-70">
-            <p>Em conformidade com a Lei 14.457/22, NR1 e LGPD</p>
+            <p>Sistema de Gestão da Qualidade Hospitalar</p>
             <p className="mt-1">© {new Date().getFullYear()} DM Consultoria em TI Ltda. Todos os direitos reservados.</p>
           </div>
           <div className="text-xs opacity-70">
-            Ref: DM-TI-NR1-2024-001
+            Ref: DM-TI-SGQ-2024-001
           </div>
         </div>
       </div>

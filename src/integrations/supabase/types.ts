@@ -608,18 +608,21 @@ export type Database = {
           display_name: string | null
           id: string
           user_id: string
+          username: string | null
         }
         Insert: {
           created_at?: string
           display_name?: string | null
           id?: string
           user_id: string
+          username?: string | null
         }
         Update: {
           created_at?: string
           display_name?: string | null
           id?: string
           user_id?: string
+          username?: string | null
         }
         Relationships: []
       }
@@ -914,6 +917,30 @@ export type Database = {
           title?: string
           training_date?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      user_module_access: {
+        Row: {
+          can_access: boolean
+          created_at: string
+          id: string
+          module_key: string
+          user_id: string
+        }
+        Insert: {
+          can_access?: boolean
+          created_at?: string
+          id?: string
+          module_key: string
+          user_id: string
+        }
+        Update: {
+          can_access?: boolean
+          created_at?: string
+          id?: string
+          module_key?: string
+          user_id?: string
         }
         Relationships: []
       }
