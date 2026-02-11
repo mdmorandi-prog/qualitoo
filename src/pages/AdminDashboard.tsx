@@ -1,157 +1,44 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import {
-  Shield,
-  LogOut,
-  FileText,
-  Clock,
-  CheckCircle2,
-  Archive,
-  AlertTriangle,
-  Users,
-} from "lucide-react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { Shield, LogOut, LayoutDashboard, AlertTriangle, BarChart3, FileText, ClipboardCheck, Target, TriangleAlert, GraduationCap, Users, FishSymbol, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import NotificationsPanel from "@/components/NotificationsPanel";
+import AdverseEvents from "@/pages/quality/AdverseEvents";
+import Capas from "@/pages/quality/Capas";
+import RootCauseAnalysis from "@/pages/quality/RootCauseAnalysis";
+import CompetencyMatrix from "@/pages/quality/CompetencyMatrix";
 
-type ReportStatus = "nova" | "em_analise" | "concluida" | "arquivada";
-
-interface Report {
-  id: string;
-  protocol: string;
-  is_anonymous: boolean;
-  type: string;
-  date: string;
-  location: string;
-  sector: string | null;
-  shift: string | null;
-  accused_name: string | null;
-  accused_role: string | null;
-  description: string;
-  has_witnesses: boolean;
-  witness_info: string | null;
-  wants_follow_up: boolean;
-  contact_info: string | null;
-  identity_name: string | null;
-  identity_role: string | null;
-  status: ReportStatus;
-  admin_notes: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-const statusConfig: Record<ReportStatus, { label: string; icon: any; color: string }> = {
-  nova: { label: "Nova", icon: AlertTriangle, color: "bg-warning/10 text-warning" },
-  em_analise: { label: "Em Análise", icon: Clock, color: "bg-accent/10 text-accent" },
-  concluida: { label: "Concluída", icon: CheckCircle2, color: "bg-safe/10 text-safe" },
-  arquivada: { label: "Arquivada", icon: Archive, color: "bg-muted text-muted-foreground" },
-};
+const tabs = [
+  { key: "resumo", label: "Resumo", icon: LayoutDashboard },
+  { key: "eventos", label: "Eventos Adversos", icon: ShieldAlert },
+  { key: "capa", label: "CAPA", icon: Target },
+  { key: "causa_raiz", label: "Causa Raiz", icon: FishSymbol },
+  { key: "competencias", label: "Competências", icon: GraduationCap },
+];
 
 const AdminDashboard = () => {
   const { user, signOut, isAdmin, isAnalyst, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const [reports, setReports] = useState<Report[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selected, setSelected] = useState<Report | null>(null);
-  const [filterStatus, setFilterStatus] = useState<string>("all");
-  const [adminNotes, setAdminNotes] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get("tab") || "resumo";
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      navigate("/admin/login");
-    }
+    if (!authLoading && !user) navigate("/admin/login");
   }, [authLoading, user, navigate]);
-
-  useEffect(() => {
-    if (user && (isAdmin || isAnalyst)) {
-      fetchReports();
-    }
-  }, [user, isAdmin, isAnalyst]);
-
-  const fetchReports = async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from("reports")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      toast.error("Erro ao carregar denúncias");
-      console.error(error);
-    } else {
-      setReports((data as Report[]) ?? []);
-    }
-    setLoading(false);
-  };
-
-  const updateStatus = async (reportId: string, status: ReportStatus) => {
-    const { error } = await supabase
-      .from("reports")
-      .update({ status } as any)
-      .eq("id", reportId);
-
-    if (error) {
-      toast.error("Erro ao atualizar status");
-    } else {
-      toast.success("Status atualizado");
-      fetchReports();
-      if (selected?.id === reportId) {
-        setSelected((prev) => prev ? { ...prev, status } : null);
-      }
-    }
-  };
-
-  const saveNotes = async () => {
-    if (!selected) return;
-    const { error } = await supabase
-      .from("reports")
-      .update({ admin_notes: adminNotes } as any)
-      .eq("id", selected.id);
-
-    if (error) {
-      toast.error("Erro ao salvar parecer");
-    } else {
-      toast.success("Parecer salvo");
-      fetchReports();
-    }
-  };
 
   const handleLogout = async () => {
     await signOut();
     navigate("/admin/login");
   };
 
-  const filtered = filterStatus === "all"
-    ? reports
-    : reports.filter((r) => r.status === filterStatus);
-
-  const stats = {
-    total: reports.length,
-    nova: reports.filter((r) => r.status === "nova").length,
-    em_analise: reports.filter((r) => r.status === "em_analise").length,
-    concluida: reports.filter((r) => r.status === "concluida").length,
+  const setTab = (tab: string) => {
+    setSearchParams({ tab });
   };
 
-  if (authLoading || loading) {
+  if (authLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <p className="text-muted-foreground">Carregando...</p>
@@ -166,9 +53,7 @@ const AdminDashboard = () => {
           <Shield className="mx-auto mb-4 h-12 w-12 text-destructive" />
           <h1 className="mb-2 text-xl font-bold text-foreground">Acesso Negado</h1>
           <p className="text-muted-foreground">Você não tem permissão para acessar este painel.</p>
-          <Button onClick={handleLogout} variant="outline" className="mt-4">
-            Sair
-          </Button>
+          <Button onClick={handleLogout} variant="outline" className="mt-4">Sair</Button>
         </div>
       </div>
     );
@@ -184,207 +69,148 @@ const AdminDashboard = () => {
               <Shield className="h-5 w-5 text-primary-foreground" />
             </div>
             <div>
-              <span className="text-lg font-semibold text-foreground">Painel do Comitê</span>
-              <Badge variant="secondary" className="ml-2 text-xs">
-                {isAdmin ? "Admin" : "Analista"}
-              </Badge>
+              <span className="text-lg font-semibold text-foreground">SGQ Hospitalar</span>
+              <Badge variant="secondary" className="ml-2 text-xs">{isAdmin ? "Admin" : "Analista"}</Badge>
             </div>
           </div>
-          <Button variant="ghost" onClick={handleLogout} className="gap-2 text-muted-foreground">
-            <LogOut className="h-4 w-4" />
-            Sair
-          </Button>
+          <div className="flex items-center gap-2">
+            <NotificationsPanel />
+            <Button variant="ghost" onClick={handleLogout} className="gap-2 text-muted-foreground">
+              <LogOut className="h-4 w-4" /> Sair
+            </Button>
+          </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
-        {/* Stats */}
-        <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {[
-            { label: "Total", value: stats.total, icon: FileText, color: "text-foreground" },
-            { label: "Novas", value: stats.nova, icon: AlertTriangle, color: "text-warning" },
-            { label: "Em Análise", value: stats.em_analise, icon: Clock, color: "text-accent" },
-            { label: "Concluídas", value: stats.concluida, icon: CheckCircle2, color: "text-safe" },
-          ].map((s, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
-              className="rounded-xl border bg-card p-5 shadow-[var(--card-shadow)]"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground">{s.label}</p>
-                  <p className={`text-3xl font-bold ${s.color}`}>{s.value}</p>
-                </div>
-                <s.icon className={`h-8 w-8 opacity-20 ${s.color}`} />
-              </div>
-            </motion.div>
-          ))}
-        </div>
+      <main className="container mx-auto px-4 py-6">
+        <Tabs value={activeTab} onValueChange={setTab}>
+          <TabsList className="mb-6 flex w-full flex-wrap justify-start gap-1 bg-transparent p-0">
+            {tabs.map(t => (
+              <TabsTrigger key={t.key} value={t.key} className="gap-2 rounded-lg border border-transparent px-3 py-2 text-sm data-[state=active]:border-primary/30 data-[state=active]:bg-primary/10 data-[state=active]:text-primary">
+                <t.icon className="h-4 w-4" /> {t.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
 
-        <div className="grid gap-6 lg:grid-cols-3">
-          {/* Report List */}
-          <div className="lg:col-span-2">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="font-display text-xl font-bold text-foreground">Denúncias</h2>
-              <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger className="w-40">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas</SelectItem>
-                  <SelectItem value="nova">Novas</SelectItem>
-                  <SelectItem value="em_analise">Em Análise</SelectItem>
-                  <SelectItem value="concluida">Concluídas</SelectItem>
-                  <SelectItem value="arquivada">Arquivadas</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="rounded-xl border bg-card shadow-[var(--card-shadow)]">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Protocolo</TableHead>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Data</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filtered.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={4} className="py-8 text-center text-muted-foreground">
-                        Nenhuma denúncia encontrada.
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filtered.map((r) => {
-                      const sc = statusConfig[r.status];
-                      return (
-                        <TableRow
-                          key={r.id}
-                          className={`cursor-pointer ${selected?.id === r.id ? "bg-primary/5" : ""}`}
-                          onClick={() => {
-                            setSelected(r);
-                            setAdminNotes(r.admin_notes ?? "");
-                          }}
-                        >
-                          <TableCell className="font-mono text-xs font-semibold">{r.protocol}</TableCell>
-                          <TableCell className="text-sm">{r.type}</TableCell>
-                          <TableCell>
-                            <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium ${sc.color}`}>
-                              <sc.icon className="h-3 w-3" />
-                              {sc.label}
-                            </span>
-                          </TableCell>
-                          <TableCell className="text-xs text-muted-foreground">
-                            {new Date(r.created_at).toLocaleDateString("pt-BR")}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </div>
-
-          {/* Detail Panel */}
-          <div className="lg:col-span-1">
-            {selected ? (
-              <motion.div
-                key={selected.id}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="sticky top-24 space-y-4"
-              >
-                <div className="rounded-xl border bg-card p-5 shadow-[var(--card-shadow)]">
-                  <h3 className="mb-4 font-display text-lg font-bold text-foreground">Detalhes</h3>
-                  <div className="space-y-3 text-sm">
-                    <DetailRow label="Protocolo" value={selected.protocol} />
-                    <DetailRow label="Modo" value={selected.is_anonymous ? "Anônimo" : "Identificado"} />
-                    <DetailRow label="Tipo" value={selected.type} />
-                    <DetailRow label="Data Ocorrência" value={selected.date} />
-                    <DetailRow label="Local" value={selected.location} />
-                    {selected.sector && <DetailRow label="Setor" value={selected.sector} />}
-                    {selected.shift && <DetailRow label="Turno" value={selected.shift} />}
-                    {selected.accused_name && <DetailRow label="Denunciado" value={selected.accused_name} />}
-                    {selected.accused_role && <DetailRow label="Cargo Denunciado" value={selected.accused_role} />}
-                    {!selected.is_anonymous && selected.identity_name && (
-                      <DetailRow label="Denunciante" value={selected.identity_name} />
-                    )}
-                    <DetailRow label="Testemunhas" value={selected.has_witnesses ? "Sim" : "Não"} />
-                    {selected.witness_info && <DetailRow label="Info Testemunhas" value={selected.witness_info} />}
-                    {selected.wants_follow_up && selected.contact_info && (
-                      <DetailRow label="Contato" value={selected.contact_info} />
-                    )}
-                  </div>
-
-                  <div className="mt-4 rounded-lg bg-secondary/50 p-3">
-                    <p className="mb-1 text-xs font-semibold text-muted-foreground">Descrição</p>
-                    <p className="text-sm text-foreground">{selected.description}</p>
-                  </div>
-                </div>
-
-                {/* Status & Notes */}
-                <div className="rounded-xl border bg-card p-5 shadow-[var(--card-shadow)]">
-                  <h3 className="mb-3 text-sm font-bold text-foreground">Gerenciar</h3>
-                  <div className="space-y-3">
-                    <div>
-                      <p className="mb-1 text-xs font-medium text-muted-foreground">Alterar Status</p>
-                      <Select
-                        value={selected.status}
-                        onValueChange={(v) => updateStatus(selected.id, v as ReportStatus)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="nova">Nova</SelectItem>
-                          <SelectItem value="em_analise">Em Análise</SelectItem>
-                          <SelectItem value="concluida">Concluída</SelectItem>
-                          <SelectItem value="arquivada">Arquivada</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <p className="mb-1 text-xs font-medium text-muted-foreground">Parecer do Comitê</p>
-                      <Textarea
-                        value={adminNotes}
-                        onChange={(e) => setAdminNotes(e.target.value)}
-                        placeholder="Adicione observações, pareceres ou encaminhamentos..."
-                        className="min-h-[100px]"
-                      />
-                      <Button onClick={saveNotes} size="sm" className="mt-2 w-full">
-                        Salvar Parecer
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            ) : (
-              <div className="flex h-64 items-center justify-center rounded-xl border bg-card text-center">
-                <div>
-                  <Users className="mx-auto mb-2 h-8 w-8 text-muted-foreground/30" />
-                  <p className="text-sm text-muted-foreground">Selecione uma denúncia para ver os detalhes</p>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+          <TabsContent value="resumo">
+            <DashboardSummary />
+          </TabsContent>
+          <TabsContent value="eventos">
+            <AdverseEvents />
+          </TabsContent>
+          <TabsContent value="capa">
+            <Capas />
+          </TabsContent>
+          <TabsContent value="causa_raiz">
+            <RootCauseAnalysis />
+          </TabsContent>
+          <TabsContent value="competencias">
+            <CompetencyMatrix />
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );
 };
 
-const DetailRow = ({ label, value }: { label: string; value: string }) => (
-  <div className="flex justify-between gap-4 border-b border-border/50 pb-2 last:border-0 last:pb-0">
-    <span className="text-xs font-medium text-muted-foreground">{label}</span>
-    <span className="text-right text-sm font-medium text-foreground">{value}</span>
-  </div>
-);
+// Inline dashboard summary
+const DashboardSummary = () => {
+  const [stats, setStats] = useState({
+    adverse_events: 0, adverse_critical: 0,
+    capas_open: 0, capas_verification: 0,
+    ncs_open: 0, docs_expiring: 0,
+    trainings_expiring: 0, audits_upcoming: 0,
+  });
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      const { supabase } = await import("@/integrations/supabase/client");
+      const now = new Date();
+      const thirtyDays = new Date(); thirtyDays.setDate(now.getDate() + 30);
+
+      const [evRes, capaRes, ncRes, docRes, trainRes, auditRes] = await Promise.all([
+        supabase.from("adverse_events").select("id, severity, status"),
+        supabase.from("capas").select("id, status"),
+        supabase.from("non_conformities").select("id, status"),
+        supabase.from("quality_documents").select("id, valid_until, status").eq("status", "aprovado"),
+        supabase.from("trainings").select("id, expiry_date"),
+        supabase.from("audits").select("id, scheduled_date, status").eq("status", "planejada"),
+      ]);
+
+      const events = (evRes.data as any[]) ?? [];
+      const capas = (capaRes.data as any[]) ?? [];
+      const ncs = (ncRes.data as any[]) ?? [];
+      const docs = (docRes.data as any[]) ?? [];
+      const trainings = (trainRes.data as any[]) ?? [];
+      const audits = (auditRes.data as any[]) ?? [];
+
+      setStats({
+        adverse_events: events.length,
+        adverse_critical: events.filter(e => (e.severity === "grave" || e.severity === "sentinela") && e.status !== "encerrado").length,
+        capas_open: capas.filter(c => c.status !== "encerrada").length,
+        capas_verification: capas.filter(c => c.status === "verificacao_eficacia").length,
+        ncs_open: ncs.filter(n => n.status !== "concluida").length,
+        docs_expiring: docs.filter(d => d.valid_until && new Date(d.valid_until) < thirtyDays).length,
+        trainings_expiring: trainings.filter(t => t.expiry_date && new Date(t.expiry_date) < thirtyDays).length,
+        audits_upcoming: audits.filter(a => { const d = new Date(a.scheduled_date); const week = new Date(); week.setDate(week.getDate() + 7); return d >= now && d <= week; }).length,
+      });
+    };
+    fetchStats();
+  }, []);
+
+  const cards = [
+    { label: "Eventos Adversos", value: stats.adverse_events, sub: `${stats.adverse_critical} críticos`, icon: ShieldAlert, color: "text-destructive", danger: stats.adverse_critical > 0 },
+    { label: "CAPAs Abertas", value: stats.capas_open, sub: `${stats.capas_verification} em verificação`, icon: Target, color: "text-accent", danger: false },
+    { label: "NCs Abertas", value: stats.ncs_open, sub: "não conformidades", icon: AlertTriangle, color: "text-warning", danger: stats.ncs_open > 5 },
+    { label: "Docs a Vencer", value: stats.docs_expiring, sub: "próximos 30 dias", icon: FileText, color: "text-foreground", danger: stats.docs_expiring > 0 },
+    { label: "Treinamentos", value: stats.trainings_expiring, sub: "certificações a vencer", icon: GraduationCap, color: "text-accent", danger: stats.trainings_expiring > 0 },
+    { label: "Auditorias", value: stats.audits_upcoming, sub: "próximos 7 dias", icon: ClipboardCheck, color: "text-primary", danger: false },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="font-display text-2xl font-bold text-foreground">Resumo Executivo</h2>
+        <p className="text-sm text-muted-foreground">Visão consolidada de todos os módulos de qualidade</p>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {cards.map((c, i) => (
+          <div key={i} className={`rounded-xl border bg-card p-5 shadow-[var(--card-shadow)] ${c.danger ? "border-destructive/30" : ""}`}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-medium text-muted-foreground">{c.label}</p>
+                <p className={`text-3xl font-bold ${c.color}`}>{c.value}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{c.sub}</p>
+              </div>
+              <c.icon className={`h-8 w-8 opacity-20 ${c.color}`} />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="rounded-xl border bg-card p-6 shadow-[var(--card-shadow)]">
+        <h3 className="mb-4 font-display text-lg font-bold text-foreground">Módulos Disponíveis</h3>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {[
+            { name: "Eventos Adversos", desc: "Notificação de incidentes, near-misses e eventos sentinela", icon: ShieldAlert },
+            { name: "CAPA", desc: "Ações corretivas e preventivas com verificação de eficácia", icon: Target },
+            { name: "Análise de Causa Raiz", desc: "Ishikawa (6M) e 5 Porquês interativos", icon: FishSymbol },
+            { name: "Matriz de Competências", desc: "Mapeamento e avaliação de competências por cargo", icon: GraduationCap },
+            { name: "Notificações", desc: "Alertas automáticos de prazos, vencimentos e escalações", icon: AlertTriangle },
+          ].map((m, i) => (
+            <div key={i} className="flex items-start gap-3 rounded-lg border bg-secondary/30 p-4">
+              <m.icon className="mt-0.5 h-5 w-5 text-primary" />
+              <div>
+                <p className="text-sm font-medium text-foreground">{m.name}</p>
+                <p className="text-xs text-muted-foreground">{m.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default AdminDashboard;
