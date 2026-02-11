@@ -3,17 +3,16 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Shield, LogOut, LayoutDashboard, AlertTriangle, BarChart3, FileText,
   ClipboardCheck, Target, GraduationCap, FishSymbol, ShieldAlert,
-  TriangleAlert, FileCheck, Crosshair, BookOpen, Users2,
+  TriangleAlert, Crosshair, BookOpen, Users2, Menu, X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "@/hooks/useAuth";
+import { useIsMobile } from "@/hooks/use-mobile";
 import NotificationsPanel from "@/components/NotificationsPanel";
 import { supabase } from "@/integrations/supabase/client";
 
-// Lazy imports for code splitting
 import AdverseEvents from "@/pages/quality/AdverseEvents";
 import Capas from "@/pages/quality/Capas";
 import RootCauseAnalysis from "@/pages/quality/RootCauseAnalysis";
@@ -43,29 +42,37 @@ const tabs = [
   { key: "competencias", label: "Competências", icon: Users2 },
 ];
 
+const contentMap: Record<string, React.FC> = {
+  ncs: NonConformities, indicadores: Indicators, documentos: Documents,
+  auditorias: Audits, planos: ActionPlans, riscos: RiskManagement,
+  treinamentos: Trainings, atas: MeetingMinutes, eventos: AdverseEvents,
+  capa: Capas, causa_raiz: RootCauseAnalysis, competencias: CompetencyMatrix,
+};
+
 const AdminDashboard = () => {
   const { user, signOut, isAdmin, isAnalyst, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get("tab") || "resumo";
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/admin/login");
   }, [authLoading, user, navigate]);
 
-  const handleLogout = async () => {
-    await signOut();
-    navigate("/admin/login");
+  useEffect(() => {
+    setSidebarOpen(!isMobile);
+  }, [isMobile]);
+
+  const handleLogout = async () => { await signOut(); navigate("/admin/login"); };
+  const setTab = (tab: string) => {
+    setSearchParams({ tab });
+    if (isMobile) setSidebarOpen(false);
   };
 
-  const setTab = (tab: string) => setSearchParams({ tab });
-
   if (authLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <p className="text-muted-foreground">Carregando...</p>
-      </div>
-    );
+    return <div className="flex min-h-screen items-center justify-center bg-background"><p className="text-muted-foreground">Carregando...</p></div>;
   }
 
   if (!isAdmin && !isAnalyst) {
@@ -81,56 +88,100 @@ const AdminDashboard = () => {
     );
   }
 
+  const ActiveContent = activeTab === "resumo" ? null : contentMap[activeTab];
+
   return (
-    <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-50 border-b bg-card/80 backdrop-blur-md">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
-              <Shield className="h-5 w-5 text-primary-foreground" />
+    <div className="flex min-h-screen w-full bg-background">
+      {/* Sidebar */}
+      <aside
+        className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-transform duration-300 ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        } lg:relative lg:translate-x-0`}
+      >
+        {/* Sidebar Header */}
+        <div className="flex h-16 shrink-0 items-center justify-between border-b border-sidebar-border px-4">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary">
+              <Shield className="h-4 w-4 text-sidebar-primary-foreground" />
             </div>
-            <div>
-              <span className="text-lg font-semibold text-foreground">SGQ Hospitalar</span>
-              <Badge variant="secondary" className="ml-2 text-xs">{isAdmin ? "Admin" : "Analista"}</Badge>
+            <div className="flex flex-col">
+              <span className="text-sm font-semibold leading-tight">SGQ Hospitalar</span>
+              <Badge className="mt-0.5 w-fit border-0 bg-sidebar-accent text-[10px] text-sidebar-accent-foreground">
+                {isAdmin ? "Admin" : "Analista"}
+              </Badge>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <NotificationsPanel />
-            <Button variant="ghost" onClick={handleLogout} className="gap-2 text-muted-foreground">
-              <LogOut className="h-4 w-4" /> Sair
+          {isMobile && (
+            <Button variant="ghost" size="sm" onClick={() => setSidebarOpen(false)} className="text-sidebar-foreground hover:bg-sidebar-accent">
+              <X className="h-5 w-5" />
             </Button>
-          </div>
+          )}
         </div>
-      </header>
 
-      <main className="container mx-auto px-4 py-6">
-        <Tabs value={activeTab} onValueChange={setTab}>
-          <ScrollArea className="mb-6 w-full">
-            <TabsList className="inline-flex w-max gap-1 bg-transparent p-0">
-              {tabs.map(t => (
-                <TabsTrigger key={t.key} value={t.key} className="gap-1.5 whitespace-nowrap rounded-lg border border-transparent px-3 py-2 text-xs data-[state=active]:border-primary/30 data-[state=active]:bg-primary/10 data-[state=active]:text-primary sm:text-sm">
-                  <t.icon className="h-3.5 w-3.5" /> {t.label}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-            <ScrollBar orientation="horizontal" />
-          </ScrollArea>
+        {/* Sidebar Nav */}
+        <ScrollArea className="flex-1 px-3 py-4">
+          <nav className="space-y-1">
+            {tabs.map(t => {
+              const isActive = activeTab === t.key;
+              return (
+                <button
+                  key={t.key}
+                  onClick={() => setTab(t.key)}
+                  className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+                    isActive
+                      ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
+                      : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                  }`}
+                >
+                  <t.icon className="h-4 w-4 shrink-0" />
+                  <span className="truncate">{t.label}</span>
+                </button>
+              );
+            })}
+          </nav>
+        </ScrollArea>
 
-          <TabsContent value="resumo"><DashboardSummary onNavigate={setTab} /></TabsContent>
-          <TabsContent value="ncs"><NonConformities /></TabsContent>
-          <TabsContent value="indicadores"><Indicators /></TabsContent>
-          <TabsContent value="documentos"><Documents /></TabsContent>
-          <TabsContent value="auditorias"><Audits /></TabsContent>
-          <TabsContent value="planos"><ActionPlans /></TabsContent>
-          <TabsContent value="riscos"><RiskManagement /></TabsContent>
-          <TabsContent value="treinamentos"><Trainings /></TabsContent>
-          <TabsContent value="atas"><MeetingMinutes /></TabsContent>
-          <TabsContent value="eventos"><AdverseEvents /></TabsContent>
-          <TabsContent value="capa"><Capas /></TabsContent>
-          <TabsContent value="causa_raiz"><RootCauseAnalysis /></TabsContent>
-          <TabsContent value="competencias"><CompetencyMatrix /></TabsContent>
-        </Tabs>
-      </main>
+        {/* Sidebar Footer */}
+        <div className="shrink-0 border-t border-sidebar-border p-3">
+          <Button
+            variant="ghost"
+            onClick={handleLogout}
+            className="w-full justify-start gap-2 text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+          >
+            <LogOut className="h-4 w-4" /> Sair
+          </Button>
+        </div>
+      </aside>
+
+      {/* Overlay for mobile */}
+      {isMobile && sidebarOpen && (
+        <div className="fixed inset-0 z-30 bg-black/40" onClick={() => setSidebarOpen(false)} />
+      )}
+
+      {/* Main content */}
+      <div className="flex flex-1 flex-col overflow-hidden">
+        {/* Top bar */}
+        <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center justify-between border-b bg-card/80 px-4 backdrop-blur-md">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="sm" onClick={() => setSidebarOpen(!sidebarOpen)} className="lg:hidden">
+              <Menu className="h-5 w-5" />
+            </Button>
+            <h1 className="text-sm font-semibold text-foreground">
+              {tabs.find(t => t.key === activeTab)?.label ?? "Resumo"}
+            </h1>
+          </div>
+          <NotificationsPanel />
+        </header>
+
+        {/* Page content */}
+        <main className="flex-1 overflow-auto p-4 sm:p-6">
+          {activeTab === "resumo" ? (
+            <DashboardSummary onNavigate={setTab} />
+          ) : ActiveContent ? (
+            <ActiveContent />
+          ) : null}
+        </main>
+      </div>
     </div>
   );
 };
@@ -185,7 +236,6 @@ const DashboardSummary = ({ onNavigate }: { onNavigate: (tab: string) => void })
       const capas = (capaRes.data as any[]) ?? [];
       const evals = (compEvalRes.data as any[]) ?? [];
 
-      // Calculate indicators below target
       const indBelow = inds.filter(ind => {
         const lastMeas = meas.find(m => m.indicator_id === ind.id);
         return lastMeas && lastMeas.value < ind.target_value;
