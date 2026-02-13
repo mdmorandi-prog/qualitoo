@@ -17,6 +17,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { executeWorkflowRules } from "@/lib/workflowEngine";
 
 type DocStatus = "rascunho" | "em_revisao" | "aprovado" | "obsoleto";
 
@@ -214,7 +215,12 @@ const Documents = () => {
       file_url: fileUrl, is_signed: isSigned,
     } as any);
     if (error) { toast.error("Erro ao criar"); console.error(error); }
-    else { toast.success("Documento criado!"); setDialogOpen(false); setForm({ ...initialForm }); setFileUrl(null); setIsSigned(false); fetchData(); }
+    else {
+      toast.success("Documento criado!"); setDialogOpen(false); setForm({ ...initialForm }); setFileUrl(null); setIsSigned(false);
+      const { data: created } = await supabase.from("quality_documents").select("*").eq("title", form.title).order("created_at", { ascending: false }).limit(1).maybeSingle();
+      if (created) executeWorkflowRules("quality_documents", "record_created", created, undefined, user.id);
+      fetchData();
+    }
   };
 
   const updateStatus = async (id: string, newStatus: DocStatus) => {
@@ -232,7 +238,12 @@ const Documents = () => {
     if (newStatus === "aprovado") { update.approved_by = user?.id; update.approved_at = new Date().toISOString(); }
     const { error } = await supabase.from("quality_documents").update(update).eq("id", id);
     if (error) toast.error("Erro");
-    else { toast.success("Status atualizado"); fetchData(); }
+    else {
+      toast.success("Status atualizado");
+      const updatedRecord = { ...doc, ...update, id };
+      executeWorkflowRules("quality_documents", "status_change", updatedRecord, doc, user?.id);
+      fetchData();
+    }
   };
 
   const filtered = docs

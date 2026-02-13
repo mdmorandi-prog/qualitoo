@@ -16,6 +16,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { executeWorkflowRules } from "@/lib/workflowEngine";
 
 type NcSeverity = "baixa" | "media" | "alta" | "critica";
 type NcStatus = "aberta" | "em_analise" | "plano_acao" | "em_execucao" | "verificacao" | "concluida";
@@ -79,15 +80,27 @@ const NonConformities = () => {
       sector: form.sector || null, deadline: form.deadline || null, created_by: user.id,
     } as any);
     if (error) { toast.error("Erro ao criar NC"); console.error(error); }
-    else { toast.success("NC registrada!"); setDialogOpen(false); setForm({ title: "", description: "", severity: "media", sector: "", deadline: "" }); fetchData(); }
+    else {
+      toast.success("NC registrada!"); setDialogOpen(false); setForm({ title: "", description: "", severity: "media", sector: "", deadline: "" });
+      // Trigger workflow rules for record creation
+      const { data: created } = await supabase.from("non_conformities").select("*").eq("title", form.title).order("created_at", { ascending: false }).limit(1).maybeSingle();
+      if (created) executeWorkflowRules("non_conformities", "record_created", created, undefined, user.id);
+      fetchData();
+    }
   };
 
   const updateStatus = async (id: string, status: NcStatus) => {
+    const previousNc = ncs.find(n => n.id === id);
     const update: any = { status };
     if (status === "concluida") update.closed_at = new Date().toISOString();
     const { error } = await supabase.from("non_conformities").update(update).eq("id", id);
     if (error) toast.error("Erro ao atualizar");
-    else { toast.success("Status atualizado"); fetchData(); }
+    else {
+      toast.success("Status atualizado");
+      const updatedRecord = { ...previousNc, ...update, id };
+      executeWorkflowRules("non_conformities", "status_change", updatedRecord, previousNc, user?.id);
+      fetchData();
+    }
   };
 
   const updateField = async (id: string, field: string, value: string) => {
