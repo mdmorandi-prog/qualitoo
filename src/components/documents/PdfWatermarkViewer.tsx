@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { X, Loader2 } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { X, Loader2, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 
@@ -25,10 +25,13 @@ const PdfWatermarkViewer = ({ open, onOpenChange, fileUrl, title }: PdfWatermark
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [useEmbed, setUseEmbed] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const loadDocument = async () => {
     setLoading(true);
     setError(null);
+    setUseEmbed(false);
 
     const parsed = parseStorageUrl(fileUrl);
     const bucket = parsed?.bucket || "documents";
@@ -38,7 +41,6 @@ const PdfWatermarkViewer = ({ open, onOpenChange, fileUrl, title }: PdfWatermark
     const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
     try {
-      // Use fetch directly to get raw binary response (supabase.functions.invoke may JSON-parse it)
       const response = await fetch(`${supabaseUrl}/functions/v1/document-proxy`, {
         method: "POST",
         headers: {
@@ -55,7 +57,9 @@ const PdfWatermarkViewer = ({ open, onOpenChange, fileUrl, title }: PdfWatermark
       }
 
       const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
+      // Force PDF content type
+      const pdfBlob = new Blob([blob], { type: "application/pdf" });
+      const url = URL.createObjectURL(pdfBlob);
       setBlobUrl(url);
     } catch (err: any) {
       console.error("Error loading document via proxy:", err);
@@ -76,8 +80,22 @@ const PdfWatermarkViewer = ({ open, onOpenChange, fileUrl, title }: PdfWatermark
       if (blobUrl) URL.revokeObjectURL(blobUrl);
       setBlobUrl(null);
       setError(null);
+      setUseEmbed(false);
     }
     onOpenChange(val);
+  };
+
+  const handleDownload = () => {
+    if (!blobUrl) return;
+    const a = document.createElement("a");
+    a.href = blobUrl;
+    a.download = `${title}.pdf`;
+    a.click();
+  };
+
+  // If iframe fails to load, try embed/object fallback
+  const handleIframeError = () => {
+    setUseEmbed(true);
   };
 
   return (
@@ -85,11 +103,18 @@ const PdfWatermarkViewer = ({ open, onOpenChange, fileUrl, title }: PdfWatermark
       <DialogContent className="flex h-[90vh] max-w-4xl flex-col gap-0 p-0">
         <div className="flex items-center justify-between border-b bg-card px-4 py-3">
           <h3 className="text-sm font-bold text-foreground truncate">{title}</h3>
-          <Button variant="ghost" size="icon" onClick={() => handleOpenChange(false)}>
-            <X className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-1">
+            {blobUrl && (
+              <Button variant="ghost" size="icon" onClick={handleDownload} title="Download">
+                <Download className="h-4 w-4" />
+              </Button>
+            )}
+            <Button variant="ghost" size="icon" onClick={() => handleOpenChange(false)}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
-        <div className="relative flex-1 overflow-hidden">
+        <div ref={containerRef} className="relative flex-1 overflow-hidden">
           {/* Watermark overlay */}
           <div className="pointer-events-none absolute inset-0 z-10 flex flex-wrap items-center justify-center gap-24 overflow-hidden opacity-[0.08]">
             {Array.from({ length: 12 }).map((_, i) => (
@@ -113,11 +138,29 @@ const PdfWatermarkViewer = ({ open, onOpenChange, fileUrl, title }: PdfWatermark
               <Button variant="outline" size="sm" onClick={loadDocument}>Tentar novamente</Button>
             </div>
           ) : blobUrl ? (
-            <iframe
-              src={blobUrl}
-              className="h-full w-full border-0"
-              title={`Visualização: ${title}`}
-            />
+            useEmbed ? (
+              <object
+                data={blobUrl}
+                type="application/pdf"
+                className="h-full w-full"
+              >
+                <div className="flex h-full flex-col items-center justify-center gap-3">
+                  <p className="text-sm text-muted-foreground">
+                    Seu navegador não suporta visualização de PDF inline.
+                  </p>
+                  <Button variant="outline" size="sm" onClick={handleDownload} className="gap-2">
+                    <Download className="h-4 w-4" /> Baixar documento
+                  </Button>
+                </div>
+              </object>
+            ) : (
+              <iframe
+                src={blobUrl + "#toolbar=0"}
+                className="h-full w-full border-0"
+                title={`Visualização: ${title}`}
+                onError={handleIframeError}
+              />
+            )
           ) : null}
         </div>
       </DialogContent>
