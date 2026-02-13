@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { supabase } from "@/integrations/supabase/client";
 
 interface PdfWatermarkViewerProps {
   open: boolean;
@@ -13,7 +12,6 @@ interface PdfWatermarkViewerProps {
 
 /**
  * Extract the storage path from a Supabase public URL.
- * Supports both /object/public/ and /object/sign/ URL formats.
  */
 const parseStorageUrl = (url: string): { bucket: string; path: string } | null => {
   try {
@@ -33,22 +31,30 @@ const PdfWatermarkViewer = ({ open, onOpenChange, fileUrl, title }: PdfWatermark
     setError(null);
 
     const parsed = parseStorageUrl(fileUrl);
-    
-    // Determine bucket and path - try parsing URL first, fallback to assuming "documents" bucket
     const bucket = parsed?.bucket || "documents";
     const path = parsed?.path || fileUrl;
 
-    console.log("Loading document via proxy:", { bucket, path, originalUrl: fileUrl });
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
     try {
-      const { data, error: fnError } = await supabase.functions.invoke("document-proxy", {
-        body: { storagePath: path, bucketName: bucket },
+      // Use fetch directly to get raw binary response (supabase.functions.invoke may JSON-parse it)
+      const response = await fetch(`${supabaseUrl}/functions/v1/document-proxy`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": anonKey,
+          "Authorization": `Bearer ${anonKey}`,
+        },
+        body: JSON.stringify({ storagePath: path, bucketName: bucket }),
       });
 
-      if (fnError) throw fnError;
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(errText || `HTTP ${response.status}`);
+      }
 
-      // supabase.functions.invoke auto-detects response type based on Content-Type
-      const blob = data instanceof Blob ? data : new Blob([data], { type: "application/pdf" });
+      const blob = await response.blob();
       const url = URL.createObjectURL(blob);
       setBlobUrl(url);
     } catch (err: any) {
@@ -67,9 +73,7 @@ const PdfWatermarkViewer = ({ open, onOpenChange, fileUrl, title }: PdfWatermark
 
   const handleOpenChange = (val: boolean) => {
     if (!val) {
-      if (blobUrl) {
-        URL.revokeObjectURL(blobUrl);
-      }
+      if (blobUrl) URL.revokeObjectURL(blobUrl);
       setBlobUrl(null);
       setError(null);
     }
