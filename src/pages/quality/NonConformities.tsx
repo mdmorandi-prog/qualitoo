@@ -133,8 +133,9 @@ const NonConformities = () => {
     if (!user) return;
     const { error } = await supabase.from("action_plans").insert({
       title: `Plano - ${nc.title}`, what: nc.corrective_action || nc.description,
-      why: `Tratamento da NC: ${nc.title}`, origin_type: "non_conformity",
+      why: `Tratamento da NC: ${nc.title}`, origin_type: `NC: ${nc.title}`,
       origin_id: nc.id, sector: nc.sector, created_by: user.id,
+      description: `Plano de ação gerado a partir da Não Conformidade "${nc.title}" (Setor: ${nc.sector || "Geral"})`,
     } as any);
     if (error) { toast.error("Erro ao criar Plano"); console.error(error); }
     else { toast.success("Plano de Ação criado a partir da NC!"); setDetailOpen(false); }

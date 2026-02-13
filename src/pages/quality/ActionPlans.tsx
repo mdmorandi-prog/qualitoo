@@ -196,7 +196,7 @@ const ActionPlans = () => {
               {detailPlan.origin_type && detailPlan.origin_type !== "manual" && (
                 <div className="rounded-lg bg-secondary/50 p-3">
                   <p className="text-xs font-semibold text-muted-foreground">Origem</p>
-                  <p className="text-sm">{detailPlan.origin_type} {detailPlan.origin_id ? `(${detailPlan.origin_id.slice(0, 8)}...)` : ""}</p>
+                  <p className="text-sm">{detailPlan.origin_type}</p>
                 </div>
               )}
 
