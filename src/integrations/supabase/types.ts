@@ -389,6 +389,62 @@ export type Database = {
         }
         Relationships: []
       }
+      calibrations: {
+        Row: {
+          calibration_date: string
+          certificate_number: string | null
+          certificate_url: string | null
+          created_at: string
+          created_by: string
+          deviation: string | null
+          equipment_id: string
+          id: string
+          next_calibration_date: string | null
+          notes: string | null
+          performed_by: string | null
+          result: string
+          updated_at: string
+        }
+        Insert: {
+          calibration_date: string
+          certificate_number?: string | null
+          certificate_url?: string | null
+          created_at?: string
+          created_by: string
+          deviation?: string | null
+          equipment_id: string
+          id?: string
+          next_calibration_date?: string | null
+          notes?: string | null
+          performed_by?: string | null
+          result?: string
+          updated_at?: string
+        }
+        Update: {
+          calibration_date?: string
+          certificate_number?: string | null
+          certificate_url?: string | null
+          created_at?: string
+          created_by?: string
+          deviation?: string | null
+          equipment_id?: string
+          id?: string
+          next_calibration_date?: string | null
+          notes?: string | null
+          performed_by?: string | null
+          result?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calibrations_equipment_id_fkey"
+            columns: ["equipment_id"]
+            isOneToOne: false
+            referencedRelation: "equipment"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       capas: {
         Row: {
           capa_type: Database["public"]["Enums"]["capa_type"]
@@ -464,6 +520,69 @@ export type Database = {
           verification_date?: string | null
           verification_method?: string | null
           verification_result?: string | null
+        }
+        Relationships: []
+      }
+      change_requests: {
+        Row: {
+          affected_documents: string | null
+          affected_processes: string | null
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          description: string
+          id: string
+          impact_analysis: string | null
+          implemented_at: string | null
+          justification: string | null
+          priority: string
+          requested_by: string
+          risk_assessment: string | null
+          sector: string | null
+          status: string
+          title: string
+          updated_at: string
+          verified_at: string | null
+        }
+        Insert: {
+          affected_documents?: string | null
+          affected_processes?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          description: string
+          id?: string
+          impact_analysis?: string | null
+          implemented_at?: string | null
+          justification?: string | null
+          priority?: string
+          requested_by: string
+          risk_assessment?: string | null
+          sector?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          verified_at?: string | null
+        }
+        Update: {
+          affected_documents?: string | null
+          affected_processes?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          impact_analysis?: string | null
+          implemented_at?: string | null
+          justification?: string | null
+          priority?: string
+          requested_by?: string
+          risk_assessment?: string | null
+          sector?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          verified_at?: string | null
         }
         Relationships: []
       }
@@ -660,6 +779,60 @@ export type Database = {
           subject?: string
           to_email?: string
           to_user_id?: string | null
+        }
+        Relationships: []
+      }
+      equipment: {
+        Row: {
+          acquisition_date: string | null
+          category: string | null
+          created_at: string
+          created_by: string
+          id: string
+          location: string | null
+          manufacturer: string | null
+          model: string | null
+          name: string
+          notes: string | null
+          sector: string | null
+          serial_number: string | null
+          status: string
+          tag_number: string | null
+          updated_at: string
+        }
+        Insert: {
+          acquisition_date?: string | null
+          category?: string | null
+          created_at?: string
+          created_by: string
+          id?: string
+          location?: string | null
+          manufacturer?: string | null
+          model?: string | null
+          name: string
+          notes?: string | null
+          sector?: string | null
+          serial_number?: string | null
+          status?: string
+          tag_number?: string | null
+          updated_at?: string
+        }
+        Update: {
+          acquisition_date?: string | null
+          category?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          location?: string | null
+          manufacturer?: string | null
+          model?: string | null
+          name?: string
+          notes?: string | null
+          sector?: string | null
+          serial_number?: string | null
+          status?: string
+          tag_number?: string | null
+          updated_at?: string
         }
         Relationships: []
       }

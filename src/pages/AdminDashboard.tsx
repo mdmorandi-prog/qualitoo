@@ -5,6 +5,7 @@ import {
   ClipboardCheck, Target, GraduationCap, FishSymbol, ShieldAlert,
   TriangleAlert, Crosshair, BookOpen, Users2, Menu, X, PanelLeftClose, PanelLeft,
   Download, Shield, Settings, Truck, Heart, FileBarChart, GitBranch, Gauge, Workflow,
+  UserCircle, Ruler, GitPullRequest, Database,
 } from "lucide-react";
 import sgqLogo from "@/assets/sgq-logo.png";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import NotificationsPanel from "@/components/NotificationsPanel";
 import { useDashboardAlerts } from "@/hooks/useDashboardAlerts";
 import { supabase } from "@/integrations/supabase/client";
+import { useI18n } from "@/lib/i18n";
 import { NcTrendChart, RiskDistributionChart, ActionPlansChart, EventsTrendChart, IndicatorsVsTargetChart, type DateFilter } from "@/components/dashboard/DashboardCharts";
 import { MaturityRadarChart } from "@/components/dashboard/MaturityRadarChart";
 import { exportDashboardPdf } from "@/lib/exportPdf";
@@ -38,6 +40,10 @@ import RegulatoryReports from "@/pages/quality/RegulatoryReports";
 import ProcessMapping from "@/pages/quality/ProcessMapping";
 import CustomizableDashboard from "@/components/dashboard/CustomizableDashboard";
 import WorkflowConfig from "@/pages/quality/WorkflowConfig";
+import EmployeePortal from "@/pages/quality/EmployeePortal";
+import Metrology from "@/pages/quality/Metrology";
+import ChangeManagement from "@/pages/quality/ChangeManagement";
+import DataExport from "@/pages/quality/DataExport";
 
 const allTabs = [
   { key: "resumo", label: "Resumo", icon: LayoutDashboard },
@@ -59,6 +65,10 @@ const allTabs = [
   { key: "regulatorio", label: "Regulatório", icon: FileBarChart },
   { key: "processos", label: "Processos BPMN", icon: GitBranch },
   { key: "workflows", label: "Workflows", icon: Workflow },
+  { key: "portal", label: "Portal Colaborador", icon: UserCircle },
+  { key: "metrologia", label: "Metrologia", icon: Ruler },
+  { key: "mudancas", label: "Mudanças", icon: GitPullRequest },
+  { key: "exportacao", label: "Exportação BI", icon: Database },
   { key: "usuarios", label: "Usuários", icon: Settings, adminOnly: true },
 ] as const;
 
@@ -69,11 +79,14 @@ const contentMap: Record<string, React.FC> = {
   treinamentos: Trainings, atas: MeetingMinutes, eventos: AdverseEvents,
   capa: Capas, causa_raiz: RootCauseAnalysis, competencias: CompetencyMatrix,
   fornecedores: Suppliers, pesquisas: SatisfactionSurveys, regulatorio: RegulatoryReports,
-  processos: ProcessMapping, workflows: WorkflowConfig, usuarios: UserManagement,
+  processos: ProcessMapping, workflows: WorkflowConfig,
+  portal: EmployeePortal, metrologia: Metrology, mudancas: ChangeManagement, exportacao: DataExport,
+  usuarios: UserManagement,
 };
 
 const AdminDashboard = () => {
   const { user, signOut, isAdmin, isAnalyst, loading: authLoading } = useAuth();
+  const { locale, setLocale, t } = useI18n();
   useDashboardAlerts();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
@@ -205,6 +218,25 @@ const AdminDashboard = () => {
 
         {/* Sidebar Footer */}
         <div className={`shrink-0 border-t border-sidebar-border ${collapsed && !isMobile ? "p-2" : "p-3"}`}>
+          {/* Language Switcher */}
+          <div className={`mb-1 flex ${collapsed && !isMobile ? "justify-center" : "gap-1"}`}>
+            <Button
+              variant={locale === "pt" ? "secondary" : "ghost"}
+              size="sm"
+              onClick={() => setLocale("pt")}
+              className="h-7 px-2 text-[10px] text-sidebar-foreground/70"
+            >
+              PT
+            </Button>
+            <Button
+              variant={locale === "en" ? "secondary" : "ghost"}
+              size="sm"
+              onClick={() => setLocale("en")}
+              className="h-7 px-2 text-[10px] text-sidebar-foreground/70"
+            >
+              EN
+            </Button>
+          </div>
           {!isMobile && (
             <Button
               variant="ghost"
@@ -214,7 +246,7 @@ const AdminDashboard = () => {
                 collapsed ? "w-full justify-center" : "w-full justify-start gap-2"
               }`}
             >
-              {collapsed ? <PanelLeft className="h-4 w-4" /> : <><PanelLeftClose className="h-4 w-4" /> <span className="text-xs">Recolher</span></>}
+              {collapsed ? <PanelLeft className="h-4 w-4" /> : <><PanelLeftClose className="h-4 w-4" /> <span className="text-xs">{t("common.collapse")}</span></>}
             </Button>
           )}
           <Button
@@ -224,7 +256,7 @@ const AdminDashboard = () => {
               collapsed && !isMobile ? "w-full justify-center" : "w-full justify-start gap-2"
             }`}
           >
-            <LogOut className="h-4 w-4" /> {!(collapsed && !isMobile) && "Sair"}
+            <LogOut className="h-4 w-4" /> {!(collapsed && !isMobile) && t("common.logout")}
           </Button>
         </div>
       </aside>
