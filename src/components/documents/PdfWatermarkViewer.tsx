@@ -58,20 +58,26 @@ const PdfWatermarkViewer = ({ open, onOpenChange, fileUrl, title }: PdfWatermark
 
       const parentWidth = containerRef.current?.clientWidth || 800;
 
-      for (let i = 1; i <= doc.numPages; i++) {
-        const page = await doc.getPage(i);
-        const unscaled = page.getViewport({ scale: 1 });
-        const scale = (parentWidth - 32) / unscaled.width;
-        const viewport = page.getViewport({ scale });
+      const BATCH_SIZE = 3;
+      for (let i = 1; i <= doc.numPages; i += BATCH_SIZE) {
+        const end = Math.min(i + BATCH_SIZE - 1, doc.numPages);
+        for (let p = i; p <= end; p++) {
+          const page = await doc.getPage(p);
+          const unscaled = page.getViewport({ scale: 1 });
+          const scale = (parentWidth - 32) / unscaled.width;
+          const viewport = page.getViewport({ scale });
 
-        const canvas = document.createElement("canvas");
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
-        canvas.className = "mx-auto mb-4 shadow-sm";
-        container.appendChild(canvas);
+          const canvas = document.createElement("canvas");
+          canvas.width = viewport.width;
+          canvas.height = viewport.height;
+          canvas.className = "mx-auto mb-4 shadow-sm";
+          container.appendChild(canvas);
 
-        const ctx = canvas.getContext("2d")!;
-        await page.render({ canvasContext: ctx, viewport }).promise;
+          const ctx = canvas.getContext("2d")!;
+          await page.render({ canvasContext: ctx, viewport }).promise;
+        }
+        // Yield to UI thread between batches
+        await new Promise((resolve) => setTimeout(resolve, 50));
       }
       setRendered(true);
     } catch (err: any) {
