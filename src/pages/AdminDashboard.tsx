@@ -4,7 +4,7 @@ import {
   LogOut, LayoutDashboard, AlertTriangle, BarChart3, FileText,
   ClipboardCheck, Target, GraduationCap, FishSymbol, ShieldAlert,
   TriangleAlert, Crosshair, BookOpen, Users2, Menu, X, PanelLeftClose, PanelLeft,
-  Download, Shield, Settings, Truck, Heart, FileBarChart,
+  Download, Shield, Settings, Truck, Heart, FileBarChart, GitBranch,
 } from "lucide-react";
 import sgqLogo from "@/assets/sgq-logo.png";
 import { Button } from "@/components/ui/button";
@@ -35,6 +35,7 @@ import UserManagement from "@/pages/quality/UserManagement";
 import Suppliers from "@/pages/quality/Suppliers";
 import SatisfactionSurveys from "@/pages/quality/SatisfactionSurveys";
 import RegulatoryReports from "@/pages/quality/RegulatoryReports";
+import ProcessMapping from "@/pages/quality/ProcessMapping";
 
 const allTabs = [
   { key: "resumo", label: "Resumo", icon: LayoutDashboard },
@@ -53,6 +54,7 @@ const allTabs = [
   { key: "fornecedores", label: "Fornecedores", icon: Truck },
   { key: "pesquisas", label: "Satisfação", icon: Heart },
   { key: "regulatorio", label: "Regulatório", icon: FileBarChart },
+  { key: "processos", label: "Processos BPMN", icon: GitBranch },
   { key: "usuarios", label: "Usuários", icon: Settings, adminOnly: true },
 ] as const;
 
@@ -62,7 +64,7 @@ const contentMap: Record<string, React.FC> = {
   treinamentos: Trainings, atas: MeetingMinutes, eventos: AdverseEvents,
   capa: Capas, causa_raiz: RootCauseAnalysis, competencias: CompetencyMatrix,
   fornecedores: Suppliers, pesquisas: SatisfactionSurveys, regulatorio: RegulatoryReports,
-  usuarios: UserManagement,
+  processos: ProcessMapping, usuarios: UserManagement,
 };
 
 const AdminDashboard = () => {
