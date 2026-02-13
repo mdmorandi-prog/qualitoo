@@ -19,7 +19,7 @@ async function sendEmailViaResend(to: string, subject: string, htmlBody: string)
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: "SGQ Hospitalar <onboarding@resend.dev>",
+      from: "SGQ Hospitalar <sgq@hbsc.com.br>",
       to: [to],
       subject,
       html: htmlBody,
