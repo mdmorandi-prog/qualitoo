@@ -553,6 +553,80 @@ export type Database = {
           },
         ]
       }
+      document_signatures: {
+        Row: {
+          created_at: string
+          document_hash: string
+          document_id: string
+          geolocation: string | null
+          id: string
+          ip_address: string | null
+          is_verified: boolean
+          metadata: Json | null
+          revoked_at: string | null
+          revoked_reason: string | null
+          signature_hash: string
+          signature_type: string
+          signed_at: string
+          signer_email: string
+          signer_id: string
+          signer_name: string
+          user_agent: string | null
+          verification_code: string | null
+          verification_method: string
+        }
+        Insert: {
+          created_at?: string
+          document_hash: string
+          document_id: string
+          geolocation?: string | null
+          id?: string
+          ip_address?: string | null
+          is_verified?: boolean
+          metadata?: Json | null
+          revoked_at?: string | null
+          revoked_reason?: string | null
+          signature_hash: string
+          signature_type?: string
+          signed_at?: string
+          signer_email: string
+          signer_id: string
+          signer_name: string
+          user_agent?: string | null
+          verification_code?: string | null
+          verification_method?: string
+        }
+        Update: {
+          created_at?: string
+          document_hash?: string
+          document_id?: string
+          geolocation?: string | null
+          id?: string
+          ip_address?: string | null
+          is_verified?: boolean
+          metadata?: Json | null
+          revoked_at?: string | null
+          revoked_reason?: string | null
+          signature_hash?: string
+          signature_type?: string
+          signed_at?: string
+          signer_email?: string
+          signer_id?: string
+          signer_name?: string
+          user_agent?: string | null
+          verification_code?: string | null
+          verification_method?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_signatures_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "quality_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_queue: {
         Row: {
           body: string
@@ -1115,6 +1189,66 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      signature_audit_log: {
+        Row: {
+          action: string
+          actor_email: string | null
+          actor_id: string | null
+          actor_name: string | null
+          created_at: string
+          details: Json | null
+          document_hash: string | null
+          document_id: string
+          id: string
+          ip_address: string | null
+          signature_id: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          action: string
+          actor_email?: string | null
+          actor_id?: string | null
+          actor_name?: string | null
+          created_at?: string
+          details?: Json | null
+          document_hash?: string | null
+          document_id: string
+          id?: string
+          ip_address?: string | null
+          signature_id?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          action?: string
+          actor_email?: string | null
+          actor_id?: string | null
+          actor_name?: string | null
+          created_at?: string
+          details?: Json | null
+          document_hash?: string | null
+          document_id?: string
+          id?: string
+          ip_address?: string | null
+          signature_id?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "signature_audit_log_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "quality_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "signature_audit_log_signature_id_fkey"
+            columns: ["signature_id"]
+            isOneToOne: false
+            referencedRelation: "document_signatures"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       supplier_evaluations: {
         Row: {

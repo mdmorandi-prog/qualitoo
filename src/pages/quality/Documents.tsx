@@ -1,6 +1,9 @@
 import { useEffect, useState, useRef } from "react";
-import { Plus, Search, Eye, Upload, FileUp, AlertTriangle, ArrowRight, CheckCircle2, FileText, Lock } from "lucide-react";
+import { Plus, Search, Eye, Upload, FileUp, AlertTriangle, ArrowRight, CheckCircle2, FileText, Lock, FileSignature, Shield, ScrollText } from "lucide-react";
 import PdfWatermarkViewer from "@/components/documents/PdfWatermarkViewer";
+import SignatureDialog from "@/components/documents/SignatureDialog";
+import SignatureVerifier from "@/components/documents/SignatureVerifier";
+import SignatureAuditLog from "@/components/documents/SignatureAuditLog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -158,6 +161,12 @@ const Documents = () => {
   const [isSigned, setIsSigned] = useState(false);
   const [pdfViewerOpen, setPdfViewerOpen] = useState(false);
   const [pdfViewerDoc, setPdfViewerDoc] = useState<Doc | null>(null);
+  const [signDialogOpen, setSignDialogOpen] = useState(false);
+  const [signDoc, setSignDoc] = useState<Doc | null>(null);
+  const [verifyOpen, setVerifyOpen] = useState(false);
+  const [verifyDoc, setVerifyDoc] = useState<Doc | null>(null);
+  const [auditOpen, setAuditOpen] = useState(false);
+  const [auditDoc, setAuditDoc] = useState<Doc | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState({ ...initialForm });
@@ -394,6 +403,17 @@ const Documents = () => {
                 <TableCell className="text-xs text-muted-foreground">{d.valid_until ? new Date(d.valid_until).toLocaleDateString("pt-BR") : "—"}</TableCell>
                 <TableCell className="flex gap-1">
                   <Button variant="ghost" size="sm" onClick={() => { setSelected(d); setDetailOpen(true); }}><Eye className="h-4 w-4" /></Button>
+                  {!d.is_signed && d.status !== "obsoleto" && (
+                    <Button variant="ghost" size="sm" onClick={() => { setSignDoc(d); setSignDialogOpen(true); }} title="Assinar documento">
+                      <FileSignature className="h-4 w-4" />
+                    </Button>
+                  )}
+                  <Button variant="ghost" size="sm" onClick={() => { setVerifyDoc(d); setVerifyOpen(true); }} title="Verificar assinaturas">
+                    <Shield className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => { setAuditDoc(d); setAuditOpen(true); }} title="Trilha de auditoria">
+                    <ScrollText className="h-4 w-4" />
+                  </Button>
                   {d.file_url && (
                     <Button variant="ghost" size="sm" onClick={() => { setPdfViewerDoc(d); setPdfViewerOpen(true); }} title="Visualizar com marca d'água">
                       <FileText className="h-4 w-4" />
@@ -443,6 +463,19 @@ const Documents = () => {
               {selected.file_url && <a href={selected.file_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-primary hover:underline"><FileUp className="h-3 w-3" /> Ver arquivo original</a>}
               {selected.description && <div className="rounded-lg bg-secondary/50 p-3"><p className="text-sm text-foreground">{selected.description}</p></div>}
               {selected.content && <div className="rounded-lg border p-4"><pre className="whitespace-pre-wrap text-sm text-foreground">{selected.content}</pre></div>}
+              <div className="flex gap-2 border-t pt-4">
+                {!selected.is_signed && selected.status !== "obsoleto" && (
+                  <Button variant="outline" size="sm" className="flex-1 gap-2" onClick={() => { setDetailOpen(false); setSignDoc(selected); setSignDialogOpen(true); }}>
+                    <FileSignature className="h-4 w-4" /> Assinar
+                  </Button>
+                )}
+                <Button variant="outline" size="sm" className="flex-1 gap-2" onClick={() => { setDetailOpen(false); setVerifyDoc(selected); setVerifyOpen(true); }}>
+                  <Shield className="h-4 w-4" /> Verificar Assinaturas
+                </Button>
+                <Button variant="outline" size="sm" className="flex-1 gap-2" onClick={() => { setDetailOpen(false); setAuditDoc(selected); setAuditOpen(true); }}>
+                  <ScrollText className="h-4 w-4" /> Auditoria
+                </Button>
+              </div>
             </div>
           )}
         </DialogContent>
@@ -454,6 +487,32 @@ const Documents = () => {
           onOpenChange={setPdfViewerOpen}
           fileUrl={pdfViewerDoc.file_url!}
           title={`${pdfViewerDoc.code ? pdfViewerDoc.code + " - " : ""}${pdfViewerDoc.title}`}
+        />
+      )}
+
+      {signDoc && (
+        <SignatureDialog
+          open={signDialogOpen}
+          onOpenChange={setSignDialogOpen}
+          document={signDoc}
+          onSigned={fetchData}
+        />
+      )}
+
+      {verifyDoc && (
+        <SignatureVerifier
+          open={verifyOpen}
+          onOpenChange={setVerifyOpen}
+          document={verifyDoc}
+        />
+      )}
+
+      {auditDoc && (
+        <SignatureAuditLog
+          open={auditOpen}
+          onOpenChange={setAuditOpen}
+          documentId={auditDoc.id}
+          documentTitle={auditDoc.title}
         />
       )}
     </div>
