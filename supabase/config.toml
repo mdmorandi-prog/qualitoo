@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.ai-root-cause]
 verify_jwt = false
+
+[functions.elevenlabs-transcribe]
+verify_jwt = false

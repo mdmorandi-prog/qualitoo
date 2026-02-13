@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, Search, Eye } from "lucide-react";
+import { Plus, Search, Eye, Mic } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -13,9 +13,11 @@ import { Label } from "@/components/ui/label";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import VoiceRecorder from "@/components/voice/VoiceRecorder";
 
 interface Meeting {
   id: string; title: string; meeting_date: string; meeting_type: string | null;
@@ -32,6 +34,9 @@ const MeetingMinutes = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selected, setSelected] = useState<Meeting | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+
+  const [voiceMode, setVoiceMode] = useState<"web-speech" | "elevenlabs">("web-speech");
+  const [activeVoiceField, setActiveVoiceField] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     title: "", meeting_date: new Date().toISOString().split("T")[0], meeting_type: "comite_qualidade",
@@ -87,6 +92,21 @@ const MeetingMinutes = () => {
           <DialogContent className="sm:max-w-lg">
             <DialogHeader><DialogTitle className="font-display">Criar Ata de Reunião</DialogTitle></DialogHeader>
             <div className="grid gap-4 py-4">
+              {/* Voice mode selection */}
+              <div className="flex items-center justify-between rounded-lg border border-border/50 bg-muted/30 p-3">
+                <div className="flex items-center gap-2">
+                  <Mic className="h-4 w-4 text-primary" />
+                  <Label className="text-sm font-medium">Transcrição por voz</Label>
+                </div>
+                <Select value={voiceMode} onValueChange={(v: "web-speech" | "elevenlabs") => setVoiceMode(v)}>
+                  <SelectTrigger className="h-8 w-48"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="web-speech">Web Speech (Grátis)</SelectItem>
+                    <SelectItem value="elevenlabs">ElevenLabs (Premium)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
               <div className="grid gap-2"><Label>Título *</Label><Input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} /></div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2"><Label>Data *</Label><Input type="date" value={form.meeting_date} onChange={e => setForm(f => ({ ...f, meeting_date: e.target.value }))} /></div>
@@ -103,8 +123,35 @@ const MeetingMinutes = () => {
                 </div>
               </div>
               <div className="grid gap-2"><Label>Local</Label><Input value={form.location} onChange={e => setForm(f => ({ ...f, location: e.target.value }))} /></div>
-              <div className="grid gap-2"><Label>Participantes</Label><Textarea value={form.participants} onChange={e => setForm(f => ({ ...f, participants: e.target.value }))} placeholder="Lista de participantes..." /></div>
-              <div className="grid gap-2"><Label>Pauta</Label><Textarea value={form.agenda} onChange={e => setForm(f => ({ ...f, agenda: e.target.value }))} placeholder="Itens da pauta..." /></div>
+
+              {/* Participantes com voz */}
+              <div className="grid gap-2">
+                <div className="flex items-center justify-between">
+                  <Label>Participantes</Label>
+                  <Button type="button" variant="ghost" size="sm" className="h-6 gap-1 text-xs" onClick={() => setActiveVoiceField(activeVoiceField === "participants" ? null : "participants")}>
+                    <Mic className="h-3 w-3" /> Voz
+                  </Button>
+                </div>
+                {activeVoiceField === "participants" && (
+                  <VoiceRecorder mode={voiceMode} onTranscript={t => setForm(f => ({ ...f, participants: (f.participants ? f.participants + " " : "") + t }))} />
+                )}
+                <Textarea value={form.participants} onChange={e => setForm(f => ({ ...f, participants: e.target.value }))} placeholder="Lista de participantes..." />
+              </div>
+
+              {/* Pauta com voz */}
+              <div className="grid gap-2">
+                <div className="flex items-center justify-between">
+                  <Label>Pauta</Label>
+                  <Button type="button" variant="ghost" size="sm" className="h-6 gap-1 text-xs" onClick={() => setActiveVoiceField(activeVoiceField === "agenda" ? null : "agenda")}>
+                    <Mic className="h-3 w-3" /> Voz
+                  </Button>
+                </div>
+                {activeVoiceField === "agenda" && (
+                  <VoiceRecorder mode={voiceMode} onTranscript={t => setForm(f => ({ ...f, agenda: (f.agenda ? f.agenda + " " : "") + t }))} />
+                )}
+                <Textarea value={form.agenda} onChange={e => setForm(f => ({ ...f, agenda: e.target.value }))} placeholder="Itens da pauta..." />
+              </div>
+
               <Button onClick={handleCreate} className="w-full">Criar Ata</Button>
             </div>
           </DialogContent>
@@ -150,9 +197,30 @@ const MeetingMinutes = () => {
               {selected.participants && <div className="rounded-lg bg-secondary/50 p-3"><p className="mb-1 text-xs font-semibold text-muted-foreground">Participantes</p><p className="text-sm">{selected.participants}</p></div>}
               {selected.agenda && <div className="rounded-lg bg-secondary/50 p-3"><p className="mb-1 text-xs font-semibold text-muted-foreground">Pauta</p><p className="text-sm whitespace-pre-wrap">{selected.agenda}</p></div>}
               <div className="grid gap-3">
-                <div className="grid gap-2"><Label className="text-xs font-semibold">Discussões</Label><Textarea defaultValue={selected.discussions ?? ""} onBlur={e => updateField(selected.id, "discussions", e.target.value)} placeholder="O que foi discutido..." /></div>
-                <div className="grid gap-2"><Label className="text-xs font-semibold">Decisões</Label><Textarea defaultValue={selected.decisions ?? ""} onBlur={e => updateField(selected.id, "decisions", e.target.value)} placeholder="Decisões tomadas..." /></div>
-                <div className="grid gap-2"><Label className="text-xs font-semibold">Encaminhamentos</Label><Textarea defaultValue={selected.action_items ?? ""} onBlur={e => updateField(selected.id, "action_items", e.target.value)} placeholder="Ações e responsáveis..." /></div>
+                {(["discussions", "decisions", "action_items"] as const).map((field) => {
+                  const labels: Record<string, string> = { discussions: "Discussões", decisions: "Decisões", action_items: "Encaminhamentos" };
+                  const placeholders: Record<string, string> = { discussions: "O que foi discutido...", decisions: "Decisões tomadas...", action_items: "Ações e responsáveis..." };
+                  return (
+                    <div key={field} className="grid gap-2">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-xs font-semibold">{labels[field]}</Label>
+                        <Button type="button" variant="ghost" size="sm" className="h-6 gap-1 text-xs" onClick={() => setActiveVoiceField(activeVoiceField === `detail-${field}` ? null : `detail-${field}`)}>
+                          <Mic className="h-3 w-3" /> Voz
+                        </Button>
+                      </div>
+                      {activeVoiceField === `detail-${field}` && (
+                        <VoiceRecorder mode={voiceMode} onTranscript={t => {
+                          const textarea = document.querySelector(`[data-field="${field}"]`) as HTMLTextAreaElement;
+                          if (textarea) {
+                            const newVal = (textarea.value ? textarea.value + " " : "") + t;
+                            textarea.value = newVal;
+                          }
+                        }} />
+                      )}
+                      <Textarea data-field={field} defaultValue={(selected as any)?.[field] ?? ""} onBlur={e => updateField(selected!.id, field, e.target.value)} placeholder={placeholders[field]} />
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
