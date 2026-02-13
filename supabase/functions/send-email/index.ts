@@ -6,6 +6,51 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+async function sendEmailViaResend(to: string, subject: string, htmlBody: string) {
+  const resendApiKey = Deno.env.get("RESEND_API_KEY");
+  if (!resendApiKey) {
+    throw new Error("RESEND_API_KEY not configured");
+  }
+
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${resendApiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from: "SGQ Hospitalar <onboarding@resend.dev>",
+      to: [to],
+      subject,
+      html: htmlBody,
+    }),
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.message || JSON.stringify(data));
+  }
+  return data;
+}
+
+function buildEmailHtml(subject: string, body: string): string {
+  return `
+    <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0;">
+      <div style="background: linear-gradient(135deg, #0f766e, #0d9488); padding: 24px 32px;">
+        <h1 style="color: #ffffff; margin: 0; font-size: 20px;">SGQ Hospitalar</h1>
+        <p style="color: #ccfbf1; margin: 4px 0 0; font-size: 13px;">Sistema de Gestão da Qualidade</p>
+      </div>
+      <div style="padding: 32px;">
+        <h2 style="color: #1e293b; font-size: 18px; margin: 0 0 16px;">${subject}</h2>
+        <div style="color: #475569; font-size: 15px; line-height: 1.6;">${body}</div>
+      </div>
+      <div style="background: #f8fafc; padding: 16px 32px; border-top: 1px solid #e2e8f0;">
+        <p style="color: #94a3b8; font-size: 12px; margin: 0;">Este é um e-mail automático do SGQ Hospitalar. Não responda.</p>
+      </div>
+    </div>
+  `;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -31,25 +76,35 @@ serve(async (req) => {
         });
       }
 
-      // Queue email (for future SMTP integration)
+      // Send email immediately
       if (user_id) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("display_name")
-          .eq("user_id", user_id)
-          .maybeSingle();
-
-        // Get user email from auth
         const { data: { user: authUser } } = await supabase.auth.admin.getUserById(user_id);
-        
+
         if (authUser?.email) {
-          await supabase.from("email_queue").insert({
-            to_user_id: user_id,
-            to_email: authUser.email,
-            subject,
-            body,
-            status: "pending",
-          });
+          const htmlBody = buildEmailHtml(subject, body);
+
+          try {
+            await sendEmailViaResend(authUser.email, subject, htmlBody);
+
+            await supabase.from("email_queue").insert({
+              to_user_id: user_id,
+              to_email: authUser.email,
+              subject,
+              body,
+              status: "sent",
+              sent_at: new Date().toISOString(),
+            });
+          } catch (emailError) {
+            // Queue for retry if sending fails
+            await supabase.from("email_queue").insert({
+              to_user_id: user_id,
+              to_email: authUser.email,
+              subject,
+              body,
+              status: "failed",
+              error_message: emailError.message,
+            });
+          }
         }
       }
 
@@ -58,28 +113,39 @@ serve(async (req) => {
       });
     }
 
-    // Process pending emails (called by cron or manually)
+    // Process pending/failed emails (called by cron or manually)
     if (action === "process_queue") {
       const { data: pending } = await supabase
         .from("email_queue")
         .select("*")
-        .eq("status", "pending")
+        .in("status", ["pending", "failed"])
         .limit(50);
 
-      // For now, mark as "queued" - SMTP integration can be added later
+      let sent = 0;
+      let errors = 0;
+
       if (pending && pending.length > 0) {
-        const ids = pending.map((e: any) => e.id);
-        await supabase
-          .from("email_queue")
-          .update({ status: "queued" })
-          .in("id", ids);
+        for (const email of pending) {
+          try {
+            const htmlBody = buildEmailHtml(email.subject, email.body);
+            await sendEmailViaResend(email.to_email, email.subject, htmlBody);
+
+            await supabase
+              .from("email_queue")
+              .update({ status: "sent", sent_at: new Date().toISOString(), error_message: null })
+              .eq("id", email.id);
+            sent++;
+          } catch (err) {
+            await supabase
+              .from("email_queue")
+              .update({ status: "failed", error_message: err.message })
+              .eq("id", email.id);
+            errors++;
+          }
+        }
       }
 
-      return new Response(JSON.stringify({ 
-        success: true, 
-        processed: pending?.length ?? 0,
-        message: "Emails queued. Configure SMTP for actual delivery." 
-      }), {
+      return new Response(JSON.stringify({ success: true, sent, errors }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
