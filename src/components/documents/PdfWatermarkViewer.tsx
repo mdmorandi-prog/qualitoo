@@ -35,6 +35,7 @@ const PdfWatermarkViewer = ({ open, onOpenChange, fileUrl, title }: PdfWatermark
     const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
     try {
+      console.log("[PdfViewer] Fetching document:", { bucket, path, supabaseUrl });
       const response = await fetch(`${supabaseUrl}/functions/v1/document-proxy`, {
         method: "POST",
         headers: {
@@ -45,14 +46,18 @@ const PdfWatermarkViewer = ({ open, onOpenChange, fileUrl, title }: PdfWatermark
         body: JSON.stringify({ storagePath: path, bucketName: bucket }),
       });
 
+      console.log("[PdfViewer] Response status:", response.status, response.statusText);
+
       if (!response.ok) {
         const errText = await response.text();
         throw new Error(errText || `HTTP ${response.status}`);
       }
 
       const blob = await response.blob();
+      console.log("[PdfViewer] Blob received:", blob.size, "bytes, type:", blob.type);
       const pdfBlob = new Blob([blob], { type: "application/pdf" });
       const url = URL.createObjectURL(pdfBlob);
+      console.log("[PdfViewer] Blob URL created:", url);
       setBlobUrl(url);
     } catch (err: any) {
       console.error("Error loading document via proxy:", err);
@@ -135,12 +140,18 @@ const PdfWatermarkViewer = ({ open, onOpenChange, fileUrl, title }: PdfWatermark
               <Button variant="outline" size="sm" onClick={loadDocument}>Tentar novamente</Button>
             </div>
           ) : blobUrl ? (
-            <iframe
-              src={`${blobUrl}#toolbar=0&navpanes=0`}
-              className="h-full w-full border-0"
-              title={`Visualização: ${title}`}
-              sandbox="allow-same-origin allow-scripts"
-            />
+            <object
+              data={blobUrl}
+              type="application/pdf"
+              className="h-full w-full"
+            >
+              <p className="p-4 text-center text-sm text-muted-foreground">
+                Seu navegador não suporta visualização de PDF inline.{" "}
+                <a href={blobUrl} target="_blank" rel="noopener noreferrer" className="text-primary underline">
+                  Clique aqui para abrir o documento
+                </a>
+              </p>
+            </object>
           ) : null}
         </div>
       </DialogContent>
