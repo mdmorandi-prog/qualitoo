@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { X, Loader2, Download, ExternalLink, ChevronLeft, ChevronRight } from "lucide-react";
+import { X, Loader2, Download, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import * as pdfjsLib from "pdfjs-dist";
@@ -31,22 +31,19 @@ const getPublicUrl = (fileUrl: string): string => {
 };
 
 const PdfWatermarkViewer = ({ open, onOpenChange, fileUrl, title }: PdfWatermarkViewerProps) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [pdfDoc, setPdfDoc] = useState<pdfjsLib.PDFDocumentProxy | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(0);
+  const canvasContainerRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
+  const [rendered, setRendered] = useState(false);
 
-  const loadPdf = useCallback(async () => {
+  const loadAndRenderAll = useCallback(async () => {
     setLoading(true);
     setError(null);
+    setRendered(false);
     try {
       const url = getPublicUrl(fileUrl);
-      console.log("[PdfViewer] Loading PDF from:", url);
-
       const response = await fetch(url);
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
@@ -55,9 +52,28 @@ const PdfWatermarkViewer = ({ open, onOpenChange, fileUrl, title }: PdfWatermark
       setBlobUrl(URL.createObjectURL(blob));
 
       const doc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-      setPdfDoc(doc);
-      setTotalPages(doc.numPages);
-      setCurrentPage(1);
+      const container = canvasContainerRef.current;
+      if (!container) return;
+      container.innerHTML = "";
+
+      const parentWidth = containerRef.current?.clientWidth || 800;
+
+      for (let i = 1; i <= doc.numPages; i++) {
+        const page = await doc.getPage(i);
+        const unscaled = page.getViewport({ scale: 1 });
+        const scale = (parentWidth - 32) / unscaled.width;
+        const viewport = page.getViewport({ scale });
+
+        const canvas = document.createElement("canvas");
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        canvas.className = "mx-auto mb-4 shadow-sm";
+        container.appendChild(canvas);
+
+        const ctx = canvas.getContext("2d")!;
+        await page.render({ canvasContext: ctx, viewport }).promise;
+      }
+      setRendered(true);
     } catch (err: any) {
       console.error("[PdfViewer] Error:", err);
       setError("Erro ao carregar documento. Tente novamente.");
@@ -66,44 +82,18 @@ const PdfWatermarkViewer = ({ open, onOpenChange, fileUrl, title }: PdfWatermark
     }
   }, [fileUrl]);
 
-  const renderPage = useCallback(async (pageNum: number) => {
-    if (!pdfDoc || !canvasRef.current || !containerRef.current) return;
-
-    const page = await pdfDoc.getPage(pageNum);
-    const container = containerRef.current;
-    const containerWidth = container.clientWidth;
-
-    const unscaledViewport = page.getViewport({ scale: 1 });
-    const scale = containerWidth / unscaledViewport.width;
-    const viewport = page.getViewport({ scale });
-
-    const canvas = canvasRef.current;
-    canvas.height = viewport.height;
-    canvas.width = viewport.width;
-
-    const ctx = canvas.getContext("2d")!;
-    await page.render({ canvasContext: ctx, viewport }).promise;
-  }, [pdfDoc]);
-
   useEffect(() => {
-    if (open && !pdfDoc && !loading) {
-      loadPdf();
+    if (open && !rendered && !loading) {
+      loadAndRenderAll();
     }
-  }, [open, loadPdf, pdfDoc, loading]);
-
-  useEffect(() => {
-    if (pdfDoc && currentPage) {
-      renderPage(currentPage);
-    }
-  }, [pdfDoc, currentPage, renderPage]);
+  }, [open, loadAndRenderAll, rendered, loading]);
 
   const handleOpenChange = (val: boolean) => {
     if (!val) {
       if (blobUrl) URL.revokeObjectURL(blobUrl);
       setBlobUrl(null);
-      setPdfDoc(null);
-      setCurrentPage(1);
-      setTotalPages(0);
+      setRendered(false);
+      if (canvasContainerRef.current) canvasContainerRef.current.innerHTML = "";
       setError(null);
     }
     onOpenChange(val);
@@ -128,29 +118,6 @@ const PdfWatermarkViewer = ({ open, onOpenChange, fileUrl, title }: PdfWatermark
         <div className="flex items-center justify-between border-b bg-card px-4 py-3">
           <h3 className="text-sm font-bold text-foreground truncate">{title}</h3>
           <div className="flex items-center gap-2">
-            {totalPages > 1 && (
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                  disabled={currentPage <= 1}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <span className="text-xs text-muted-foreground min-w-[60px] text-center">
-                  {currentPage} / {totalPages}
-                </span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                  disabled={currentPage >= totalPages}
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-            )}
             {blobUrl && (
               <>
                 <Button variant="ghost" size="icon" onClick={handleOpenNewTab} title="Abrir em nova aba">
@@ -187,13 +154,13 @@ const PdfWatermarkViewer = ({ open, onOpenChange, fileUrl, title }: PdfWatermark
           ) : error ? (
             <div className="flex h-full flex-col items-center justify-center gap-3">
               <p className="text-sm text-destructive">{error}</p>
-              <Button variant="outline" size="sm" onClick={loadPdf}>Tentar novamente</Button>
+              <Button variant="outline" size="sm" onClick={loadAndRenderAll}>Tentar novamente</Button>
             </div>
-          ) : pdfDoc ? (
-            <div className="flex justify-center">
-              <canvas ref={canvasRef} className="max-w-full" />
-            </div>
-          ) : null}
+          ) : rendered ? (
+            <div ref={canvasContainerRef} className="p-4" />
+          ) : (
+            <div ref={canvasContainerRef} />
+          )}
         </div>
       </DialogContent>
     </Dialog>
