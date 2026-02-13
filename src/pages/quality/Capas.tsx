@@ -16,6 +16,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { executeWorkflowRules } from "@/lib/workflowEngine";
 
 type CapaType = "corretiva" | "preventiva" | "melhoria";
 type CapaStatus = "identificacao" | "analise_causa" | "plano_acao" | "implementacao" | "verificacao_eficacia" | "encerrada";
@@ -85,7 +86,12 @@ const Capas = () => {
       sector: form.sector || null, deadline: form.deadline || null, created_by: user.id,
     } as any);
     if (error) { toast.error("Erro ao criar CAPA"); console.error(error); }
-    else { toast.success("CAPA criada!"); setDialogOpen(false); setForm({ title: "", description: "", capa_type: "corretiva", sector: "", deadline: "" }); fetchCapas(); }
+    else {
+      toast.success("CAPA criada!"); setDialogOpen(false); setForm({ title: "", description: "", capa_type: "corretiva", sector: "", deadline: "" });
+      const { data: created } = await supabase.from("capas").select("*").eq("title", form.title).order("created_at", { ascending: false }).limit(1).maybeSingle();
+      if (created) executeWorkflowRules("capas", "record_created", created, undefined, user.id);
+      fetchCapas();
+    }
   };
 
   const advanceStatus = async (capa: Capa) => {
@@ -94,7 +100,12 @@ const Capas = () => {
     const nextStatus = statusSteps[currentIdx + 1].key;
     const { error } = await supabase.from("capas").update({ status: nextStatus } as any).eq("id", capa.id);
     if (error) toast.error("Erro ao avançar status");
-    else { toast.success(`Avançado para: ${statusSteps[currentIdx + 1].label}`); fetchCapas(); }
+    else {
+      toast.success(`Avançado para: ${statusSteps[currentIdx + 1].label}`);
+      const updatedRecord = { ...capa, status: nextStatus };
+      executeWorkflowRules("capas", "status_change", updatedRecord, capa, user?.id);
+      fetchCapas();
+    }
   };
 
   const updateField = async (id: string, field: string, value: any) => {
