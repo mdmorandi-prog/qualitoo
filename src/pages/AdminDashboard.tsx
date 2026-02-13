@@ -5,7 +5,7 @@ import {
   ClipboardCheck, Target, GraduationCap, FishSymbol, ShieldAlert,
   TriangleAlert, Crosshair, BookOpen, Users2, Menu, X, PanelLeftClose, PanelLeft,
   Download, Shield, Settings, Truck, Heart, FileBarChart, GitBranch, Gauge, Workflow,
-  UserCircle, Ruler, GitPullRequest, Database,
+  UserCircle, Ruler, GitPullRequest, Database, Search, Upload, HelpCircle, ShieldCheck, GitMerge,
 } from "lucide-react";
 import sgqLogo from "@/assets/sgq-logo.png";
 import { Button } from "@/components/ui/button";
@@ -45,6 +45,11 @@ import Metrology from "@/pages/quality/Metrology";
 import ChangeManagement from "@/pages/quality/ChangeManagement";
 import DataExport from "@/pages/quality/DataExport";
 import SystemSettings from "@/pages/quality/SystemSettings";
+import QueryBuilder from "@/pages/quality/QueryBuilder";
+import FmeaAnalysis from "@/pages/quality/FmeaAnalysis";
+import LgpdCompliance from "@/pages/quality/LgpdCompliance";
+import HelpCenter from "@/pages/quality/HelpCenter";
+import BulkImport from "@/pages/quality/BulkImport";
 
 const allTabs = [
   { key: "resumo", label: "Resumo", icon: LayoutDashboard },
@@ -70,6 +75,11 @@ const allTabs = [
   { key: "metrologia", label: "Metrologia", icon: Ruler },
   { key: "mudancas", label: "Mudanças", icon: GitPullRequest },
   { key: "exportacao", label: "Exportação BI", icon: Database },
+  { key: "consultas", label: "Consultas", icon: Search },
+  { key: "importacao", label: "Importação", icon: Upload },
+  { key: "fmea", label: "FMEA", icon: GitMerge },
+  { key: "lgpd", label: "LGPD", icon: ShieldCheck },
+  { key: "ajuda", label: "Central de Ajuda", icon: HelpCircle },
   { key: "configuracoes", label: "Configurações", icon: Settings, adminOnly: true },
   { key: "usuarios", label: "Usuários", icon: Users2, adminOnly: true },
 ] as const;
@@ -83,6 +93,7 @@ const contentMap: Record<string, React.FC> = {
   fornecedores: Suppliers, pesquisas: SatisfactionSurveys, regulatorio: RegulatoryReports,
   processos: ProcessMapping, workflows: WorkflowConfig,
   portal: EmployeePortal, metrologia: Metrology, mudancas: ChangeManagement, exportacao: DataExport,
+  consultas: QueryBuilder, importacao: BulkImport, fmea: FmeaAnalysis, lgpd: LgpdCompliance, ajuda: HelpCenter,
   configuracoes: SystemSettings, usuarios: UserManagement,
 };
 

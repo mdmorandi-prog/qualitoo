@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { Plus, Search, Eye, Upload, FileUp, AlertTriangle, ArrowRight, CheckCircle2, FileText, Lock, FileSignature, Shield, ScrollText, Clock, XCircle } from "lucide-react";
+import { Plus, Search, Eye, Upload, FileUp, AlertTriangle, ArrowRight, CheckCircle2, FileText, Lock, FileSignature, Shield, ScrollText, Clock, XCircle, BookOpenCheck } from "lucide-react";
 import PdfWatermarkViewer from "@/components/documents/PdfWatermarkViewer";
 import SignatureDialog from "@/components/documents/SignatureDialog";
 import SignatureVerifier from "@/components/documents/SignatureVerifier";
@@ -168,6 +168,7 @@ const Documents = () => {
   const [verifyDoc, setVerifyDoc] = useState<Doc | null>(null);
   const [auditOpen, setAuditOpen] = useState(false);
   const [auditDoc, setAuditDoc] = useState<Doc | null>(null);
+  const [readConfirmations, setReadConfirmations] = useState<Record<string, boolean>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState({ ...initialForm });
@@ -179,7 +180,25 @@ const Documents = () => {
     const { data, error } = await supabase.from("quality_documents").select("*").order("created_at", { ascending: false });
     if (error) toast.error("Erro ao carregar");
     else setDocs((data as any[]) ?? []);
+    // Fetch read confirmations for current user
+    if (user) {
+      const { data: confirms } = await supabase.from("document_read_confirmations").select("document_id").eq("user_id", user.id);
+      if (confirms) {
+        const map: Record<string, boolean> = {};
+        confirms.forEach((c: any) => { map[c.document_id] = true; });
+        setReadConfirmations(map);
+      }
+    }
     setLoading(false);
+  };
+
+  const confirmRead = async (docId: string) => {
+    if (!user) return;
+    const { error } = await supabase.from("document_read_confirmations").insert({ document_id: docId, user_id: user.id } as any);
+    if (error) { if (error.code === "23505") toast.info("Já confirmado"); else toast.error("Erro"); }
+    else { toast.success("Leitura confirmada!"); setReadConfirmations(prev => ({ ...prev, [docId]: true })); }
+    // Log access
+    await supabase.from("document_access_log").insert({ document_id: docId, user_id: user.id, action: "read_confirmation" } as any);
   };
 
   const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -448,6 +467,14 @@ const Documents = () => {
                 <TableCell className={`text-xs ${isExpired ? "font-bold text-destructive" : "text-muted-foreground"}`}>{d.valid_until ? new Date(d.valid_until).toLocaleDateString("pt-BR") : "—"}</TableCell>
                 <TableCell className="flex gap-1">
                   <Button variant="ghost" size="sm" onClick={() => { setSelected(d); setDetailOpen(true); }}><Eye className="h-4 w-4" /></Button>
+                  {d.status === "aprovado" && !readConfirmations[d.id] && (
+                    <Button variant="ghost" size="sm" onClick={() => confirmRead(d.id)} title="Confirmar leitura" className="text-primary">
+                      <BookOpenCheck className="h-4 w-4" />
+                    </Button>
+                  )}
+                  {d.status === "aprovado" && readConfirmations[d.id] && (
+                    <span className="flex items-center text-safe" title="Leitura confirmada"><CheckCircle2 className="h-4 w-4" /></span>
+                  )}
                   {!d.is_signed && d.status !== "obsoleto" && (
                     <Button variant="ghost" size="sm" onClick={() => { setSignDoc(d); setSignDialogOpen(true); }} title="Assinar documento">
                       <FileSignature className="h-4 w-4" />

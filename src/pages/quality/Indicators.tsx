@@ -39,7 +39,7 @@ const Indicators = () => {
 
   const [form, setForm] = useState({
     name: "", description: "", unit: "%", target_value: "", min_acceptable: "", max_acceptable: "",
-    frequency: "mensal", sector: "",
+    frequency: "mensal", sector: "", is_composite: false, formula: "",
   });
 
   const [measForm, setMeasForm] = useState({ value: "", period_date: new Date().toISOString().split("T")[0], notes: "" });
@@ -65,9 +65,10 @@ const Indicators = () => {
       min_acceptable: form.min_acceptable ? Number(form.min_acceptable) : null,
       max_acceptable: form.max_acceptable ? Number(form.max_acceptable) : null,
       frequency: form.frequency, sector: form.sector || null,
+      is_composite: form.is_composite, formula: form.formula || null,
     } as any);
     if (error) { toast.error("Erro ao criar"); console.error(error); }
-    else { toast.success("Indicador criado!"); setDialogOpen(false); setForm({ name: "", description: "", unit: "%", target_value: "", min_acceptable: "", max_acceptable: "", frequency: "mensal", sector: "" }); fetchAll(); }
+    else { toast.success("Indicador criado!"); setDialogOpen(false); setForm({ name: "", description: "", unit: "%", target_value: "", min_acceptable: "", max_acceptable: "", frequency: "mensal", sector: "", is_composite: false, formula: "" }); fetchAll(); }
   };
 
   const addMeasurement = async () => {
@@ -127,6 +128,20 @@ const Indicators = () => {
                 <div className="grid gap-2"><Label>Setor</Label><Input value={form.sector} onChange={e => setForm(f => ({ ...f, sector: e.target.value }))} /></div>
               </div>
               <div className="grid gap-2"><Label>Descrição</Label><Textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} /></div>
+              <div className="flex items-center gap-3 rounded-lg bg-secondary/50 p-3">
+                <input type="checkbox" checked={form.is_composite} onChange={e => setForm(f => ({ ...f, is_composite: e.target.checked }))} className="h-4 w-4 rounded" />
+                <div className="flex-1">
+                  <Label className="text-xs font-bold">Indicador Composto</Label>
+                  <p className="text-[10px] text-muted-foreground">Calculado a partir de fórmula com outros indicadores</p>
+                </div>
+              </div>
+              {form.is_composite && (
+                <div className="grid gap-2">
+                  <Label>Fórmula</Label>
+                  <Input value={form.formula} onChange={e => setForm(f => ({ ...f, formula: e.target.value }))} placeholder="Ex: (IND_A / IND_B) * 100" />
+                  <p className="text-[10px] text-muted-foreground">Use nomes de indicadores para criar fórmulas compostas</p>
+                </div>
+              )}
               <Button onClick={handleCreate} className="w-full">Cadastrar</Button>
             </div>
           </DialogContent>

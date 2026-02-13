@@ -672,6 +672,70 @@ export type Database = {
           },
         ]
       }
+      document_access_log: {
+        Row: {
+          action: string
+          created_at: string
+          details: string | null
+          document_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          action?: string
+          created_at?: string
+          details?: string | null
+          document_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: string | null
+          document_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_access_log_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "quality_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_read_confirmations: {
+        Row: {
+          confirmed_at: string
+          document_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          confirmed_at?: string
+          document_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          confirmed_at?: string
+          document_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_read_confirmations_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "quality_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_signatures: {
         Row: {
           created_at: string
@@ -836,6 +900,98 @@ export type Database = {
         }
         Relationships: []
       }
+      fmea_analyses: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          process: string | null
+          sector: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          process?: string | null
+          sector?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          process?: string | null
+          sector?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      fmea_items: {
+        Row: {
+          cause: string | null
+          created_at: string
+          current_controls: string | null
+          detection: number
+          effect: string | null
+          failure_mode: string
+          fmea_id: string
+          id: string
+          occurrence: number
+          recommended_action: string | null
+          responsible: string | null
+          rpn: number | null
+          severity: number
+          status: string
+        }
+        Insert: {
+          cause?: string | null
+          created_at?: string
+          current_controls?: string | null
+          detection?: number
+          effect?: string | null
+          failure_mode: string
+          fmea_id: string
+          id?: string
+          occurrence?: number
+          recommended_action?: string | null
+          responsible?: string | null
+          rpn?: number | null
+          severity?: number
+          status?: string
+        }
+        Update: {
+          cause?: string | null
+          created_at?: string
+          current_controls?: string | null
+          detection?: number
+          effect?: string | null
+          failure_mode?: string
+          fmea_id?: string
+          id?: string
+          occurrence?: number
+          recommended_action?: string | null
+          responsible?: string | null
+          rpn?: number | null
+          severity?: number
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fmea_items_fmea_id_fkey"
+            columns: ["fmea_id"]
+            isOneToOne: false
+            referencedRelation: "fmea_analyses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       indicator_measurements: {
         Row: {
           created_at: string
@@ -873,6 +1029,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      lgpd_data_mappings: {
+        Row: {
+          created_at: string
+          created_by: string
+          data_category: string
+          data_type: string
+          id: string
+          is_sensitive: boolean
+          legal_basis: string
+          notes: string | null
+          purpose: string
+          responsible: string | null
+          retention_period: string | null
+          sector: string | null
+          status: string
+          storage_location: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          data_category: string
+          data_type: string
+          id?: string
+          is_sensitive?: boolean
+          legal_basis: string
+          notes?: string | null
+          purpose: string
+          responsible?: string | null
+          retention_period?: string | null
+          sector?: string | null
+          status?: string
+          storage_location?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          data_category?: string
+          data_type?: string
+          id?: string
+          is_sensitive?: boolean
+          legal_basis?: string
+          notes?: string | null
+          purpose?: string
+          responsible?: string | null
+          retention_period?: string | null
+          sector?: string | null
+          status?: string
+          storage_location?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       meeting_minutes: {
         Row: {
@@ -925,6 +1135,45 @@ export type Database = {
           status?: string
           title?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      nc_custom_fields: {
+        Row: {
+          created_at: string
+          display_order: number
+          field_label: string
+          field_name: string
+          field_type: string
+          id: string
+          is_active: boolean
+          is_required: boolean
+          nc_type: string
+          options: string[] | null
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          field_label: string
+          field_name: string
+          field_type?: string
+          id?: string
+          is_active?: boolean
+          is_required?: boolean
+          nc_type: string
+          options?: string[] | null
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          field_label?: string
+          field_name?: string
+          field_type?: string
+          id?: string
+          is_active?: boolean
+          is_required?: boolean
+          nc_type?: string
+          options?: string[] | null
         }
         Relationships: []
       }
@@ -1106,14 +1355,17 @@ export type Database = {
         Row: {
           created_at: string
           description: string | null
+          formula: string | null
           frequency: Database["public"]["Enums"]["indicator_frequency"]
           id: string
           is_active: boolean
+          is_composite: boolean
           max_acceptable: number | null
           min_acceptable: number | null
           name: string
           responsible_id: string | null
           sector: string | null
+          source_indicator_ids: string[] | null
           target_value: number
           unit: string
           updated_at: string
@@ -1121,14 +1373,17 @@ export type Database = {
         Insert: {
           created_at?: string
           description?: string | null
+          formula?: string | null
           frequency?: Database["public"]["Enums"]["indicator_frequency"]
           id?: string
           is_active?: boolean
+          is_composite?: boolean
           max_acceptable?: number | null
           min_acceptable?: number | null
           name: string
           responsible_id?: string | null
           sector?: string | null
+          source_indicator_ids?: string[] | null
           target_value: number
           unit?: string
           updated_at?: string
@@ -1136,14 +1391,17 @@ export type Database = {
         Update: {
           created_at?: string
           description?: string | null
+          formula?: string | null
           frequency?: Database["public"]["Enums"]["indicator_frequency"]
           id?: string
           is_active?: boolean
+          is_composite?: boolean
           max_acceptable?: number | null
           min_acceptable?: number | null
           name?: string
           responsible_id?: string | null
           sector?: string | null
+          source_indicator_ids?: string[] | null
           target_value?: number
           unit?: string
           updated_at?: string
@@ -1661,7 +1919,9 @@ export type Database = {
           created_at: string
           id: string
           is_default: boolean
+          is_shared: boolean
           layouts: Json
+          shared_with_roles: string[] | null
           updated_at: string
           user_id: string
           widgets: Json
@@ -1671,7 +1931,9 @@ export type Database = {
           created_at?: string
           id?: string
           is_default?: boolean
+          is_shared?: boolean
           layouts?: Json
+          shared_with_roles?: string[] | null
           updated_at?: string
           user_id: string
           widgets?: Json
@@ -1681,7 +1943,9 @@ export type Database = {
           created_at?: string
           id?: string
           is_default?: boolean
+          is_shared?: boolean
           layouts?: Json
+          shared_with_roles?: string[] | null
           updated_at?: string
           user_id?: string
           widgets?: Json

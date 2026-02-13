@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Plus, Trash2, FishSymbol, Bot, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +26,97 @@ interface FiveWhys {
   whys: { question: string; answer: string }[];
   rootCause: string;
 }
+
+// Tree Diagram Component
+interface TreeNode {
+  id: string;
+  label: string;
+  children: TreeNode[];
+}
+
+const TreeDiagram = () => {
+  const [rootProblem, setRootProblem] = useState("Problema Principal");
+  const [tree, setTree] = useState<TreeNode>({
+    id: "root",
+    label: "",
+    children: [
+      { id: "c1", label: "", children: [] },
+      { id: "c2", label: "", children: [] },
+    ],
+  });
+
+  const updateNodeLabel = useCallback((nodes: TreeNode, nodeId: string, label: string): TreeNode => {
+    if (nodes.id === nodeId) return { ...nodes, label };
+    return { ...nodes, children: nodes.children.map(c => updateNodeLabel(c, nodeId, label)) };
+  }, []);
+
+  const addChild = useCallback((nodes: TreeNode, parentId: string): TreeNode => {
+    if (nodes.id === parentId) {
+      return { ...nodes, children: [...nodes.children, { id: `n_${Date.now()}`, label: "", children: [] }] };
+    }
+    return { ...nodes, children: nodes.children.map(c => addChild(c, parentId)) };
+  }, []);
+
+  const removeNode = useCallback((nodes: TreeNode, nodeId: string): TreeNode => {
+    return { ...nodes, children: nodes.children.filter(c => c.id !== nodeId).map(c => removeNode(c, nodeId)) };
+  }, []);
+
+  const renderNode = (node: TreeNode, depth: number = 0): React.ReactNode => {
+    return (
+      <div key={node.id} className="ml-4 first:ml-0" style={{ marginLeft: depth > 0 ? 24 : 0 }}>
+        <div className="flex items-center gap-1.5 mb-1">
+          {depth > 0 && <div className="h-4 w-3 border-l-2 border-b-2 border-primary/30 rounded-bl" />}
+          <div className={`flex items-center gap-1 rounded-lg border px-2 py-1 ${depth === 0 ? "bg-primary/10 border-primary" : "bg-card"}`}>
+            <Input
+              value={node.label}
+              onChange={e => setTree(prev => updateNodeLabel(prev, node.id, e.target.value))}
+              placeholder={depth === 0 ? "Causa principal" : `Sub-causa nível ${depth}`}
+              className="h-7 border-0 bg-transparent text-xs p-0 shadow-none focus-visible:ring-0"
+            />
+            <Button variant="ghost" size="sm" onClick={() => setTree(prev => addChild(prev, node.id))} className="h-5 w-5 p-0 text-muted-foreground hover:text-primary" title="Adicionar sub-causa">
+              <Plus className="h-3 w-3" />
+            </Button>
+            {depth > 0 && (
+              <Button variant="ghost" size="sm" onClick={() => setTree(prev => removeNode(prev, node.id))} className="h-5 w-5 p-0 text-muted-foreground hover:text-destructive" title="Remover">
+                <Trash2 className="h-3 w-3" />
+              </Button>
+            )}
+          </div>
+        </div>
+        {node.children.length > 0 && (
+          <div className="border-l-2 border-primary/20 ml-3 pl-1">
+            {node.children.map(c => renderNode(c, depth + 1))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="rounded-xl border bg-card p-5 shadow-[var(--card-shadow)]">
+        <Label className="text-sm font-bold">Problema / Efeito</Label>
+        <Input value={rootProblem} onChange={e => setRootProblem(e.target.value)} placeholder="Descreva o problema..." className="mt-2" />
+      </div>
+
+      <div className="rounded-xl border bg-card p-6 shadow-[var(--card-shadow)]">
+        <h3 className="mb-4 text-sm font-bold text-foreground">Árvore de Causas</h3>
+        <div className="flex items-center gap-3 mb-4">
+          <div className="rounded-lg bg-primary px-3 py-1.5 text-sm font-bold text-primary-foreground">
+            {rootProblem || "Problema"}
+          </div>
+          <div className="h-0.5 w-8 bg-primary/30" />
+        </div>
+        <div className="space-y-1">
+          {tree.children.map(c => renderNode(c, 1))}
+        </div>
+        <Button variant="outline" size="sm" className="mt-4 gap-1" onClick={() => setTree(prev => addChild(prev, "root"))}>
+          <Plus className="h-3 w-3" /> Adicionar Causa Raiz
+        </Button>
+      </div>
+    </div>
+  );
+};
 
 const RootCauseAnalysis = () => {
   const [aiSource, setAiSource] = useState<string | null>(null);
@@ -150,6 +241,7 @@ const RootCauseAnalysis = () => {
         <TabsList className="w-full justify-start">
           <TabsTrigger value="ishikawa" className="gap-2"><FishSymbol className="h-4 w-4" /> Ishikawa (6M)</TabsTrigger>
           <TabsTrigger value="five_whys">5 Porquês</TabsTrigger>
+          <TabsTrigger value="tree">Diagrama de Árvore</TabsTrigger>
         </TabsList>
 
         {/* ISHIKAWA */}
@@ -255,6 +347,11 @@ const RootCauseAnalysis = () => {
             <Label className="text-sm font-bold text-primary">Causa Raiz Identificada</Label>
             <Textarea value={fiveWhys.rootCause} onChange={e => setFiveWhys(prev => ({ ...prev, rootCause: e.target.value }))} placeholder="Com base nas respostas acima, qual é a causa raiz?" className="mt-2 border-primary/30" />
           </div>
+        </TabsContent>
+
+        {/* TREE DIAGRAM */}
+        <TabsContent value="tree" className="space-y-6">
+          <TreeDiagram />
         </TabsContent>
       </Tabs>
     </div>
