@@ -4,6 +4,7 @@ import PdfWatermarkViewer from "@/components/documents/PdfWatermarkViewer";
 import SignatureDialog from "@/components/documents/SignatureDialog";
 import SignatureVerifier from "@/components/documents/SignatureVerifier";
 import SignatureAuditLog from "@/components/documents/SignatureAuditLog";
+import DocumentSignatureBlock from "@/components/documents/DocumentSignatureBlock";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -536,6 +537,7 @@ const Documents = () => {
               {selected.file_url && <Button variant="link" size="sm" className="h-auto p-0 gap-1 text-xs text-primary" onClick={() => { setDetailOpen(false); setPdfViewerDoc(selected); setPdfViewerOpen(true); }}><FileUp className="h-3 w-3" /> Ver arquivo original</Button>}
               {selected.description && <div className="rounded-lg bg-secondary/50 p-3"><p className="text-sm text-foreground">{selected.description}</p></div>}
               {selected.content && <div className="rounded-lg border p-4"><pre className="whitespace-pre-wrap text-sm text-foreground">{selected.content}</pre></div>}
+              <DocumentSignatureBlock documentId={selected.id} documentTitle={selected.title} />
               <div className="flex gap-2 border-t pt-4">
                 {!selected.is_signed && selected.status !== "obsoleto" && (
                   <Button variant="outline" size="sm" className="flex-1 gap-2" onClick={() => { setDetailOpen(false); setSignDoc(selected); setSignDialogOpen(true); }}>
