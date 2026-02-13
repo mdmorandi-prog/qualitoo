@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -13,11 +13,11 @@ interface PdfWatermarkViewerProps {
 
 /**
  * Extract the storage path from a Supabase public URL.
- * URL format: https://<project>.supabase.co/storage/v1/object/public/<bucket>/<path>
+ * Supports both /object/public/ and /object/sign/ URL formats.
  */
 const parseStorageUrl = (url: string): { bucket: string; path: string } | null => {
   try {
-    const match = url.match(/\/storage\/v1\/object\/public\/([^/]+)\/(.+)/);
+    const match = url.match(/\/storage\/v1\/object\/(?:public|sign)\/([^/]+)\/(.+?)(?:\?.*)?$/);
     if (match) return { bucket: match[1], path: decodeURIComponent(match[2]) };
   } catch {}
   return null;
@@ -29,42 +29,45 @@ const PdfWatermarkViewer = ({ open, onOpenChange, fileUrl, title }: PdfWatermark
   const [error, setError] = useState<string | null>(null);
 
   const loadDocument = async () => {
-    if (blobUrl) return; // already loaded
     setLoading(true);
     setError(null);
 
     const parsed = parseStorageUrl(fileUrl);
-    if (!parsed) {
-      // Fallback: try opening directly (non-storage URLs)
-      setBlobUrl(fileUrl);
-      setLoading(false);
-      return;
-    }
+    
+    // Determine bucket and path - try parsing URL first, fallback to assuming "documents" bucket
+    const bucket = parsed?.bucket || "documents";
+    const path = parsed?.path || fileUrl;
+
+    console.log("Loading document via proxy:", { bucket, path, originalUrl: fileUrl });
 
     try {
       const { data, error: fnError } = await supabase.functions.invoke("document-proxy", {
-        body: { storagePath: parsed.path, bucketName: parsed.bucket },
+        body: { storagePath: path, bucketName: bucket },
       });
 
       if (fnError) throw fnError;
 
-      // data is already an ArrayBuffer or Blob from the edge function
-      const blob = data instanceof Blob ? data : new Blob([data]);
+      // supabase.functions.invoke auto-detects response type based on Content-Type
+      const blob = data instanceof Blob ? data : new Blob([data], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
       setBlobUrl(url);
     } catch (err: any) {
-      console.error("Error loading document:", err);
+      console.error("Error loading document via proxy:", err);
       setError("Erro ao carregar documento. Tente novamente.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleOpenChange = (val: boolean) => {
-    if (val) {
+  useEffect(() => {
+    if (open && !blobUrl && !loading) {
       loadDocument();
-    } else {
-      if (blobUrl && blobUrl !== fileUrl) {
+    }
+  }, [open]);
+
+  const handleOpenChange = (val: boolean) => {
+    if (!val) {
+      if (blobUrl) {
         URL.revokeObjectURL(blobUrl);
       }
       setBlobUrl(null);
@@ -72,11 +75,6 @@ const PdfWatermarkViewer = ({ open, onOpenChange, fileUrl, title }: PdfWatermark
     }
     onOpenChange(val);
   };
-
-  // Trigger load when dialog opens
-  if (open && !blobUrl && !loading && !error) {
-    loadDocument();
-  }
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
