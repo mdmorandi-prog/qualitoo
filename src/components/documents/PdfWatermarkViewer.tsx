@@ -19,8 +19,7 @@ const parseStorageUrl = (url: string): { bucket: string; path: string } | null =
 };
 
 const PdfWatermarkViewer = ({ open, onOpenChange, fileUrl, title }: PdfWatermarkViewerProps) => {
-  const [dataUrl, setDataUrl] = useState<string | null>(null);
-  const [blobForDownload, setBlobForDownload] = useState<Blob | null>(null);
+  const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -53,55 +52,42 @@ const PdfWatermarkViewer = ({ open, onOpenChange, fileUrl, title }: PdfWatermark
 
       const blob = await response.blob();
       const pdfBlob = new Blob([blob], { type: "application/pdf" });
-      setBlobForDownload(pdfBlob);
-
-      // Convert to data URL to avoid iframe blocking
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setDataUrl(reader.result as string);
-        setLoading(false);
-      };
-      reader.onerror = () => {
-        setError("Erro ao processar documento.");
-        setLoading(false);
-      };
-      reader.readAsDataURL(pdfBlob);
+      const url = URL.createObjectURL(pdfBlob);
+      setBlobUrl(url);
     } catch (err: any) {
       console.error("Error loading document via proxy:", err);
       setError("Erro ao carregar documento. Tente novamente.");
+    } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (open && !dataUrl && !loading && !error) {
+    if (open && !blobUrl && !loading && !error) {
       loadDocument();
     }
   }, [open]);
 
   const handleOpenChange = (val: boolean) => {
     if (!val) {
-      setDataUrl(null);
-      setBlobForDownload(null);
+      if (blobUrl) URL.revokeObjectURL(blobUrl);
+      setBlobUrl(null);
       setError(null);
     }
     onOpenChange(val);
   };
 
   const handleDownload = () => {
-    if (!blobForDownload) return;
-    const url = URL.createObjectURL(blobForDownload);
+    if (!blobUrl) return;
     const a = document.createElement("a");
-    a.href = url;
+    a.href = blobUrl;
     a.download = `${title}.pdf`;
     a.click();
-    URL.revokeObjectURL(url);
   };
 
   const handleOpenNewTab = () => {
-    if (!blobForDownload) return;
-    const url = URL.createObjectURL(blobForDownload);
-    window.open(url, "_blank");
+    if (!blobUrl) return;
+    window.open(blobUrl, "_blank");
   };
 
   return (
@@ -110,7 +96,7 @@ const PdfWatermarkViewer = ({ open, onOpenChange, fileUrl, title }: PdfWatermark
         <div className="flex items-center justify-between border-b bg-card px-4 py-3">
           <h3 className="text-sm font-bold text-foreground truncate">{title}</h3>
           <div className="flex items-center gap-1">
-            {blobForDownload && (
+            {blobUrl && (
               <>
                 <Button variant="ghost" size="icon" onClick={handleOpenNewTab} title="Abrir em nova aba">
                   <ExternalLink className="h-4 w-4" />
@@ -148,11 +134,12 @@ const PdfWatermarkViewer = ({ open, onOpenChange, fileUrl, title }: PdfWatermark
               <p className="text-sm text-destructive">{error}</p>
               <Button variant="outline" size="sm" onClick={loadDocument}>Tentar novamente</Button>
             </div>
-          ) : dataUrl ? (
-            <embed
-              src={dataUrl}
-              type="application/pdf"
-              className="h-full w-full"
+          ) : blobUrl ? (
+            <iframe
+              src={`${blobUrl}#toolbar=0&navpanes=0`}
+              className="h-full w-full border-0"
+              title={`Visualização: ${title}`}
+              sandbox="allow-same-origin allow-scripts"
             />
           ) : null}
         </div>
