@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Plus, Search, Eye, LayoutGrid, Table as TableIcon, GripVertical } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 import NcDetailContent from "@/components/nc/NcDetailContent";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,6 +52,7 @@ const statusLabels: Record<NcStatus, string> = {
 
 const NonConformities = () => {
   const { user } = useAuth();
+  const [, setSearchParams] = useSearchParams();
   const [ncs, setNcs] = useState<NC[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -313,6 +315,7 @@ const NonConformities = () => {
             createActionPlanFromNc={createActionPlanFromNc}
             onClose={() => setDetailOpen(false)}
             refreshData={fetchData}
+            onNavigateToCausaRaiz={() => setSearchParams({ tab: "causa_raiz" })}
           />}
         </DialogContent>
       </Dialog>
