@@ -4,7 +4,7 @@ import {
   LogOut, LayoutDashboard, AlertTriangle, BarChart3, FileText,
   ClipboardCheck, Target, GraduationCap, FishSymbol, ShieldAlert,
   TriangleAlert, Crosshair, BookOpen, Users2, Menu, X, PanelLeftClose, PanelLeft,
-  Download, Shield, Settings, Truck, Heart, FileBarChart, GitBranch,
+  Download, Shield, Settings, Truck, Heart, FileBarChart, GitBranch, Gauge,
 } from "lucide-react";
 import sgqLogo from "@/assets/sgq-logo.png";
 import { Button } from "@/components/ui/button";
@@ -36,9 +36,11 @@ import Suppliers from "@/pages/quality/Suppliers";
 import SatisfactionSurveys from "@/pages/quality/SatisfactionSurveys";
 import RegulatoryReports from "@/pages/quality/RegulatoryReports";
 import ProcessMapping from "@/pages/quality/ProcessMapping";
+import CustomizableDashboard from "@/components/dashboard/CustomizableDashboard";
 
 const allTabs = [
   { key: "resumo", label: "Resumo", icon: LayoutDashboard },
+  { key: "meu_dashboard", label: "Meu Dashboard", icon: Gauge },
   { key: "ncs", label: "Não Conformidades", icon: AlertTriangle },
   { key: "indicadores", label: "Indicadores", icon: BarChart3 },
   { key: "documentos", label: "Documentos", icon: FileText },
@@ -59,6 +61,7 @@ const allTabs = [
 ] as const;
 
 const contentMap: Record<string, React.FC> = {
+  meu_dashboard: CustomizableDashboard,
   ncs: NonConformities, indicadores: Indicators, documentos: Documents,
   auditorias: Audits, planos: ActionPlans, riscos: RiskManagement,
   treinamentos: Trainings, atas: MeetingMinutes, eventos: AdverseEvents,

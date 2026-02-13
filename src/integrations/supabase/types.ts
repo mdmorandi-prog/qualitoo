@@ -1321,6 +1321,39 @@ export type Database = {
         }
         Relationships: []
       }
+      user_dashboard_configs: {
+        Row: {
+          config_name: string
+          created_at: string
+          id: string
+          is_default: boolean
+          layouts: Json
+          updated_at: string
+          user_id: string
+          widgets: Json
+        }
+        Insert: {
+          config_name?: string
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          layouts?: Json
+          updated_at?: string
+          user_id: string
+          widgets?: Json
+        }
+        Update: {
+          config_name?: string
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          layouts?: Json
+          updated_at?: string
+          user_id?: string
+          widgets?: Json
+        }
+        Relationships: []
+      }
       user_module_access: {
         Row: {
           can_access: boolean
