@@ -4,7 +4,7 @@ import {
   LogOut, LayoutDashboard, AlertTriangle, BarChart3, FileText,
   ClipboardCheck, Target, GraduationCap, FishSymbol, ShieldAlert,
   TriangleAlert, Crosshair, BookOpen, Users2, Menu, X, PanelLeftClose, PanelLeft,
-  Download, Shield, Settings,
+  Download, Shield, Settings, Truck, Heart, FileBarChart,
 } from "lucide-react";
 import sgqLogo from "@/assets/sgq-logo.png";
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,9 @@ import RiskManagement from "@/pages/quality/RiskManagement";
 import Trainings from "@/pages/quality/Trainings";
 import MeetingMinutes from "@/pages/quality/MeetingMinutes";
 import UserManagement from "@/pages/quality/UserManagement";
+import Suppliers from "@/pages/quality/Suppliers";
+import SatisfactionSurveys from "@/pages/quality/SatisfactionSurveys";
+import RegulatoryReports from "@/pages/quality/RegulatoryReports";
 
 const allTabs = [
   { key: "resumo", label: "Resumo", icon: LayoutDashboard },
@@ -47,6 +50,9 @@ const allTabs = [
   { key: "capa", label: "CAPA", icon: Target },
   { key: "causa_raiz", label: "Causa Raiz", icon: FishSymbol },
   { key: "competencias", label: "Competências", icon: Users2 },
+  { key: "fornecedores", label: "Fornecedores", icon: Truck },
+  { key: "pesquisas", label: "Satisfação", icon: Heart },
+  { key: "regulatorio", label: "Regulatório", icon: FileBarChart },
   { key: "usuarios", label: "Usuários", icon: Settings, adminOnly: true },
 ] as const;
 
@@ -55,6 +61,7 @@ const contentMap: Record<string, React.FC> = {
   auditorias: Audits, planos: ActionPlans, riscos: RiskManagement,
   treinamentos: Trainings, atas: MeetingMinutes, eventos: AdverseEvents,
   capa: Capas, causa_raiz: RootCauseAnalysis, competencias: CompetencyMatrix,
+  fornecedores: Suppliers, pesquisas: SatisfactionSurveys, regulatorio: RegulatoryReports,
   usuarios: UserManagement,
 };
 

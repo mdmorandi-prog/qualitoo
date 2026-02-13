@@ -11,6 +11,9 @@ import {
   Award,
   Activity,
   Users,
+  Truck,
+  Heart,
+  FileBarChart,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
@@ -23,6 +26,9 @@ const modules = [
   { icon: Search, title: "Auditorias Internas", description: "Planejamento, execução e acompanhamento de auditorias com registro de achados." },
   { icon: AlertTriangle, title: "Eventos Adversos", description: "Notificação e investigação de eventos com classificação de gravidade e ações imediatas." },
   { icon: Activity, title: "Gestão de Riscos", description: "Matriz de riscos 5×5 com avaliação de probabilidade, impacto e planos de mitigação." },
+  { icon: Truck, title: "Gestão de Fornecedores", description: "Cadastro, avaliação periódica e qualificação de fornecedores com classificação de criticidade." },
+  { icon: Heart, title: "Pesquisa de Satisfação", description: "NPS, CSAT e pesquisas customizadas para monitorar a experiência do paciente." },
+  { icon: FileBarChart, title: "Relatórios Regulatórios", description: "Exportação para NOTIVISA/ANVISA com rastreabilidade completa de eventos adversos." },
 ];
 
 const highlights = [

@@ -420,6 +420,42 @@ export type Database = {
           },
         ]
       }
+      email_queue: {
+        Row: {
+          body: string
+          created_at: string
+          error_message: string | null
+          id: string
+          sent_at: string | null
+          status: string
+          subject: string
+          to_email: string
+          to_user_id: string | null
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          sent_at?: string | null
+          status?: string
+          subject: string
+          to_email: string
+          to_user_id?: string | null
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          sent_at?: string | null
+          status?: string
+          subject?: string
+          to_email?: string
+          to_user_id?: string | null
+        }
+        Relationships: []
+      }
       indicator_measurements: {
         Row: {
           created_at: string
@@ -734,6 +770,42 @@ export type Database = {
         }
         Relationships: []
       }
+      regulatory_reports: {
+        Row: {
+          created_at: string
+          exported_data: Json | null
+          generated_by: string
+          id: string
+          period_end: string | null
+          period_start: string | null
+          records_count: number
+          report_type: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          exported_data?: Json | null
+          generated_by: string
+          id?: string
+          period_end?: string | null
+          period_start?: string | null
+          records_count?: number
+          report_type?: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          exported_data?: Json | null
+          generated_by?: string
+          id?: string
+          period_end?: string | null
+          period_start?: string | null
+          records_count?: number
+          report_type?: string
+          title?: string
+        }
+        Relationships: []
+      }
       reports: {
         Row: {
           accused_name: string | null
@@ -865,6 +937,202 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      satisfaction_surveys: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          end_date: string | null
+          id: string
+          questions: Json | null
+          sector: string | null
+          start_date: string | null
+          status: Database["public"]["Enums"]["survey_status"]
+          survey_type: Database["public"]["Enums"]["survey_type"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          questions?: Json | null
+          sector?: string | null
+          start_date?: string | null
+          status?: Database["public"]["Enums"]["survey_status"]
+          survey_type?: Database["public"]["Enums"]["survey_type"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          questions?: Json | null
+          sector?: string | null
+          start_date?: string | null
+          status?: Database["public"]["Enums"]["survey_status"]
+          survey_type?: Database["public"]["Enums"]["survey_type"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      supplier_evaluations: {
+        Row: {
+          compliance_score: number
+          cost_score: number
+          created_at: string
+          delivery_score: number
+          evaluated_by: string
+          evaluation_date: string
+          id: string
+          non_conformities_count: number
+          notes: string | null
+          overall_score: number | null
+          quality_score: number
+          supplier_id: string
+        }
+        Insert: {
+          compliance_score?: number
+          cost_score?: number
+          created_at?: string
+          delivery_score?: number
+          evaluated_by: string
+          evaluation_date?: string
+          id?: string
+          non_conformities_count?: number
+          notes?: string | null
+          overall_score?: number | null
+          quality_score?: number
+          supplier_id: string
+        }
+        Update: {
+          compliance_score?: number
+          cost_score?: number
+          created_at?: string
+          delivery_score?: number
+          evaluated_by?: string
+          evaluation_date?: string
+          id?: string
+          non_conformities_count?: number
+          notes?: string | null
+          overall_score?: number | null
+          quality_score?: number
+          supplier_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_evaluations_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      suppliers: {
+        Row: {
+          address: string | null
+          category: string | null
+          cnpj: string | null
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string
+          created_by: string
+          criticality: Database["public"]["Enums"]["supplier_criticality"]
+          id: string
+          name: string
+          next_evaluation_date: string | null
+          notes: string | null
+          qualification_date: string | null
+          status: Database["public"]["Enums"]["supplier_status"]
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          category?: string | null
+          cnpj?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          created_by: string
+          criticality?: Database["public"]["Enums"]["supplier_criticality"]
+          id?: string
+          name: string
+          next_evaluation_date?: string | null
+          notes?: string | null
+          qualification_date?: string | null
+          status?: Database["public"]["Enums"]["supplier_status"]
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          category?: string | null
+          cnpj?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          created_by?: string
+          criticality?: Database["public"]["Enums"]["supplier_criticality"]
+          id?: string
+          name?: string
+          next_evaluation_date?: string | null
+          notes?: string | null
+          qualification_date?: string | null
+          status?: Database["public"]["Enums"]["supplier_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      survey_responses: {
+        Row: {
+          answers: Json | null
+          comments: string | null
+          created_at: string
+          id: string
+          respondent_name: string | null
+          respondent_sector: string | null
+          score: number | null
+          survey_id: string
+        }
+        Insert: {
+          answers?: Json | null
+          comments?: string | null
+          created_at?: string
+          id?: string
+          respondent_name?: string | null
+          respondent_sector?: string | null
+          score?: number | null
+          survey_id: string
+        }
+        Update: {
+          answers?: Json | null
+          comments?: string | null
+          created_at?: string
+          id?: string
+          respondent_name?: string | null
+          respondent_sector?: string | null
+          score?: number | null
+          survey_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "survey_responses_survey_id_fkey"
+            columns: ["survey_id"]
+            isOneToOne: false
+            referencedRelation: "satisfaction_surveys"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       trainings: {
         Row: {
@@ -1026,6 +1294,10 @@ export type Database = {
         | "verificacao"
         | "concluida"
       report_status: "nova" | "em_analise" | "concluida" | "arquivada"
+      supplier_criticality: "baixa" | "media" | "alta" | "critica"
+      supplier_status: "ativo" | "inativo" | "em_avaliacao" | "bloqueado"
+      survey_status: "rascunho" | "ativa" | "encerrada"
+      survey_type: "nps" | "csat" | "custom"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1196,6 +1468,10 @@ export const Constants = {
         "concluida",
       ],
       report_status: ["nova", "em_analise", "concluida", "arquivada"],
+      supplier_criticality: ["baixa", "media", "alta", "critica"],
+      supplier_status: ["ativo", "inativo", "em_avaliacao", "bloqueado"],
+      survey_status: ["rascunho", "ativa", "encerrada"],
+      survey_type: ["nps", "csat", "custom"],
     },
   },
 } as const
