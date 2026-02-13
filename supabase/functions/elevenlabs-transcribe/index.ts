@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,10 +13,29 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY");
+  // Try env var first, then DB
+  let ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY");
+
+  if (!ELEVENLABS_API_KEY) {
+    try {
+      const supabase = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+      );
+      const { data } = await supabase
+        .from("system_settings")
+        .select("value")
+        .eq("key", "elevenlabs_api_key")
+        .single();
+      if (data?.value) ELEVENLABS_API_KEY = data.value;
+    } catch (e) {
+      console.error("Error reading API key from DB:", e);
+    }
+  }
+
   if (!ELEVENLABS_API_KEY) {
     return new Response(
-      JSON.stringify({ error: "ELEVENLABS_API_KEY não configurada. Configure nas configurações do sistema." }),
+      JSON.stringify({ error: "ELEVENLABS_API_KEY não configurada. Acesse Configurações do Sistema para inserir a chave." }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
