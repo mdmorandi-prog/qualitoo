@@ -460,7 +460,7 @@ const Documents = () => {
               </div>
               {selected.category && <p className="text-xs text-muted-foreground">Categoria: <span className="font-medium text-foreground">{selected.category}</span></p>}
               {selected.sector && <p className="text-xs text-muted-foreground">Setor: <span className="font-medium text-foreground">{selected.sector}</span></p>}
-              {selected.file_url && <a href={selected.file_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-primary hover:underline"><FileUp className="h-3 w-3" /> Ver arquivo original</a>}
+              {selected.file_url && <Button variant="link" size="sm" className="h-auto p-0 gap-1 text-xs text-primary" onClick={() => { setDetailOpen(false); setPdfViewerDoc(selected); setPdfViewerOpen(true); }}><FileUp className="h-3 w-3" /> Ver arquivo original</Button>}
               {selected.description && <div className="rounded-lg bg-secondary/50 p-3"><p className="text-sm text-foreground">{selected.description}</p></div>}
               {selected.content && <div className="rounded-lg border p-4"><pre className="whitespace-pre-wrap text-sm text-foreground">{selected.content}</pre></div>}
               <div className="flex gap-2 border-t pt-4">
