@@ -4,7 +4,7 @@ import {
   LogOut, LayoutDashboard, AlertTriangle, BarChart3, FileText,
   ClipboardCheck, Target, GraduationCap, FishSymbol, ShieldAlert,
   TriangleAlert, Crosshair, BookOpen, Users2, Menu, X, PanelLeftClose, PanelLeft,
-  Download, Shield, Settings, Truck, Heart, FileBarChart, GitBranch, Gauge,
+  Download, Shield, Settings, Truck, Heart, FileBarChart, GitBranch, Gauge, Workflow,
 } from "lucide-react";
 import sgqLogo from "@/assets/sgq-logo.png";
 import { Button } from "@/components/ui/button";
@@ -37,6 +37,7 @@ import SatisfactionSurveys from "@/pages/quality/SatisfactionSurveys";
 import RegulatoryReports from "@/pages/quality/RegulatoryReports";
 import ProcessMapping from "@/pages/quality/ProcessMapping";
 import CustomizableDashboard from "@/components/dashboard/CustomizableDashboard";
+import WorkflowConfig from "@/pages/quality/WorkflowConfig";
 
 const allTabs = [
   { key: "resumo", label: "Resumo", icon: LayoutDashboard },
@@ -57,6 +58,7 @@ const allTabs = [
   { key: "pesquisas", label: "Satisfação", icon: Heart },
   { key: "regulatorio", label: "Regulatório", icon: FileBarChart },
   { key: "processos", label: "Processos BPMN", icon: GitBranch },
+  { key: "workflows", label: "Workflows", icon: Workflow },
   { key: "usuarios", label: "Usuários", icon: Settings, adminOnly: true },
 ] as const;
 
@@ -67,7 +69,7 @@ const contentMap: Record<string, React.FC> = {
   treinamentos: Trainings, atas: MeetingMinutes, eventos: AdverseEvents,
   capa: Capas, causa_raiz: RootCauseAnalysis, competencias: CompetencyMatrix,
   fornecedores: Suppliers, pesquisas: SatisfactionSurveys, regulatorio: RegulatoryReports,
-  processos: ProcessMapping, usuarios: UserManagement,
+  processos: ProcessMapping, workflows: WorkflowConfig, usuarios: UserManagement,
 };
 
 const AdminDashboard = () => {

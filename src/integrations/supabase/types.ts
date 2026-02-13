@@ -1396,6 +1396,205 @@ export type Database = {
         }
         Relationships: []
       }
+      workflow_approval_requests: {
+        Row: {
+          decided_at: string | null
+          decided_by: string | null
+          decision_notes: string | null
+          escalated_at: string | null
+          id: string
+          module: string
+          record_id: string
+          record_title: string | null
+          requested_at: string
+          requested_by: string | null
+          rule_id: string
+          status: string
+          step_id: string
+        }
+        Insert: {
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_notes?: string | null
+          escalated_at?: string | null
+          id?: string
+          module: string
+          record_id: string
+          record_title?: string | null
+          requested_at?: string
+          requested_by?: string | null
+          rule_id: string
+          status?: string
+          step_id: string
+        }
+        Update: {
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_notes?: string | null
+          escalated_at?: string | null
+          id?: string
+          module?: string
+          record_id?: string
+          record_title?: string | null
+          requested_at?: string
+          requested_by?: string | null
+          rule_id?: string
+          status?: string
+          step_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflow_approval_requests_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_rules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workflow_approval_requests_step_id_fkey"
+            columns: ["step_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_approval_steps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workflow_approval_steps: {
+        Row: {
+          approver_role: string
+          approver_user_id: string | null
+          created_at: string
+          escalation_user_id: string | null
+          id: string
+          required_approvals: number
+          rule_id: string
+          step_order: number
+          timeout_hours: number | null
+        }
+        Insert: {
+          approver_role?: string
+          approver_user_id?: string | null
+          created_at?: string
+          escalation_user_id?: string | null
+          id?: string
+          required_approvals?: number
+          rule_id: string
+          step_order?: number
+          timeout_hours?: number | null
+        }
+        Update: {
+          approver_role?: string
+          approver_user_id?: string | null
+          created_at?: string
+          escalation_user_id?: string | null
+          id?: string
+          required_approvals?: number
+          rule_id?: string
+          step_order?: number
+          timeout_hours?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflow_approval_steps_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workflow_execution_log: {
+        Row: {
+          actions_executed: Json | null
+          conditions_met: boolean
+          executed_at: string
+          id: string
+          module: string
+          notes: string | null
+          record_id: string | null
+          rule_id: string | null
+          rule_name: string | null
+          trigger_event: string | null
+        }
+        Insert: {
+          actions_executed?: Json | null
+          conditions_met?: boolean
+          executed_at?: string
+          id?: string
+          module: string
+          notes?: string | null
+          record_id?: string | null
+          rule_id?: string | null
+          rule_name?: string | null
+          trigger_event?: string | null
+        }
+        Update: {
+          actions_executed?: Json | null
+          conditions_met?: boolean
+          executed_at?: string
+          id?: string
+          module?: string
+          notes?: string | null
+          record_id?: string | null
+          rule_id?: string | null
+          rule_name?: string | null
+          trigger_event?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflow_execution_log_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workflow_rules: {
+        Row: {
+          actions: Json
+          conditions: Json
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          is_active: boolean
+          module: string
+          name: string
+          priority: number
+          trigger_event: string
+          updated_at: string
+        }
+        Insert: {
+          actions?: Json
+          conditions?: Json
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          module: string
+          name: string
+          priority?: number
+          trigger_event?: string
+          updated_at?: string
+        }
+        Update: {
+          actions?: Json
+          conditions?: Json
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          module?: string
+          name?: string
+          priority?: number
+          trigger_event?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
