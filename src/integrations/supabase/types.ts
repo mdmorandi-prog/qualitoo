@@ -256,6 +256,139 @@ export type Database = {
         }
         Relationships: []
       }
+      bpmn_execution_log: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          instance_id: string
+          node_id: string
+          node_label: string | null
+          notes: string | null
+          performed_by: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          instance_id: string
+          node_id: string
+          node_label?: string | null
+          notes?: string | null
+          performed_by?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          instance_id?: string
+          node_id?: string
+          node_label?: string | null
+          notes?: string | null
+          performed_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bpmn_execution_log_instance_id_fkey"
+            columns: ["instance_id"]
+            isOneToOne: false
+            referencedRelation: "bpmn_process_instances"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bpmn_process_instances: {
+        Row: {
+          completed_at: string | null
+          current_node_ids: string[]
+          id: string
+          process_id: string
+          started_at: string
+          started_by: string
+          status: string
+          title: string
+          updated_at: string
+          variables: Json
+        }
+        Insert: {
+          completed_at?: string | null
+          current_node_ids?: string[]
+          id?: string
+          process_id: string
+          started_at?: string
+          started_by: string
+          status?: string
+          title: string
+          updated_at?: string
+          variables?: Json
+        }
+        Update: {
+          completed_at?: string | null
+          current_node_ids?: string[]
+          id?: string
+          process_id?: string
+          started_at?: string
+          started_by?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          variables?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bpmn_process_instances_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "bpmn_processes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bpmn_processes: {
+        Row: {
+          category: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          edges: Json
+          id: string
+          nodes: Json
+          sector: string | null
+          status: string
+          title: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          edges?: Json
+          id?: string
+          nodes?: Json
+          sector?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          edges?: Json
+          id?: string
+          nodes?: Json
+          sector?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: []
+      }
       capas: {
         Row: {
           capa_type: Database["public"]["Enums"]["capa_type"]
