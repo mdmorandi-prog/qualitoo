@@ -32,6 +32,22 @@ const emptyForm = {
   when_start: "", when_end: "", how: "", how_much: "", sector: "", description: "",
 };
 
+const originLabels: Record<string, string> = {
+  non_conformity: "Não Conformidade",
+  audit: "Auditoria",
+  capa: "CAPA",
+  risk: "Risco",
+  adverse_event: "Evento Adverso",
+  change_request: "Mudança",
+  manual: "Manual",
+};
+
+const formatOrigin = (type: string | null, title?: string | null) => {
+  if (!type || type === "manual") return null;
+  const label = originLabels[type] || type;
+  return title ? `${label}: ${title}` : label;
+};
+
 const ActionPlans = () => {
   const { user } = useAuth();
   const [plans, setPlans] = useState<ActionPlan[]>([]);
@@ -153,7 +169,7 @@ const ActionPlans = () => {
             : filtered.length === 0 ? <TableRow><TableCell colSpan={5} className="py-8 text-center text-muted-foreground">Nenhum plano.</TableCell></TableRow>
             : filtered.map(p => (
               <TableRow key={p.id} className="cursor-pointer hover:bg-muted/50" onClick={() => openDetail(p)}>
-                <TableCell><div><p className="font-medium">{p.title}</p>{p.origin_type && p.origin_type !== "manual" && <p className="text-xs text-muted-foreground">Origem: {p.origin_type}</p>}</div></TableCell>
+                <TableCell><div><p className="font-medium">{p.title}</p>{formatOrigin(p.origin_type) && <p className="text-xs text-muted-foreground">Origem: {formatOrigin(p.origin_type)}</p>}</div></TableCell>
                 <TableCell className="text-sm">{p.who || "—"}</TableCell>
                 <TableCell onClick={e => e.stopPropagation()}>
                   <Select value={p.status} onValueChange={v => updateStatus(p.id, v)}>
@@ -193,10 +209,10 @@ const ActionPlans = () => {
                 <div className="grid gap-2"><Label>Setor</Label><Input value={editForm.sector} onChange={e => setEditForm(f => ({ ...f, sector: e.target.value }))} /></div>
               </div>
 
-              {detailPlan.origin_type && detailPlan.origin_type !== "manual" && (
+              {formatOrigin(detailPlan.origin_type) && (
                 <div className="rounded-lg bg-secondary/50 p-3">
                   <p className="text-xs font-semibold text-muted-foreground">Origem</p>
-                  <p className="text-sm">{detailPlan.origin_type}</p>
+                  <p className="text-sm">{formatOrigin(detailPlan.origin_type)}</p>
                 </div>
               )}
 
