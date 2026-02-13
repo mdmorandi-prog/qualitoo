@@ -1,5 +1,54 @@
 import { supabase } from "@/integrations/supabase/client";
 
+export const generateSignatureBlockHtml = async (documentId: string): Promise<string> => {
+  const { data: sigs } = await supabase
+    .from("document_signatures")
+    .select("signer_name, signer_email, signature_hash, signed_at, signature_role, is_verified")
+    .eq("document_id", documentId)
+    .is("revoked_at", null)
+    .order("signed_at", { ascending: true });
+
+  const signatures = (sigs as any[]) ?? [];
+  const roles = [
+    { key: "elaborado", label: "ELABORADO POR" },
+    { key: "aprovado", label: "APROVADO POR" },
+    { key: "validado", label: "VALIDADO POR" },
+  ];
+
+  return `
+    <div style="margin-top:40px;border-top:2px solid #1a5f73;padding-top:16px">
+      <p style="font-size:13px;font-weight:bold;color:#1a5f73;margin-bottom:12px">Controle de Assinaturas Eletrônicas</p>
+      <table style="width:100%;border-collapse:collapse;font-size:11px">
+        <tr>
+          ${roles.map(r => {
+            const sig = signatures.find(s => s.signature_role === r.key);
+            return `<td style="width:33.3%;vertical-align:top;padding:8px;border:1px solid #ddd">
+              <p style="font-weight:bold;color:#1a5f73;margin:0 0 8px 0;font-size:10px;letter-spacing:1px">${r.label}</p>
+              ${sig ? `
+                <p style="margin:0 0 2px 0;font-weight:bold">${sig.signer_name}</p>
+                <p style="margin:0 0 2px 0;color:#666">${sig.signer_email}</p>
+                <p style="margin:0 0 6px 0;color:#666">${new Date(sig.signed_at).toLocaleString("pt-BR")}</p>
+                <div style="background:#f5f5f5;padding:4px 6px;border-radius:3px;word-break:break-all">
+                  <p style="margin:0 0 2px 0;font-size:9px;color:#999;font-weight:bold">Hash SHA-256:</p>
+                  <p style="margin:0;font-family:monospace;font-size:8px;color:#333">${sig.signature_hash}</p>
+                </div>
+                ${sig.is_verified ? '<p style="margin:4px 0 0 0;color:#16a34a;font-size:10px">✓ Identidade verificada</p>' : ''}
+              ` : `
+                <div style="text-align:center;padding:16px 0;color:#ccc">
+                  <p style="margin:0;font-size:24px">—</p>
+                  <p style="margin:4px 0 0 0;font-size:10px">Pendente</p>
+                </div>
+              `}
+            </td>`;
+          }).join("")}
+        </tr>
+      </table>
+      <p style="text-align:center;font-size:9px;color:#999;margin-top:8px">
+        Assinaturas eletrônicas com integridade garantida por hash criptográfico SHA-256
+      </p>
+    </div>`;
+};
+
 export const exportDashboardPdf = async () => {
   const now = new Date();
   const dateStr = now.toLocaleDateString("pt-BR");

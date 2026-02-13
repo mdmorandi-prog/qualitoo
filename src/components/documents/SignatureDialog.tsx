@@ -11,6 +11,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { sha256, generateSignaturePayload } from "@/lib/crypto";
 
+type SignatureRole = "elaborado" | "aprovado" | "validado";
+
 interface SignatureDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -21,22 +23,31 @@ interface SignatureDialogProps {
     code: string | null;
   };
   onSigned: () => void;
+  defaultRole?: SignatureRole;
 }
 
 type Step = "confirm" | "verify" | "signing" | "done";
 
-const SignatureDialog = ({ open, onOpenChange, document, onSigned }: SignatureDialogProps) => {
+const ROLE_LABELS: Record<SignatureRole, string> = {
+  elaborado: "Elaborado por",
+  aprovado: "Aprovado por",
+  validado: "Validado por",
+};
+
+const SignatureDialog = ({ open, onOpenChange, document, onSigned, defaultRole = "elaborado" }: SignatureDialogProps) => {
   const { user } = useAuth();
   const [step, setStep] = useState<Step>("confirm");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [signatureResult, setSignatureResult] = useState<{ hash: string; signedAt: string } | null>(null);
+  const [selectedRole, setSelectedRole] = useState<SignatureRole>(defaultRole);
 
   const reset = () => {
     setStep("confirm");
     setPassword("");
     setLoading(false);
     setSignatureResult(null);
+    setSelectedRole(defaultRole);
   };
 
   const handleClose = (val: boolean) => {
@@ -119,6 +130,7 @@ const SignatureDialog = ({ open, onOpenChange, document, onSigned }: SignatureDi
         verification_method: "senha",
         is_verified: true,
         signed_at: timestamp,
+        signature_role: selectedRole,
         metadata: { payload_structure: "v1", algorithm: "SHA-256" } as any,
       } as any).select("id").maybeSingle();
 
@@ -161,6 +173,24 @@ const SignatureDialog = ({ open, onOpenChange, document, onSigned }: SignatureDi
             <div className="rounded-lg border bg-secondary/50 p-4">
               <p className="text-xs font-semibold text-muted-foreground">Documento</p>
               <p className="mt-1 text-sm font-medium text-foreground">{document.code ? `${document.code} — ` : ""}{document.title}</p>
+            </div>
+            <div className="grid gap-2">
+              <p className="text-xs font-semibold text-muted-foreground">Assinar como</p>
+              <div className="flex gap-2">
+                {(Object.entries(ROLE_LABELS) as [SignatureRole, string][]).map(([role, label]) => (
+                  <button
+                    key={role}
+                    onClick={() => setSelectedRole(role)}
+                    className={`flex-1 rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${
+                      selectedRole === role
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-muted-foreground/20 text-muted-foreground hover:border-primary/40"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
             </div>
             <div className="space-y-2 rounded-lg border border-warning/30 bg-warning/5 p-4">
               <div className="flex items-center gap-2">

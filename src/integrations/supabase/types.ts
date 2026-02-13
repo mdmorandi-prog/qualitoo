@@ -785,6 +785,7 @@ export type Database = {
           revoked_at: string | null
           revoked_reason: string | null
           signature_hash: string
+          signature_role: string
           signature_type: string
           signed_at: string
           signer_email: string
@@ -806,6 +807,7 @@ export type Database = {
           revoked_at?: string | null
           revoked_reason?: string | null
           signature_hash: string
+          signature_role?: string
           signature_type?: string
           signed_at?: string
           signer_email: string
@@ -827,6 +829,7 @@ export type Database = {
           revoked_at?: string | null
           revoked_reason?: string | null
           signature_hash?: string
+          signature_role?: string
           signature_type?: string
           signed_at?: string
           signer_email?: string
