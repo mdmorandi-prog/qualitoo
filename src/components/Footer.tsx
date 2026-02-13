@@ -14,7 +14,7 @@ const Footer = () => {
             <p className="mt-1">© {new Date().getFullYear()} DM Consultoria em TI Ltda. Todos os direitos reservados.</p>
           </div>
           <div className="text-xs opacity-70">
-            Ref: DM-TI-SGQ-2024-001
+            Ref: DM-TI-SGQ-2025-001
           </div>
         </div>
       </div>
