@@ -1,10 +1,11 @@
-import { useState } from "react";
-import { Plus, Trash2, FishSymbol } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Plus, Trash2, FishSymbol, Bot, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from "sonner";
 
 const ISHIKAWA_CATEGORIES = [
   { key: "mao_de_obra", label: "Mão de Obra", color: "bg-accent" },
@@ -27,6 +28,8 @@ interface FiveWhys {
 }
 
 const RootCauseAnalysis = () => {
+  const [aiSource, setAiSource] = useState<string | null>(null);
+
   const [ishikawa, setIshikawa] = useState<IshikawaData>({
     problem: "",
     categories: Object.fromEntries(ISHIKAWA_CATEGORIES.map(c => [c.key, [""]])),
@@ -43,6 +46,53 @@ const RootCauseAnalysis = () => {
     ],
     rootCause: "",
   });
+
+  // Load AI-generated data from sessionStorage if available
+  useEffect(() => {
+    const raw = sessionStorage.getItem("ai_root_cause_data");
+    if (!raw) return;
+
+    try {
+      const data = JSON.parse(raw);
+      sessionStorage.removeItem("ai_root_cause_data");
+
+      setAiSource(data.ncTitle || "NC");
+
+      // Fill Ishikawa
+      const aiIshikawa = data.ishikawa || {};
+      const categories: Record<string, string[]> = {};
+      for (const cat of ISHIKAWA_CATEGORIES) {
+        const causes = aiIshikawa[cat.key];
+        categories[cat.key] = Array.isArray(causes) && causes.length > 0 ? causes : [""];
+      }
+      setIshikawa({
+        problem: data.ncTitle || "",
+        categories,
+      });
+
+      // Fill 5 Whys
+      const aiWhys = data.fiveWhys || [];
+      const whys = aiWhys.length > 0
+        ? aiWhys.map((w: any) => ({ question: w.question || "Por que?", answer: w.answer || "" }))
+        : [
+            { question: "Por que isso aconteceu?", answer: "" },
+            { question: "Por que?", answer: "" },
+            { question: "Por que?", answer: "" },
+            { question: "Por que?", answer: "" },
+            { question: "Por que?", answer: "" },
+          ];
+
+      setFiveWhys({
+        problem: data.ncTitle || "",
+        whys,
+        rootCause: data.rootCauseSummary || "",
+      });
+
+      toast.success("Dados da análise de IA carregados para revisão!");
+    } catch {
+      // ignore parse errors
+    }
+  }, []);
 
   const addCause = (category: string) => {
     setIshikawa(prev => ({
@@ -81,6 +131,20 @@ const RootCauseAnalysis = () => {
         <h2 className="font-display text-2xl font-bold text-foreground">Análise de Causa Raiz</h2>
         <p className="text-sm text-muted-foreground">Ferramentas visuais: Diagrama de Ishikawa (6M) e 5 Porquês</p>
       </div>
+
+      {/* AI Source Banner */}
+      {aiSource && (
+        <div className="flex items-center gap-3 rounded-xl border border-primary/30 bg-primary/5 p-4">
+          <Bot className="h-5 w-5 text-primary" />
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-foreground">
+              Análise gerada por IA para: <span className="text-primary">{aiSource}</span>
+            </p>
+            <p className="text-xs text-muted-foreground">Revise e edite os dados abaixo antes de aprovar.</p>
+          </div>
+          <CheckCircle2 className="h-5 w-5 text-safe" />
+        </div>
+      )}
 
       <Tabs defaultValue="ishikawa" className="w-full">
         <TabsList className="w-full justify-start">
