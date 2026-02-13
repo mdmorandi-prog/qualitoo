@@ -30,18 +30,29 @@ const getPublicUrl = (fileUrl: string): string => {
   return `${supabaseUrl}/storage/v1/object/public/${bucket}/${encodeURIComponent(path).replace(/%2F/g, "/")}`;
 };
 
+interface PageSlot {
+  pageNum: number;
+  width: number;
+  height: number;
+  rendered: boolean;
+}
+
 const PdfWatermarkViewer = ({ open, onOpenChange, fileUrl, title }: PdfWatermarkViewerProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const canvasContainerRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
-  const [rendered, setRendered] = useState(false);
+  const [pageSlots, setPageSlots] = useState<PageSlot[]>([]);
+  const pdfDocRef = useRef<pdfjsLib.PDFDocumentProxy | null>(null);
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const renderingRef = useRef<Set<number>>(new Set());
 
-  const loadAndRenderAll = useCallback(async () => {
+  const loadDocument = useCallback(async () => {
     setLoading(true);
     setError(null);
-    setRendered(false);
+    setPageSlots([]);
+    renderingRef.current.clear();
+
     try {
       const url = getPublicUrl(fileUrl);
       const response = await fetch(url);
@@ -52,34 +63,25 @@ const PdfWatermarkViewer = ({ open, onOpenChange, fileUrl, title }: PdfWatermark
       setBlobUrl(URL.createObjectURL(blob));
 
       const doc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-      const container = canvasContainerRef.current;
-      if (!container) return;
-      container.innerHTML = "";
+      pdfDocRef.current = doc;
 
       const parentWidth = containerRef.current?.clientWidth || 800;
+      const slots: PageSlot[] = [];
 
-      const BATCH_SIZE = 3;
-      for (let i = 1; i <= doc.numPages; i += BATCH_SIZE) {
-        const end = Math.min(i + BATCH_SIZE - 1, doc.numPages);
-        for (let p = i; p <= end; p++) {
-          const page = await doc.getPage(p);
-          const unscaled = page.getViewport({ scale: 1 });
-          const scale = (parentWidth - 32) / unscaled.width;
-          const viewport = page.getViewport({ scale });
-
-          const canvas = document.createElement("canvas");
-          canvas.width = viewport.width;
-          canvas.height = viewport.height;
-          canvas.className = "mx-auto mb-4 shadow-sm";
-          container.appendChild(canvas);
-
-          const ctx = canvas.getContext("2d")!;
-          await page.render({ canvasContext: ctx, viewport }).promise;
-        }
-        // Yield to UI thread between batches
-        await new Promise((resolve) => setTimeout(resolve, 50));
+      // Only read viewport dimensions (very fast, no rendering)
+      for (let i = 1; i <= doc.numPages; i++) {
+        const page = await doc.getPage(i);
+        const vp = page.getViewport({ scale: 1 });
+        const scale = (parentWidth - 32) / vp.width;
+        slots.push({
+          pageNum: i,
+          width: Math.floor(vp.width * scale),
+          height: Math.floor(vp.height * scale),
+          rendered: false,
+        });
       }
-      setRendered(true);
+
+      setPageSlots(slots);
     } catch (err: any) {
       console.error("[PdfViewer] Error:", err);
       setError("Erro ao carregar documento. Tente novamente.");
@@ -88,18 +90,77 @@ const PdfWatermarkViewer = ({ open, onOpenChange, fileUrl, title }: PdfWatermark
     }
   }, [fileUrl]);
 
-  useEffect(() => {
-    if (open && !rendered && !loading) {
-      loadAndRenderAll();
+  // Render a single page into its canvas
+  const renderPage = useCallback(async (pageNum: number, canvas: HTMLCanvasElement) => {
+    const doc = pdfDocRef.current;
+    if (!doc || renderingRef.current.has(pageNum)) return;
+    renderingRef.current.add(pageNum);
+
+    try {
+      const page = await doc.getPage(pageNum);
+      const unscaled = page.getViewport({ scale: 1 });
+      const scale = canvas.width / unscaled.width;
+      const viewport = page.getViewport({ scale });
+
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      await page.render({ canvasContext: ctx, viewport }).promise;
+
+      setPageSlots(prev =>
+        prev.map(s => (s.pageNum === pageNum ? { ...s, rendered: true } : s))
+      );
+    } catch (err) {
+      console.error(`[PdfViewer] Error rendering page ${pageNum}:`, err);
     }
-  }, [open, loadAndRenderAll, rendered, loading]);
+  }, []);
+
+  // Setup IntersectionObserver to lazy-render pages as they scroll into view
+  useEffect(() => {
+    if (pageSlots.length === 0) return;
+
+    observerRef.current?.disconnect();
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const canvas = entry.target as HTMLCanvasElement;
+            const pageNum = Number(canvas.dataset.page);
+            if (pageNum && !renderingRef.current.has(pageNum)) {
+              renderPage(pageNum, canvas);
+            }
+          }
+        });
+      },
+      {
+        root: containerRef.current,
+        rootMargin: "200px 0px", // pre-render pages 200px before they're visible
+      }
+    );
+
+    observerRef.current = observer;
+
+    // Observe all canvas elements
+    const canvases = containerRef.current?.querySelectorAll("canvas[data-page]");
+    canvases?.forEach((c) => observer.observe(c));
+
+    return () => observer.disconnect();
+  }, [pageSlots, renderPage]);
+
+  useEffect(() => {
+    if (open && pageSlots.length === 0 && !loading) {
+      loadDocument();
+    }
+  }, [open, loadDocument, pageSlots.length, loading]);
 
   const handleOpenChange = (val: boolean) => {
     if (!val) {
       if (blobUrl) URL.revokeObjectURL(blobUrl);
       setBlobUrl(null);
-      setRendered(false);
-      if (canvasContainerRef.current) canvasContainerRef.current.innerHTML = "";
+      setPageSlots([]);
+      pdfDocRef.current = null;
+      renderingRef.current.clear();
+      observerRef.current?.disconnect();
       setError(null);
     }
     onOpenChange(val);
@@ -160,13 +221,22 @@ const PdfWatermarkViewer = ({ open, onOpenChange, fileUrl, title }: PdfWatermark
           ) : error ? (
             <div className="flex h-full flex-col items-center justify-center gap-3">
               <p className="text-sm text-destructive">{error}</p>
-              <Button variant="outline" size="sm" onClick={loadAndRenderAll}>Tentar novamente</Button>
+              <Button variant="outline" size="sm" onClick={loadDocument}>Tentar novamente</Button>
             </div>
-          ) : rendered ? (
-            <div ref={canvasContainerRef} className="p-4" />
-          ) : (
-            <div ref={canvasContainerRef} />
-          )}
+          ) : pageSlots.length > 0 ? (
+            <div className="p-4 space-y-4">
+              {pageSlots.map((slot) => (
+                <canvas
+                  key={slot.pageNum}
+                  data-page={slot.pageNum}
+                  width={slot.width}
+                  height={slot.height}
+                  className="mx-auto shadow-sm bg-white"
+                  style={{ width: slot.width, height: slot.height, maxWidth: "100%" }}
+                />
+              ))}
+            </div>
+          ) : null}
         </div>
       </DialogContent>
     </Dialog>
