@@ -5,7 +5,7 @@ import {
   ClipboardCheck, Target, GraduationCap, FishSymbol, ShieldAlert,
   TriangleAlert, Crosshair, BookOpen, Users2, Menu, X, PanelLeftClose, PanelLeft,
   Download, Shield, Settings, Truck, Heart, FileBarChart, GitBranch, Gauge, Workflow,
-  UserCircle, Ruler, GitPullRequest, Database, Search, Upload, HelpCircle, ShieldCheck, GitMerge,
+  UserCircle, Ruler, GitPullRequest, Database, Search, Upload, HelpCircle, ShieldCheck, GitMerge, History,
 } from "lucide-react";
 import sgqLogo from "@/assets/sgq-logo.png";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,11 @@ import { useI18n } from "@/lib/i18n";
 import { NcTrendChart, RiskDistributionChart, RiskSeverityBarChart, ConformityRateChart, ActionPlansChart, EventsTrendChart, IndicatorsVsTargetChart, type DateFilter } from "@/components/dashboard/DashboardCharts";
 import { MaturityRadarChart } from "@/components/dashboard/MaturityRadarChart";
 import { exportDashboardPdf } from "@/lib/exportPdf";
+import ThemeToggle from "@/components/ThemeToggle";
+import GlobalSearch from "@/components/GlobalSearch";
+import DeadlinesPanel from "@/components/DeadlinesPanel";
+import OnboardingTour from "@/components/OnboardingTour";
+import AuditLogViewer from "@/components/AuditLogViewer";
 
 import AdverseEvents from "@/pages/quality/AdverseEvents";
 import Capas from "@/pages/quality/Capas";
@@ -80,6 +85,7 @@ const allTabs = [
   { key: "fmea", label: "FMEA", icon: GitMerge },
   { key: "lgpd", label: "LGPD", icon: ShieldCheck },
   { key: "ajuda", label: "Central de Ajuda", icon: HelpCircle },
+  { key: "auditoria_global", label: "Log de Auditoria", icon: History, adminOnly: true },
   { key: "configuracoes", label: "Configurações", icon: Settings, adminOnly: true },
   { key: "usuarios", label: "Usuários", icon: Users2, adminOnly: true },
 ] as const;
@@ -94,6 +100,7 @@ const contentMap: Record<string, React.FC> = {
   processos: ProcessMapping, workflows: WorkflowConfig,
   portal: EmployeePortal, metrologia: Metrology, mudancas: ChangeManagement, exportacao: DataExport,
   consultas: QueryBuilder, importacao: BulkImport, fmea: FmeaAnalysis, lgpd: LgpdCompliance, ajuda: HelpCenter,
+  auditoria_global: AuditLogViewer,
   configuracoes: SystemSettings, usuarios: UserManagement,
 };
 
@@ -250,6 +257,7 @@ const AdminDashboard = () => {
               EN
             </Button>
           </div>
+          <ThemeToggle collapsed={collapsed && !isMobile} />
           {!isMobile && (
             <Button
               variant="ghost"
@@ -287,11 +295,18 @@ const AdminDashboard = () => {
             <Button variant="ghost" size="sm" onClick={() => setSidebarOpen(!sidebarOpen)} className="lg:hidden">
               <Menu className="h-5 w-5" />
             </Button>
-            <h1 className="text-sm font-semibold text-foreground">
-              {tabs.find(t => t.key === activeTab)?.label ?? "Resumo"}
-            </h1>
+            <div className="flex items-center gap-1.5 text-sm">
+              <span className="text-muted-foreground">SGQ</span>
+              <span className="text-muted-foreground">/</span>
+              <span className="font-semibold text-foreground">
+                {tabs.find(t => t.key === activeTab)?.label ?? "Resumo"}
+              </span>
+            </div>
           </div>
-          <NotificationsPanel />
+          <div className="flex items-center gap-2">
+            <GlobalSearch onNavigate={setTab} />
+            <NotificationsPanel />
+          </div>
         </header>
 
         {/* Page content */}
@@ -302,6 +317,7 @@ const AdminDashboard = () => {
             <ActiveContent />
           ) : null}
         </main>
+        <OnboardingTour />
         <footer className="shrink-0 border-t px-4 py-2 text-center text-[10px] text-muted-foreground">
           © {new Date().getFullYear()} DM Consultoria em TI Ltda. Todos os direitos reservados.
         </footer>
@@ -427,6 +443,8 @@ const DashboardSummary = ({ onNavigate }: { onNavigate: (tab: string) => void })
           </button>
         ))}
       </div>
+
+      <DeadlinesPanel />
 
       {/* Date Filter */}
       <div className="flex flex-wrap items-center gap-3 rounded-xl border bg-card p-4 shadow-[var(--card-shadow)]">
