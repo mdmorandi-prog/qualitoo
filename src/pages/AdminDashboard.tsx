@@ -17,7 +17,7 @@ import NotificationsPanel from "@/components/NotificationsPanel";
 import { useDashboardAlerts } from "@/hooks/useDashboardAlerts";
 import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/lib/i18n";
-import { NcTrendChart, RiskDistributionChart, ActionPlansChart, EventsTrendChart, IndicatorsVsTargetChart, type DateFilter } from "@/components/dashboard/DashboardCharts";
+import { NcTrendChart, RiskDistributionChart, RiskSeverityBarChart, ConformityRateChart, ActionPlansChart, EventsTrendChart, IndicatorsVsTargetChart, type DateFilter } from "@/components/dashboard/DashboardCharts";
 import { MaturityRadarChart } from "@/components/dashboard/MaturityRadarChart";
 import { exportDashboardPdf } from "@/lib/exportPdf";
 
@@ -435,6 +435,8 @@ const DashboardSummary = ({ onNavigate }: { onNavigate: (tab: string) => void })
 
       {/* Charts Section */}
       <div className="grid gap-4 lg:grid-cols-2">
+        <ConformityRateChart />
+        <RiskSeverityBarChart />
         <MaturityRadarChart />
         <NcTrendChart filter={dateFilter} />
         <RiskDistributionChart />

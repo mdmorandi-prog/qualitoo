@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, Search, Eye, Target, Crosshair, LayoutGrid, Table as TableIcon, GripVertical } from "lucide-react";
+import { Plus, Search, Eye, Target, Crosshair, LayoutGrid, Table as TableIcon, GripVertical, Bot, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -305,26 +305,108 @@ const NonConformities = () => {
       <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader><DialogTitle className="font-display">Detalhes da NC</DialogTitle></DialogHeader>
-          {selected && (
-            <div className="space-y-4">
-              <div className="rounded-lg bg-secondary/50 p-3"><p className="mb-1 text-xs font-semibold text-muted-foreground">Descrição</p><p className="text-sm text-foreground">{selected.description}</p></div>
-              <div className="grid gap-3">
-                <div className="grid gap-2"><Label className="text-xs font-semibold">Causa Raiz</Label><Textarea defaultValue={selected.root_cause ?? ""} onBlur={e => updateField(selected.id, "root_cause", e.target.value)} placeholder="Análise de causa raiz..." /></div>
-                <div className="grid gap-2"><Label className="text-xs font-semibold">Ação Corretiva</Label><Textarea defaultValue={selected.corrective_action ?? ""} onBlur={e => updateField(selected.id, "corrective_action", e.target.value)} placeholder="Ação corretiva..." /></div>
-                <div className="grid gap-2"><Label className="text-xs font-semibold">Ação Preventiva</Label><Textarea defaultValue={selected.preventive_action ?? ""} onBlur={e => updateField(selected.id, "preventive_action", e.target.value)} placeholder="Ação preventiva..." /></div>
-              </div>
-              <div className="flex gap-2 border-t pt-4">
-                <Button variant="outline" size="sm" className="flex-1 gap-2" onClick={() => createCapaFromNc(selected)}>
-                  <Target className="h-4 w-4" /> Criar CAPA
-                </Button>
-                <Button variant="outline" size="sm" className="flex-1 gap-2" onClick={() => createActionPlanFromNc(selected)}>
-                  <Crosshair className="h-4 w-4" /> Criar Plano de Ação
-                </Button>
-              </div>
-            </div>
-          )}
+          {selected && <NcDetailContent
+            nc={selected}
+            updateField={updateField}
+            createCapaFromNc={createCapaFromNc}
+            createActionPlanFromNc={createActionPlanFromNc}
+            onClose={() => setDetailOpen(false)}
+            refreshData={fetchData}
+          />}
         </DialogContent>
       </Dialog>
+    </div>
+  );
+};
+
+const NcDetailContent = ({ nc, updateField, createCapaFromNc, createActionPlanFromNc, onClose, refreshData }: {
+  nc: NC; updateField: (id: string, field: string, value: string) => Promise<void>;
+  createCapaFromNc: (nc: NC) => Promise<void>; createActionPlanFromNc: (nc: NC) => Promise<void>;
+  onClose: () => void; refreshData: () => void;
+}) => {
+  const [aiLoading, setAiLoading] = useState(false);
+  const [rootCause, setRootCause] = useState(nc.root_cause ?? "");
+  const [corrective, setCorrective] = useState(nc.corrective_action ?? "");
+  const [preventive, setPreventive] = useState(nc.preventive_action ?? "");
+
+  const runAiAnalysis = async () => {
+    setAiLoading(true);
+    try {
+      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-root-cause`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({
+          title: nc.title,
+          description: nc.description,
+          severity: nc.severity,
+          sector: nc.sector,
+        }),
+      });
+
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        throw new Error(err.error || "Erro na análise de IA");
+      }
+
+      const data = await resp.json();
+
+      // Fill root cause
+      const rootCauseText = data.root_cause_summary + "\n\n5 Porquês:\n" +
+        data.five_whys.map((w: any, i: number) => `${i + 1}. ${w.question}\n   → ${w.answer}`).join("\n") +
+        "\n\nIshikawa (6M):\n" +
+        Object.entries(data.ishikawa).map(([k, v]: [string, any]) =>
+          `• ${k.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase())}: ${v.join("; ")}`
+        ).join("\n");
+
+      setRootCause(rootCauseText);
+      setCorrective(data.corrective_action || "");
+      setPreventive(data.preventive_action || "");
+
+      // Save to DB
+      await Promise.all([
+        updateField(nc.id, "root_cause", rootCauseText),
+        updateField(nc.id, "corrective_action", data.corrective_action || ""),
+        updateField(nc.id, "preventive_action", data.preventive_action || ""),
+      ]);
+
+      toast.success("Análise de causa raiz preenchida pela IA!");
+    } catch (e: any) {
+      toast.error(e.message || "Erro na análise de IA");
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-lg bg-secondary/50 p-3"><p className="mb-1 text-xs font-semibold text-muted-foreground">Descrição</p><p className="text-sm text-foreground">{nc.description}</p></div>
+      
+      {/* AI Analysis Button */}
+      <Button
+        onClick={runAiAnalysis}
+        disabled={aiLoading}
+        className="w-full gap-2 bg-gradient-to-r from-primary to-accent text-primary-foreground hover:opacity-90"
+      >
+        {aiLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Bot className="h-4 w-4" />}
+        {aiLoading ? "Analisando com IA..." : "🤖 SGQ IA — Análise de Causa Raiz"}
+      </Button>
+
+      <div className="grid gap-3">
+        <div className="grid gap-2"><Label className="text-xs font-semibold">Causa Raiz</Label><Textarea value={rootCause} onChange={e => setRootCause(e.target.value)} onBlur={e => updateField(nc.id, "root_cause", e.target.value)} placeholder="Análise de causa raiz..." className="min-h-[120px]" /></div>
+        <div className="grid gap-2"><Label className="text-xs font-semibold">Ação Corretiva</Label><Textarea value={corrective} onChange={e => setCorrective(e.target.value)} onBlur={e => updateField(nc.id, "corrective_action", e.target.value)} placeholder="Ação corretiva..." /></div>
+        <div className="grid gap-2"><Label className="text-xs font-semibold">Ação Preventiva</Label><Textarea value={preventive} onChange={e => setPreventive(e.target.value)} onBlur={e => updateField(nc.id, "preventive_action", e.target.value)} placeholder="Ação preventiva..." /></div>
+      </div>
+      <div className="flex gap-2 border-t pt-4">
+        <Button variant="outline" size="sm" className="flex-1 gap-2" onClick={() => createCapaFromNc(nc)}>
+          <Target className="h-4 w-4" /> Criar CAPA
+        </Button>
+        <Button variant="outline" size="sm" className="flex-1 gap-2" onClick={() => createActionPlanFromNc(nc)}>
+          <Crosshair className="h-4 w-4" /> Criar Plano de Ação
+        </Button>
+      </div>
     </div>
   );
 };
