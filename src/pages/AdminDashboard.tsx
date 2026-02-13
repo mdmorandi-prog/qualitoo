@@ -44,6 +44,7 @@ import EmployeePortal from "@/pages/quality/EmployeePortal";
 import Metrology from "@/pages/quality/Metrology";
 import ChangeManagement from "@/pages/quality/ChangeManagement";
 import DataExport from "@/pages/quality/DataExport";
+import SystemSettings from "@/pages/quality/SystemSettings";
 
 const allTabs = [
   { key: "resumo", label: "Resumo", icon: LayoutDashboard },
@@ -69,7 +70,8 @@ const allTabs = [
   { key: "metrologia", label: "Metrologia", icon: Ruler },
   { key: "mudancas", label: "Mudanças", icon: GitPullRequest },
   { key: "exportacao", label: "Exportação BI", icon: Database },
-  { key: "usuarios", label: "Usuários", icon: Settings, adminOnly: true },
+  { key: "configuracoes", label: "Configurações", icon: Settings, adminOnly: true },
+  { key: "usuarios", label: "Usuários", icon: Users2, adminOnly: true },
 ] as const;
 
 const contentMap: Record<string, React.FC> = {
@@ -81,7 +83,7 @@ const contentMap: Record<string, React.FC> = {
   fornecedores: Suppliers, pesquisas: SatisfactionSurveys, regulatorio: RegulatoryReports,
   processos: ProcessMapping, workflows: WorkflowConfig,
   portal: EmployeePortal, metrologia: Metrology, mudancas: ChangeManagement, exportacao: DataExport,
-  usuarios: UserManagement,
+  configuracoes: SystemSettings, usuarios: UserManagement,
 };
 
 const AdminDashboard = () => {
