@@ -225,9 +225,9 @@ const executeAction = async (
       if (userId) {
         await supabase.from("action_plans").insert({
           title: action.params.default_title ?? `Plano - ${record.title ?? ""}`,
-          description: `Gerado automaticamente pelo workflow a partir de ${module}`,
+          description: `Gerado automaticamente pelo workflow a partir de ${record.title ?? module}`,
           created_by: userId,
-          origin_type: module,
+          origin_type: `${module}: ${record.title ?? ""}`,
           origin_id: record.id ?? null,
         });
       }
