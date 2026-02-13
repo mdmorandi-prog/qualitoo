@@ -27,17 +27,22 @@ interface ActionPlan {
   created_at: string;
 }
 
+const emptyForm = {
+  title: "", what: "", why: "", where_action: "", who: "",
+  when_start: "", when_end: "", how: "", how_much: "", sector: "", description: "",
+};
+
 const ActionPlans = () => {
   const { user } = useAuth();
   const [plans, setPlans] = useState<ActionPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [detailPlan, setDetailPlan] = useState<ActionPlan | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [editForm, setEditForm] = useState(emptyForm);
 
-  const [form, setForm] = useState({
-    title: "", what: "", why: "", where_action: "", who: "",
-    when_start: "", when_end: "", how: "", how_much: "", sector: "",
-  });
+  const [form, setForm] = useState(emptyForm);
 
   useEffect(() => { fetch(); }, []);
 
@@ -59,7 +64,32 @@ const ActionPlans = () => {
       sector: form.sector || null, created_by: user.id,
     } as any);
     if (error) { toast.error("Erro"); console.error(error); }
-    else { toast.success("Plano criado!"); setDialogOpen(false); setForm({ title: "", what: "", why: "", where_action: "", who: "", when_start: "", when_end: "", how: "", how_much: "", sector: "" }); fetch(); }
+    else { toast.success("Plano criado!"); setDialogOpen(false); setForm(emptyForm); fetch(); }
+  };
+
+  const openDetail = (plan: ActionPlan) => {
+    setDetailPlan(plan);
+    setEditForm({
+      title: plan.title, what: plan.what ?? "", why: plan.why ?? "",
+      where_action: plan.where_action ?? "", who: plan.who ?? "",
+      when_start: plan.when_start ?? "", when_end: plan.when_end ?? "",
+      how: plan.how ?? "", how_much: plan.how_much ?? "",
+      sector: plan.sector ?? "", description: plan.description ?? "",
+    });
+    setDetailOpen(true);
+  };
+
+  const handleSave = async () => {
+    if (!detailPlan) return;
+    const { error } = await supabase.from("action_plans").update({
+      title: editForm.title, what: editForm.what || null, why: editForm.why || null,
+      where_action: editForm.where_action || null, who: editForm.who || null,
+      when_start: editForm.when_start || null, when_end: editForm.when_end || null,
+      how: editForm.how || null, how_much: editForm.how_much || null,
+      sector: editForm.sector || null, description: editForm.description || null,
+    }).eq("id", detailPlan.id);
+    if (error) { toast.error("Erro ao salvar"); console.error(error); }
+    else { toast.success("Plano atualizado!"); setDetailOpen(false); fetch(); }
   };
 
   const updateStatus = async (id: string, status: string) => {
@@ -122,10 +152,10 @@ const ActionPlans = () => {
             {loading ? <TableRow><TableCell colSpan={5} className="py-8 text-center text-muted-foreground">Carregando...</TableCell></TableRow>
             : filtered.length === 0 ? <TableRow><TableCell colSpan={5} className="py-8 text-center text-muted-foreground">Nenhum plano.</TableCell></TableRow>
             : filtered.map(p => (
-              <TableRow key={p.id}>
+              <TableRow key={p.id} className="cursor-pointer hover:bg-muted/50" onClick={() => openDetail(p)}>
                 <TableCell><div><p className="font-medium">{p.title}</p>{p.origin_type && p.origin_type !== "manual" && <p className="text-xs text-muted-foreground">Origem: {p.origin_type}</p>}</div></TableCell>
                 <TableCell className="text-sm">{p.who || "—"}</TableCell>
-                <TableCell>
+                <TableCell onClick={e => e.stopPropagation()}>
                   <Select value={p.status} onValueChange={v => updateStatus(p.id, v)}>
                     <SelectTrigger className="h-8 w-36"><SelectValue /></SelectTrigger>
                     <SelectContent><SelectItem value="pendente">Pendente</SelectItem><SelectItem value="em_andamento">Em Andamento</SelectItem><SelectItem value="concluido">Concluído</SelectItem></SelectContent>
@@ -138,6 +168,46 @@ const ActionPlans = () => {
           </TableBody>
         </Table>
       </div>
+
+      {/* Detail / Edit Dialog */}
+      <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+          <DialogHeader><DialogTitle className="font-display">Detalhes do Plano de Ação (5W2H)</DialogTitle></DialogHeader>
+          {detailPlan && (
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2"><Label>Título *</Label><Input value={editForm.title} onChange={e => setEditForm(f => ({ ...f, title: e.target.value }))} /></div>
+              <div className="grid gap-2"><Label>Descrição</Label><Textarea value={editForm.description} onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))} placeholder="Descrição do plano..." /></div>
+              <div className="grid gap-2"><Label>O quê? (What)</Label><Textarea value={editForm.what} onChange={e => setEditForm(f => ({ ...f, what: e.target.value }))} placeholder="O que será feito?" /></div>
+              <div className="grid gap-2"><Label>Por quê? (Why)</Label><Textarea value={editForm.why} onChange={e => setEditForm(f => ({ ...f, why: e.target.value }))} placeholder="Por que será feito?" /></div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2"><Label>Onde? (Where)</Label><Input value={editForm.where_action} onChange={e => setEditForm(f => ({ ...f, where_action: e.target.value }))} /></div>
+                <div className="grid gap-2"><Label>Quem? (Who)</Label><Input value={editForm.who} onChange={e => setEditForm(f => ({ ...f, who: e.target.value }))} /></div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2"><Label>Quando? Início</Label><Input type="date" value={editForm.when_start} onChange={e => setEditForm(f => ({ ...f, when_start: e.target.value }))} /></div>
+                <div className="grid gap-2"><Label>Quando? Fim</Label><Input type="date" value={editForm.when_end} onChange={e => setEditForm(f => ({ ...f, when_end: e.target.value }))} /></div>
+              </div>
+              <div className="grid gap-2"><Label>Como? (How)</Label><Textarea value={editForm.how} onChange={e => setEditForm(f => ({ ...f, how: e.target.value }))} placeholder="Como será feito?" /></div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2"><Label>Quanto custa? (How much)</Label><Input value={editForm.how_much} onChange={e => setEditForm(f => ({ ...f, how_much: e.target.value }))} /></div>
+                <div className="grid gap-2"><Label>Setor</Label><Input value={editForm.sector} onChange={e => setEditForm(f => ({ ...f, sector: e.target.value }))} /></div>
+              </div>
+
+              {detailPlan.origin_type && detailPlan.origin_type !== "manual" && (
+                <div className="rounded-lg bg-secondary/50 p-3">
+                  <p className="text-xs font-semibold text-muted-foreground">Origem</p>
+                  <p className="text-sm">{detailPlan.origin_type} {detailPlan.origin_id ? `(${detailPlan.origin_id.slice(0, 8)}...)` : ""}</p>
+                </div>
+              )}
+
+              <div className="flex gap-2 border-t pt-4">
+                <Button onClick={handleSave} className="flex-1">Salvar Alterações</Button>
+                <Button variant="outline" onClick={() => setDetailOpen(false)}>Fechar</Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
