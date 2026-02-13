@@ -6,9 +6,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Settings2, Plus, Save, RotateCcw, X, GripVertical, Lock, Unlock } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Plus, Save, RotateCcw, X, GripVertical, Lock, Unlock, Share2, Users, Globe } from "lucide-react";
 import { toast } from "sonner";
 import { WidgetRenderer, widgetRegistry, type WidgetDefinition } from "./DashboardWidgets";
 
@@ -62,6 +64,10 @@ const CustomizableDashboard = () => {
   const [config, setConfig] = useState<DashboardConfig | null>(null);
   const [editing, setEditing] = useState(false);
   const [showAddWidget, setShowAddWidget] = useState(false);
+  const [showShareDialog, setShowShareDialog] = useState(false);
+  const [isShared, setIsShared] = useState(false);
+  const [sharedRoles, setSharedRoles] = useState<string[]>([]);
+  const [sharedDashboards, setSharedDashboards] = useState<any[]>([]);
   const [locked, setLocked] = useState(true);
   const [loading, setLoading] = useState(true);
 
@@ -80,6 +86,8 @@ const CustomizableDashboard = () => {
         layouts: (data.layouts as unknown as Record<string, Layout[]>) ?? generateDefaultLayouts(defaultWidgets),
         widgets: (data.widgets as unknown as WidgetConfig[]) ?? defaultWidgets,
       });
+      setIsShared(data.is_shared ?? false);
+      setSharedRoles((data.shared_with_roles as string[]) ?? []);
     } else {
       setConfig({
         layouts: generateDefaultLayouts(defaultWidgets),
@@ -89,7 +97,18 @@ const CustomizableDashboard = () => {
     setLoading(false);
   }, [user]);
 
-  useEffect(() => { loadConfig(); }, [loadConfig]);
+  // Load shared dashboards from other users
+  const loadSharedDashboards = useCallback(async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("user_dashboard_configs")
+      .select("*")
+      .eq("is_shared", true)
+      .neq("user_id", user.id);
+    setSharedDashboards(data ?? []);
+  }, [user]);
+
+  useEffect(() => { loadConfig(); loadSharedDashboards(); }, [loadConfig, loadSharedDashboards]);
 
   const saveConfig = async () => {
     if (!user || !config) return;
@@ -120,6 +139,46 @@ const CustomizableDashboard = () => {
     toast.success("Dashboard salvo!");
     setEditing(false);
     setLocked(true);
+  };
+
+  const saveShareSettings = async () => {
+    if (!user || !config?.id) {
+      toast.error("Salve o dashboard primeiro antes de compartilhar");
+      return;
+    }
+    const { error } = await supabase
+      .from("user_dashboard_configs")
+      .update({
+        is_shared: isShared,
+        shared_with_roles: sharedRoles,
+      })
+      .eq("id", config.id);
+    if (error) return toast.error("Erro ao compartilhar");
+    toast.success(isShared ? "Dashboard compartilhado!" : "Compartilhamento removido");
+    setShowShareDialog(false);
+    loadSharedDashboards();
+  };
+
+  const loadSharedDashboard = async (dashId: string) => {
+    const { data } = await supabase
+      .from("user_dashboard_configs")
+      .select("*")
+      .eq("id", dashId)
+      .single();
+    if (data) {
+      setConfig({
+        id: config?.id,
+        layouts: (data.layouts as unknown as Record<string, Layout[]>) ?? generateDefaultLayouts(defaultWidgets),
+        widgets: (data.widgets as unknown as WidgetConfig[]) ?? defaultWidgets,
+      });
+      toast.success(`Layout "${data.config_name}" aplicado!`);
+    }
+  };
+
+  const toggleRole = (role: string) => {
+    setSharedRoles((prev) =>
+      prev.includes(role) ? prev.filter((r) => r !== role) : [...prev, role]
+    );
   };
 
   const resetToDefault = () => {
@@ -216,8 +275,31 @@ const CustomizableDashboard = () => {
               </Button>
             </>
           )}
+          <Button variant="outline" size="sm" onClick={() => setShowShareDialog(true)}>
+            <Share2 className="mr-1 h-4 w-4" /> Compartilhar
+          </Button>
         </div>
       </div>
+
+      {/* Shared dashboards from others */}
+      {sharedDashboards.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          <Users className="h-4 w-4 text-muted-foreground" />
+          <span className="text-xs text-muted-foreground">Dashboards compartilhados:</span>
+          {sharedDashboards.map((d) => (
+            <Button
+              key={d.id}
+              variant="ghost"
+              size="sm"
+              className="h-7 text-xs"
+              onClick={() => loadSharedDashboard(d.id)}
+            >
+              <Globe className="mr-1 h-3 w-3" />
+              {d.config_name}
+            </Button>
+          ))}
+        </div>
+      )}
 
       {!locked && (
         <p className="text-xs text-muted-foreground">
@@ -292,6 +374,71 @@ const CustomizableDashboard = () => {
               </div>
             ))}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Share Dialog */}
+      <Dialog open={showShareDialog} onOpenChange={setShowShareDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Share2 className="h-5 w-5" />
+              Compartilhar Dashboard
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="share-toggle" className="text-sm font-medium">Compartilhar com outros usuários</Label>
+                <p className="text-xs text-muted-foreground">
+                  Outros usuários poderão aplicar seu layout de dashboard
+                </p>
+              </div>
+              <Switch
+                id="share-toggle"
+                checked={isShared}
+                onCheckedChange={setIsShared}
+              />
+            </div>
+
+            {isShared && (
+              <div className="space-y-3">
+                <Label className="text-sm font-medium">Compartilhar com perfis</Label>
+                <div className="space-y-2">
+                  {["admin", "analyst"].map((role) => (
+                    <button
+                      key={role}
+                      onClick={() => toggleRole(role)}
+                      className={`flex w-full items-center gap-3 rounded-lg border p-3 text-left text-sm transition-colors ${
+                        sharedRoles.includes(role)
+                          ? "border-primary bg-primary/5"
+                          : "border-border hover:border-muted-foreground"
+                      }`}
+                    >
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                      <span className="flex-1 capitalize">{role === "admin" ? "Administradores" : "Analistas"}</span>
+                      {sharedRoles.includes(role) && (
+                        <Badge variant="secondary" className="text-xs">Selecionado</Badge>
+                      )}
+                    </button>
+                  ))}
+                </div>
+                {sharedRoles.length === 0 && (
+                  <p className="text-xs text-warning">
+                    Nenhum perfil selecionado — o dashboard ficará visível para todos.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowShareDialog(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={saveShareSettings}>
+              <Save className="mr-1 h-4 w-4" /> Salvar
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
