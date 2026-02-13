@@ -95,6 +95,100 @@ export const NcTrendChart = ({ filter }: { filter: DateFilter }) => {
   );
 };
 
+export const RiskSeverityBarChart = () => {
+  const [data, setData] = useState<{ name: string; value: number; fill: string }[]>([]);
+
+  useEffect(() => {
+    const load = async () => {
+      const { data: risks } = await supabase.from("risks").select("risk_level");
+      if (!risks) return;
+
+      let low = 0, medium = 0, high = 0, critical = 0;
+      risks.forEach((r: any) => {
+        const lvl = r.risk_level ?? 0;
+        if (lvl >= 15) critical++;
+        else if (lvl >= 10) high++;
+        else if (lvl >= 5) medium++;
+        else low++;
+      });
+
+      setData([
+        { name: "Baixo", value: low, fill: COLORS.safe },
+        { name: "Médio", value: medium, fill: COLORS.warning },
+        { name: "Alto", value: high, fill: COLORS.destructive },
+        { name: "Crítico", value: critical, fill: "#ef4444" },
+      ]);
+    };
+    load();
+  }, []);
+
+  if (data.every(d => d.value === 0)) return <ChartPlaceholder label="Severidade de Riscos" />;
+
+  return (
+    <div className="rounded-xl border bg-card p-5 shadow-[var(--card-shadow)]">
+      <h4 className="mb-4 text-sm font-bold text-foreground">Severidade de Riscos — Distribuição</h4>
+      <ResponsiveContainer width="100%" height={220}>
+        <BarChart data={data} barGap={4}>
+          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+          <XAxis dataKey="name" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+          <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+          <Tooltip {...tooltipStyle} />
+          <Bar dataKey="value" name="Riscos" radius={[4, 4, 0, 0]}>
+            {data.map((entry, i) => (<Cell key={i} fill={entry.fill} />))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+};
+
+export const ConformityRateChart = () => {
+  const [data, setData] = useState<{ signed: number; unsigned: number; rate: number } | null>(null);
+
+  useEffect(() => {
+    const load = async () => {
+      const { data: docs } = await supabase.from("quality_documents").select("is_signed, status");
+      if (!docs) return;
+      const approved = docs.filter((d: any) => d.status === "aprovado");
+      const signed = approved.filter((d: any) => d.is_signed).length;
+      const unsigned = approved.length - signed;
+      const rate = approved.length > 0 ? Math.round((signed / approved.length) * 100) : 0;
+      setData({ signed, unsigned, rate });
+    };
+    load();
+  }, []);
+
+  if (!data) return <ChartPlaceholder label="Taxa de Conformidade" />;
+
+  const pieData = [
+    { name: "Conforme", value: data.signed, color: COLORS.safe },
+    { name: "Pendente", value: data.unsigned, color: COLORS.warning },
+  ].filter(d => d.value > 0);
+
+  return (
+    <div className="rounded-xl border bg-card p-5 shadow-[var(--card-shadow)]">
+      <h4 className="mb-1 text-sm font-bold text-foreground">Taxa de Conformidade Documental</h4>
+      <p className="mb-3 text-xs text-muted-foreground">Documentos aprovados com assinatura confirmada</p>
+      <div className="flex items-center gap-4">
+        <div className="flex-1">
+          <ResponsiveContainer width="100%" height={180}>
+            <PieChart>
+              <Pie data={pieData} cx="50%" cy="50%" innerRadius={50} outerRadius={75} paddingAngle={3} dataKey="value" label={({ name, value }) => `${name}: ${value}`}>
+                {pieData.map((entry, i) => (<Cell key={i} fill={entry.color} />))}
+              </Pie>
+              <Tooltip {...tooltipStyle} />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="text-center">
+          <p className="text-4xl font-bold text-foreground">{data.rate}%</p>
+          <p className="text-xs text-muted-foreground">conformidade</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export const RiskDistributionChart = () => {
   const [data, setData] = useState<{ name: string; value: number; color: string }[]>([]);
 

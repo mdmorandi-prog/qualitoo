@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { Plus, Search, Eye, Upload, FileUp, AlertTriangle, ArrowRight, CheckCircle2, FileText, Lock, FileSignature, Shield, ScrollText } from "lucide-react";
+import { Plus, Search, Eye, Upload, FileUp, AlertTriangle, ArrowRight, CheckCircle2, FileText, Lock, FileSignature, Shield, ScrollText, Clock, XCircle } from "lucide-react";
 import PdfWatermarkViewer from "@/components/documents/PdfWatermarkViewer";
 import SignatureDialog from "@/components/documents/SignatureDialog";
 import SignatureVerifier from "@/components/documents/SignatureVerifier";
@@ -153,6 +153,7 @@ const Documents = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [specialFilter, setSpecialFilter] = useState<"pending_sig" | "expired" | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selected, setSelected] = useState<Doc | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
@@ -255,8 +256,17 @@ const Documents = () => {
     }
   };
 
+  const now = new Date();
+  const pendingSigCount = docs.filter(d => !d.is_signed && d.status !== "obsoleto").length;
+  const expiredCount = docs.filter(d => d.valid_until && new Date(d.valid_until) < now && d.status !== "obsoleto").length;
+
   const filtered = docs
     .filter(d => filterStatus === "all" || d.status === filterStatus)
+    .filter(d => {
+      if (specialFilter === "pending_sig") return !d.is_signed && d.status !== "obsoleto";
+      if (specialFilter === "expired") return d.valid_until && new Date(d.valid_until) < now && d.status !== "obsoleto";
+      return true;
+    })
     .filter(d => !search || d.title.toLowerCase().includes(search.toLowerCase()) || (d.code && d.code.toLowerCase().includes(search.toLowerCase())));
 
   return (
@@ -336,6 +346,34 @@ const Documents = () => {
         </div>
       </div>
 
+      {/* Special Filter Cards */}
+      <div className="grid gap-3 sm:grid-cols-2">
+        <button
+          onClick={() => { setSpecialFilter(specialFilter === "pending_sig" ? null : "pending_sig"); setFilterStatus("all"); }}
+          className={`flex items-center gap-3 rounded-xl border p-4 text-left transition-all ${specialFilter === "pending_sig" ? "ring-2 ring-warning border-warning bg-warning/10" : "bg-card shadow-[var(--card-shadow)] hover:shadow-md"}`}
+        >
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-warning/10">
+            <Clock className="h-5 w-5 text-warning" />
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-warning">{pendingSigCount}</p>
+            <p className="text-xs text-muted-foreground">Assinaturas Pendentes</p>
+          </div>
+        </button>
+        <button
+          onClick={() => { setSpecialFilter(specialFilter === "expired" ? null : "expired"); setFilterStatus("all"); }}
+          className={`flex items-center gap-3 rounded-xl border p-4 text-left transition-all ${specialFilter === "expired" ? "ring-2 ring-destructive border-destructive bg-destructive/10" : "bg-card shadow-[var(--card-shadow)] hover:shadow-md"}`}
+        >
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-destructive/10">
+            <XCircle className="h-5 w-5 text-destructive" />
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-destructive">{expiredCount}</p>
+            <p className="text-xs text-muted-foreground">Documentos Vencidos</p>
+          </div>
+        </button>
+      </div>
+
       <div className="grid gap-3 sm:grid-cols-5">
         {[
           { label: "Total", value: docs.length, color: "text-foreground" },
@@ -371,10 +409,17 @@ const Documents = () => {
           <TableBody>
             {loading ? <TableRow><TableCell colSpan={7} className="py-8 text-center text-muted-foreground">Carregando...</TableCell></TableRow>
             : filtered.length === 0 ? <TableRow><TableCell colSpan={7} className="py-8 text-center text-muted-foreground">Nenhum documento.</TableCell></TableRow>
-            : filtered.map(d => (
-              <TableRow key={d.id} className={!d.is_signed && d.status !== "obsoleto" ? "bg-warning/5" : ""}>
+            : filtered.map(d => {
+              const isExpired = d.valid_until && new Date(d.valid_until) < now && d.status !== "obsoleto";
+              return (
+              <TableRow key={d.id} className={isExpired ? "bg-destructive/5" : !d.is_signed && d.status !== "obsoleto" ? "bg-warning/5" : ""}>
                 <TableCell className="font-mono text-xs font-semibold">{d.code || "—"}</TableCell>
-                <TableCell className="font-medium">{d.title}</TableCell>
+                <TableCell className="font-medium">
+                  <div className="flex items-center gap-2">
+                    {d.title}
+                    {isExpired && <span className="shrink-0 rounded bg-destructive px-1.5 py-0.5 text-[10px] font-bold text-destructive-foreground">VENCIDO</span>}
+                  </div>
+                </TableCell>
                 <TableCell className="text-sm">v{d.version}</TableCell>
                 <TableCell>
                   <Select value={d.status} onValueChange={v => updateStatus(d.id, v as DocStatus)}>
@@ -400,7 +445,7 @@ const Documents = () => {
                     : <span className="inline-flex items-center gap-1 rounded-full bg-warning/10 px-2 py-0.5 text-xs font-medium text-warning"><AlertTriangle className="h-3 w-3" /> Não</span>
                   }
                 </TableCell>
-                <TableCell className="text-xs text-muted-foreground">{d.valid_until ? new Date(d.valid_until).toLocaleDateString("pt-BR") : "—"}</TableCell>
+                <TableCell className={`text-xs ${isExpired ? "font-bold text-destructive" : "text-muted-foreground"}`}>{d.valid_until ? new Date(d.valid_until).toLocaleDateString("pt-BR") : "—"}</TableCell>
                 <TableCell className="flex gap-1">
                   <Button variant="ghost" size="sm" onClick={() => { setSelected(d); setDetailOpen(true); }}><Eye className="h-4 w-4" /></Button>
                   {!d.is_signed && d.status !== "obsoleto" && (
@@ -421,7 +466,8 @@ const Documents = () => {
                   )}
                 </TableCell>
               </TableRow>
-            ))}
+              );
+            })}
           </TableBody>
         </Table>
       </div>
