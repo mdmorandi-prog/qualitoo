@@ -2247,13 +2247,8 @@ export type Database = {
       lookup_report_by_protocol: {
         Args: { p_protocol: string }
         Returns: {
-          created_at: string
-          date: string
-          is_anonymous: boolean
-          location: string
           protocol: string
           status: Database["public"]["Enums"]["report_status"]
-          type: string
         }[]
       }
     }
