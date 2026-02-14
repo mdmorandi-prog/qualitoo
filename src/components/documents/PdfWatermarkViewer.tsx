@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { X, Loader2, Download, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { supabase } from "@/integrations/supabase/client";
 import * as pdfjsLib from "pdfjs-dist";
 
 // Configure worker
@@ -22,12 +23,19 @@ const parseStorageUrl = (url: string): { bucket: string; path: string } | null =
   return null;
 };
 
-const getPublicUrl = (fileUrl: string): string => {
+const getSignedUrl = async (fileUrl: string): Promise<string> => {
   const parsed = parseStorageUrl(fileUrl);
   const bucket = parsed?.bucket || "documents";
   const path = parsed?.path || fileUrl;
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-  return `${supabaseUrl}/storage/v1/object/public/${bucket}/${encodeURIComponent(path).replace(/%2F/g, "/")}`;
+
+  const { data, error } = await supabase.storage
+    .from(bucket)
+    .createSignedUrl(path, 3600); // 1 hour expiry
+
+  if (error || !data?.signedUrl) {
+    throw new Error("Failed to create signed URL for document");
+  }
+  return data.signedUrl;
 };
 
 interface PageSlot {
@@ -54,7 +62,7 @@ const PdfWatermarkViewer = ({ open, onOpenChange, fileUrl, title }: PdfWatermark
     renderingRef.current.clear();
 
     try {
-      const url = getPublicUrl(fileUrl);
+      const url = await getSignedUrl(fileUrl);
       const response = await fetch(url);
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
 

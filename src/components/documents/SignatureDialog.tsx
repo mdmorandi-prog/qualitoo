@@ -34,6 +34,9 @@ const ROLE_LABELS: Record<SignatureRole, string> = {
   validado: "Validado por",
 };
 
+const MAX_ATTEMPTS = 3;
+const LOCKOUT_DURATION_MS = 5 * 60 * 1000; // 5 minutes
+
 const SignatureDialog = ({ open, onOpenChange, document, onSigned, defaultRole = "elaborado" }: SignatureDialogProps) => {
   const { user } = useAuth();
   const [step, setStep] = useState<Step>("confirm");
@@ -41,6 +44,8 @@ const SignatureDialog = ({ open, onOpenChange, document, onSigned, defaultRole =
   const [loading, setLoading] = useState(false);
   const [signatureResult, setSignatureResult] = useState<{ hash: string; signedAt: string } | null>(null);
   const [selectedRole, setSelectedRole] = useState<SignatureRole>(defaultRole);
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [lockoutUntil, setLockoutUntil] = useState<Date | null>(null);
 
   const reset = () => {
     setStep("confirm");
@@ -48,6 +53,7 @@ const SignatureDialog = ({ open, onOpenChange, document, onSigned, defaultRole =
     setLoading(false);
     setSignatureResult(null);
     setSelectedRole(defaultRole);
+    // Don't reset failedAttempts/lockoutUntil on close to persist lockout
   };
 
   const handleClose = (val: boolean) => {
@@ -72,6 +78,14 @@ const SignatureDialog = ({ open, onOpenChange, document, onSigned, defaultRole =
 
   const handleVerifyIdentity = async () => {
     if (!password) { toast.error("Digite sua senha para verificar identidade"); return; }
+
+    // Check lockout
+    if (lockoutUntil && new Date() < lockoutUntil) {
+      const remainingSec = Math.ceil((lockoutUntil.getTime() - Date.now()) / 1000);
+      toast.error(`Muitas tentativas falhas. Tente novamente em ${remainingSec} segundos.`);
+      return;
+    }
+
     setLoading(true);
     try {
       // Re-authenticate user with password
@@ -80,10 +94,21 @@ const SignatureDialog = ({ open, onOpenChange, document, onSigned, defaultRole =
         password,
       });
       if (error) {
-        toast.error("Senha incorreta. Verificação de identidade falhou.");
-        await logAudit("identity_verification_failed", { method: "password" });
+        const newAttempts = failedAttempts + 1;
+        setFailedAttempts(newAttempts);
+        if (newAttempts >= MAX_ATTEMPTS) {
+          const lockout = new Date(Date.now() + LOCKOUT_DURATION_MS);
+          setLockoutUntil(lockout);
+          toast.error(`Conta temporariamente bloqueada após ${MAX_ATTEMPTS} tentativas falhas. Aguarde 5 minutos.`);
+        } else {
+          toast.error(`Senha incorreta. ${MAX_ATTEMPTS - newAttempts} tentativa(s) restante(s).`);
+        }
+        await logAudit("identity_verification_failed", { method: "password", attempts: newAttempts });
         return;
       }
+      // Reset on success
+      setFailedAttempts(0);
+      setLockoutUntil(null);
       await logAudit("identity_verified", { method: "password" });
       toast.success("Identidade verificada!");
       setStep("signing");
