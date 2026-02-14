@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -51,7 +53,7 @@ const operators = [
   { key: "like", label: "Contém" },
 ];
 
-const QueryBuilder = () => {
+const QueryBuilderContent = () => {
   const [selectedTable, setSelectedTable] = useState("");
   const [selectedColumns, setSelectedColumns] = useState<string[]>([]);
   const [filters, setFilters] = useState<QueryFilter[]>([]);
@@ -330,6 +332,14 @@ const QueryBuilder = () => {
       </div>
     </div>
   );
+};
+
+const QueryBuilder = () => {
+  const { isAdmin, isAnalyst } = useAuth();
+  if (!isAdmin && !isAnalyst) {
+    return <Navigate to="/" replace />;
+  }
+  return <QueryBuilderContent />;
 };
 
 export default QueryBuilder;
