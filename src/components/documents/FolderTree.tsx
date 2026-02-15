@@ -1,7 +1,11 @@
 import { useEffect, useState, useCallback } from "react";
 import {
   ChevronRight, ChevronDown, FolderOpen, Folder, Plus, Pencil, Trash2,
-  Building2, FolderPlus, MoreHorizontal,
+  FolderPlus, MoreHorizontal,
+  Monitor, Heart, Pill, FlaskConical, Stethoscope, ShieldCheck,
+  ClipboardList, Microscope, Baby, Syringe, Building2, Brain,
+  Wrench, Users, GraduationCap, Landmark, Truck, Leaf, Phone,
+  type LucideIcon,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -55,8 +59,47 @@ const buildTree = (flat: any[]): FolderNode[] => {
   return roots;
 };
 
+// Sector icon mapping — keywords → lucide icon
+const SECTOR_ICON_MAP: { keywords: string[]; icon: string; component: LucideIcon }[] = [
+  { keywords: ["tecnologia", "informação", "ti", "informática", "sistemas"], icon: "monitor", component: Monitor },
+  { keywords: ["enfermagem", "nursing"], icon: "heart", component: Heart },
+  { keywords: ["farmácia", "farmacia"], icon: "pill", component: Pill },
+  { keywords: ["laboratório", "laboratorio"], icon: "flask-conical", component: FlaskConical },
+  { keywords: ["médic", "clínic", "clinic", "medic"], icon: "stethoscope", component: Stethoscope },
+  { keywords: ["qualidade", "sgq"], icon: "shield-check", component: ShieldCheck },
+  { keywords: ["uti", "intensiv"], icon: "clipboard-list", component: ClipboardList },
+  { keywords: ["diagnóstico", "diagnostico", "imagem"], icon: "microscope", component: Microscope },
+  { keywords: ["pediatr", "neonat", "maternidade"], icon: "baby", component: Baby },
+  { keywords: ["centro cirúrgico", "cirurg", "bloco"], icon: "syringe", component: Syringe },
+  { keywords: ["administrativ", "diretoria", "gestão"], icon: "building-2", component: Building2 },
+  { keywords: ["psicolog", "saúde mental", "mental"], icon: "brain", component: Brain },
+  { keywords: ["manutenção", "manutencao", "engenharia"], icon: "wrench", component: Wrench },
+  { keywords: ["rh", "recursos humanos", "pessoas"], icon: "users", component: Users },
+  { keywords: ["ensino", "treinamento", "educação"], icon: "graduation-cap", component: GraduationCap },
+  { keywords: ["financ", "contab", "faturamento"], icon: "landmark", component: Landmark },
+  { keywords: ["logística", "logistica", "suprimento", "almoxarifado"], icon: "truck", component: Truck },
+  { keywords: ["ambiental", "sustentab", "resíduos"], icon: "leaf", component: Leaf },
+  { keywords: ["recepção", "recepcao", "atendimento", "sac"], icon: "phone", component: Phone },
+];
+
+export const getSectorIcon = (name: string): { icon: string; Component: LucideIcon } => {
+  const lower = name.toLowerCase();
+  for (const entry of SECTOR_ICON_MAP) {
+    if (entry.keywords.some(kw => lower.includes(kw))) {
+      return { icon: entry.icon, Component: entry.component };
+    }
+  }
+  return { icon: "building-2", Component: Building2 };
+};
+
+const ICON_COMPONENT_MAP: Record<string, LucideIcon> = Object.fromEntries([
+  ...SECTOR_ICON_MAP.map(e => [e.icon, e.component]),
+  ["building-2", Building2],
+]);
+
 const FolderIcon = ({ icon, isOpen }: { icon: string; isOpen: boolean }) => {
-  if (icon === "building-2") return <Building2 className="h-4 w-4 shrink-0 text-primary" />;
+  const IconComp = ICON_COMPONENT_MAP[icon];
+  if (IconComp) return <IconComp className="h-4 w-4 shrink-0 text-primary" />;
   return isOpen
     ? <FolderOpen className="h-4 w-4 shrink-0 text-amber-500" />
     : <Folder className="h-4 w-4 shrink-0 text-amber-500" />;
@@ -216,7 +259,7 @@ const FolderTree = ({ selectedFolderId, onSelectFolder }: FolderTreeProps) => {
         name: folderName.trim(),
         parent_id: parentIdForNew,
         sector,
-        icon: isRootFolder ? "building-2" : "folder",
+        icon: isRootFolder ? getSectorIcon(folderName.trim()).icon : "folder",
         created_by: user.id,
       } as any).select().single();
       if (error) toast.error("Erro ao criar pasta");
