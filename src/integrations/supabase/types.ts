@@ -1399,6 +1399,111 @@ export type Database = {
         }
         Relationships: []
       }
+      project_tasks: {
+        Row: {
+          created_at: string
+          depends_on: string | null
+          display_order: number
+          end_date: string
+          id: string
+          is_milestone: boolean
+          progress: number
+          project_id: string
+          responsible: string | null
+          start_date: string
+          status: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          depends_on?: string | null
+          display_order?: number
+          end_date?: string
+          id?: string
+          is_milestone?: boolean
+          progress?: number
+          project_id: string
+          responsible?: string | null
+          start_date?: string
+          status?: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          depends_on?: string | null
+          display_order?: number
+          end_date?: string
+          id?: string
+          is_milestone?: boolean
+          progress?: number
+          project_id?: string
+          responsible?: string | null
+          start_date?: string
+          status?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_tasks_depends_on_fkey"
+            columns: ["depends_on"]
+            isOneToOne: false
+            referencedRelation: "project_tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_tasks_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      projects: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          end_date: string | null
+          id: string
+          progress: number
+          responsible: string | null
+          sector: string | null
+          start_date: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          progress?: number
+          responsible?: string | null
+          sector?: string | null
+          start_date?: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          progress?: number
+          responsible?: string | null
+          sector?: string | null
+          start_date?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       quality_documents: {
         Row: {
           approved_at: string | null
