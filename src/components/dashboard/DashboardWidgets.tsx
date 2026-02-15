@@ -415,7 +415,7 @@ const ProjectsSummaryWidget = () => {
   useEffect(() => {
     supabase.from("projects").select("id, status").then(({ data: items }) => {
       const list = items ?? [];
-      setData({ active: list.filter((p: any) => p.status === "em_andamento" || p.status === "ativo").length, total: list.length });
+      setData({ active: list.filter((p: any) => p.status !== "concluído" && p.status !== "cancelado").length, total: list.length });
     });
   }, []);
   return <StatCard label="Projetos Ativos" value={data.active} sub={`de ${data.total} total`} />;
