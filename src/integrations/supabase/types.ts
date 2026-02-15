@@ -708,6 +708,75 @@ export type Database = {
           },
         ]
       }
+      contracts: {
+        Row: {
+          ai_analysis: string | null
+          ai_analyzed_at: string | null
+          alert_days_before: number
+          category: string | null
+          contract_number: string | null
+          counterparty: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          duration_months: number
+          end_date: string | null
+          file_name: string | null
+          file_url: string | null
+          id: string
+          notes: string | null
+          sector: string | null
+          start_date: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          ai_analysis?: string | null
+          ai_analyzed_at?: string | null
+          alert_days_before?: number
+          category?: string | null
+          contract_number?: string | null
+          counterparty?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          duration_months?: number
+          end_date?: string | null
+          file_name?: string | null
+          file_url?: string | null
+          id?: string
+          notes?: string | null
+          sector?: string | null
+          start_date: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          ai_analysis?: string | null
+          ai_analyzed_at?: string | null
+          alert_days_before?: number
+          category?: string | null
+          contract_number?: string | null
+          counterparty?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          duration_months?: number
+          end_date?: string | null
+          file_name?: string | null
+          file_url?: string | null
+          id?: string
+          notes?: string | null
+          sector?: string | null
+          start_date?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       document_access_log: {
         Row: {
           action: string
