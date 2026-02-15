@@ -200,7 +200,7 @@ const FolderTree = ({ selectedFolderId, onSelectFolder }: FolderTreeProps) => {
       else { toast.success("Pasta renomeada"); setDialogOpen(false); fetchFolders(); }
     } else {
       if (!user) return;
-      // Find sector from parent
+      const isRootFolder = !parentIdForNew;
       let sector: string | null = null;
       if (parentIdForNew) {
         const { data: parent } = await supabase
@@ -209,18 +209,35 @@ const FolderTree = ({ selectedFolderId, onSelectFolder }: FolderTreeProps) => {
           .eq("id", parentIdForNew)
           .maybeSingle();
         sector = parent?.sector || null;
+      } else {
+        sector = folderName.trim();
       }
-      const { error } = await supabase.from("document_folders").insert({
+      const { data: newFolder, error } = await supabase.from("document_folders").insert({
         name: folderName.trim(),
         parent_id: parentIdForNew,
         sector,
+        icon: isRootFolder ? "building-2" : "folder",
         created_by: user.id,
-      } as any);
+      } as any).select().single();
       if (error) toast.error("Erro ao criar pasta");
       else {
+        // Auto-create default subfolders for root folders
+        if (isRootFolder && newFolder) {
+          const defaultSubs = ["POP", "Políticas", "Formulários", "Protocolos"];
+          const subInserts = defaultSubs.map((name, i) => ({
+            name,
+            parent_id: (newFolder as any).id,
+            sector,
+            icon: "folder",
+            display_order: i,
+            created_by: user.id,
+          }));
+          await supabase.from("document_folders").insert(subInserts as any);
+        }
         toast.success("Pasta criada");
         setDialogOpen(false);
         if (parentIdForNew) setExpanded(prev => new Set([...prev, parentIdForNew!]));
+        if (isRootFolder && newFolder) setExpanded(prev => new Set([...prev, (newFolder as any).id]));
         fetchFolders();
       }
     }
