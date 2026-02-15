@@ -6,6 +6,7 @@ import {
   TriangleAlert, Crosshair, BookOpen, Users2, Menu, X, PanelLeftClose, PanelLeft,
   Download, Shield, Settings, Truck, Heart, FileBarChart, GitBranch, Gauge, Workflow,
   UserCircle, Ruler, GitPullRequest, Database, Search, Upload, HelpCircle, ShieldCheck, GitMerge, History,
+  ScrollText,
 } from "lucide-react";
 import sgqLogo from "@/assets/sgq-logo.png";
 import { Button } from "@/components/ui/button";
@@ -55,6 +56,7 @@ import FmeaAnalysis from "@/pages/quality/FmeaAnalysis";
 import LgpdCompliance from "@/pages/quality/LgpdCompliance";
 import HelpCenter from "@/pages/quality/HelpCenter";
 import BulkImport from "@/pages/quality/BulkImport";
+import Contracts from "@/pages/quality/Contracts";
 
 const allTabs = [
   { key: "resumo", label: "Resumo", icon: LayoutDashboard },
@@ -84,6 +86,7 @@ const allTabs = [
   { key: "importacao", label: "Importação", icon: Upload },
   { key: "fmea", label: "FMEA", icon: GitMerge },
   { key: "lgpd", label: "LGPD", icon: ShieldCheck },
+  { key: "contratos", label: "Contratos", icon: ScrollText },
   { key: "ajuda", label: "Central de Ajuda", icon: HelpCircle },
   { key: "auditoria_global", label: "Log de Auditoria", icon: History, adminOnly: true },
   { key: "configuracoes", label: "Configurações", icon: Settings, adminOnly: true },
@@ -99,7 +102,7 @@ const contentMap: Record<string, React.FC> = {
   fornecedores: Suppliers, pesquisas: SatisfactionSurveys, regulatorio: RegulatoryReports,
   processos: ProcessMapping, workflows: WorkflowConfig,
   portal: EmployeePortal, metrologia: Metrology, mudancas: ChangeManagement, exportacao: DataExport,
-  consultas: QueryBuilder, importacao: BulkImport, fmea: FmeaAnalysis, lgpd: LgpdCompliance, ajuda: HelpCenter,
+  consultas: QueryBuilder, importacao: BulkImport, fmea: FmeaAnalysis, lgpd: LgpdCompliance, contratos: Contracts, ajuda: HelpCenter,
   auditoria_global: AuditLogViewer,
   configuracoes: SystemSettings, usuarios: UserManagement,
 };
