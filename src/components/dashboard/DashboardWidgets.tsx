@@ -14,31 +14,32 @@ export interface WidgetDefinition {
   defaultH: number;
   minW?: number;
   minH?: number;
+  navigateTo?: string; // tab key for navigation
 }
 
 export const widgetRegistry: WidgetDefinition[] = [
-  { id: "ncs_summary", label: "NCs Resumo", icon: AlertTriangle, category: "Não Conformidades", defaultW: 3, defaultH: 2 },
-  { id: "ncs_by_severity", label: "NCs por Severidade", icon: AlertTriangle, category: "Não Conformidades", defaultW: 4, defaultH: 3 },
-  { id: "indicators_status", label: "Indicadores Status", icon: BarChart3, category: "Indicadores", defaultW: 3, defaultH: 2 },
-  { id: "indicators_chart", label: "Indicadores vs Meta", icon: TrendingUp, category: "Indicadores", defaultW: 6, defaultH: 3 },
-  { id: "docs_status", label: "Documentos Status", icon: FileText, category: "Documentos", defaultW: 3, defaultH: 2 },
-  { id: "audits_summary", label: "Auditorias Resumo", icon: ClipboardCheck, category: "Auditorias", defaultW: 3, defaultH: 2 },
-  { id: "risks_heatmap", label: "Riscos por Nível", icon: TriangleAlert, category: "Riscos", defaultW: 4, defaultH: 3 },
-  { id: "plans_progress", label: "Planos de Ação", icon: Crosshair, category: "Planos", defaultW: 4, defaultH: 3 },
-  { id: "events_summary", label: "Eventos Adversos", icon: ShieldAlert, category: "Eventos", defaultW: 3, defaultH: 2 },
-  { id: "capas_summary", label: "CAPAs Resumo", icon: Target, category: "CAPA", defaultW: 3, defaultH: 2 },
-  { id: "trainings_summary", label: "Treinamentos", icon: GraduationCap, category: "Treinamentos", defaultW: 3, defaultH: 2 },
+  { id: "ncs_summary", label: "NCs Resumo", icon: AlertTriangle, category: "Não Conformidades", defaultW: 3, defaultH: 2, navigateTo: "ncs" },
+  { id: "ncs_by_severity", label: "NCs por Severidade", icon: AlertTriangle, category: "Não Conformidades", defaultW: 4, defaultH: 3, navigateTo: "ncs" },
+  { id: "indicators_status", label: "Indicadores Status", icon: BarChart3, category: "Indicadores", defaultW: 3, defaultH: 2, navigateTo: "indicadores" },
+  { id: "indicators_chart", label: "Indicadores vs Meta", icon: TrendingUp, category: "Indicadores", defaultW: 6, defaultH: 3, navigateTo: "indicadores" },
+  { id: "docs_status", label: "Documentos Status", icon: FileText, category: "Documentos", defaultW: 3, defaultH: 2, navigateTo: "documentos" },
+  { id: "audits_summary", label: "Auditorias Resumo", icon: ClipboardCheck, category: "Auditorias", defaultW: 3, defaultH: 2, navigateTo: "auditorias" },
+  { id: "risks_heatmap", label: "Riscos por Nível", icon: TriangleAlert, category: "Riscos", defaultW: 4, defaultH: 3, navigateTo: "riscos" },
+  { id: "plans_progress", label: "Planos de Ação", icon: Crosshair, category: "Planos", defaultW: 4, defaultH: 3, navigateTo: "planos" },
+  { id: "events_summary", label: "Eventos Adversos", icon: ShieldAlert, category: "Eventos", defaultW: 3, defaultH: 2, navigateTo: "eventos" },
+  { id: "capas_summary", label: "CAPAs Resumo", icon: Target, category: "CAPA", defaultW: 3, defaultH: 2, navigateTo: "capa" },
+  { id: "trainings_summary", label: "Treinamentos", icon: GraduationCap, category: "Treinamentos", defaultW: 3, defaultH: 2, navigateTo: "treinamentos" },
   { id: "maturity_radar", label: "Radar Maturidade", icon: BarChart3, category: "Geral", defaultW: 6, defaultH: 4 },
-  { id: "suppliers_summary", label: "Fornecedores", icon: Truck, category: "Fornecedores", defaultW: 3, defaultH: 2 },
-  { id: "surveys_summary", label: "Pesquisas Satisfação", icon: MessageSquare, category: "Pesquisas", defaultW: 3, defaultH: 2 },
-  { id: "contracts_summary", label: "Contratos", icon: FileSignature, category: "Contratos", defaultW: 3, defaultH: 2 },
-  { id: "meetings_summary", label: "Atas de Reunião", icon: Users, category: "Reuniões", defaultW: 3, defaultH: 2 },
-  { id: "metrology_summary", label: "Metrologia", icon: Wrench, category: "Metrologia", defaultW: 3, defaultH: 2 },
-  { id: "changes_summary", label: "Gestão de Mudanças", icon: GitBranch, category: "Mudanças", defaultW: 3, defaultH: 2 },
-  { id: "projects_summary", label: "Projetos", icon: FolderKanban, category: "Projetos", defaultW: 3, defaultH: 2 },
-  { id: "lgpd_summary", label: "LGPD", icon: Shield, category: "LGPD", defaultW: 3, defaultH: 2 },
-  { id: "competencies_summary", label: "Competências", icon: Brain, category: "Competências", defaultW: 3, defaultH: 2 },
-  { id: "fmea_summary", label: "FMEA", icon: FlaskConical, category: "FMEA", defaultW: 3, defaultH: 2 },
+  { id: "suppliers_summary", label: "Fornecedores", icon: Truck, category: "Fornecedores", defaultW: 3, defaultH: 2, navigateTo: "fornecedores" },
+  { id: "surveys_summary", label: "Pesquisas Satisfação", icon: MessageSquare, category: "Pesquisas", defaultW: 3, defaultH: 2, navigateTo: "pesquisas" },
+  { id: "contracts_summary", label: "Contratos", icon: FileSignature, category: "Contratos", defaultW: 3, defaultH: 2, navigateTo: "contratos" },
+  { id: "meetings_summary", label: "Atas de Reunião", icon: Users, category: "Reuniões", defaultW: 3, defaultH: 2, navigateTo: "atas" },
+  { id: "metrology_summary", label: "Metrologia", icon: Wrench, category: "Metrologia", defaultW: 3, defaultH: 2, navigateTo: "metrologia" },
+  { id: "changes_summary", label: "Gestão de Mudanças", icon: GitBranch, category: "Mudanças", defaultW: 3, defaultH: 2, navigateTo: "mudancas" },
+  { id: "projects_summary", label: "Projetos", icon: FolderKanban, category: "Projetos", defaultW: 3, defaultH: 2, navigateTo: "projetos" },
+  { id: "lgpd_summary", label: "LGPD", icon: Shield, category: "LGPD", defaultW: 3, defaultH: 2, navigateTo: "lgpd" },
+  { id: "competencies_summary", label: "Competências", icon: Brain, category: "Competências", defaultW: 3, defaultH: 2, navigateTo: "competencias" },
+  { id: "fmea_summary", label: "FMEA", icon: FlaskConical, category: "FMEA", defaultW: 3, defaultH: 2, navigateTo: "fmea" },
 ];
 
 const COLORS = [
