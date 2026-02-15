@@ -812,6 +812,50 @@ export type Database = {
           },
         ]
       }
+      document_folders: {
+        Row: {
+          created_at: string
+          created_by: string
+          display_order: number | null
+          icon: string | null
+          id: string
+          name: string
+          parent_id: string | null
+          sector: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          display_order?: number | null
+          icon?: string | null
+          id?: string
+          name: string
+          parent_id?: string | null
+          sector?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          display_order?: number | null
+          icon?: string | null
+          id?: string
+          name?: string
+          parent_id?: string | null
+          sector?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_folders_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "document_folders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_read_confirmations: {
         Row: {
           confirmed_at: string
@@ -1515,6 +1559,7 @@ export type Database = {
           created_by: string
           description: string | null
           file_url: string | null
+          folder_id: string | null
           id: string
           is_signed: boolean
           sector: string | null
@@ -1534,6 +1579,7 @@ export type Database = {
           created_by: string
           description?: string | null
           file_url?: string | null
+          folder_id?: string | null
           id?: string
           is_signed?: boolean
           sector?: string | null
@@ -1553,6 +1599,7 @@ export type Database = {
           created_by?: string
           description?: string | null
           file_url?: string | null
+          folder_id?: string | null
           id?: string
           is_signed?: boolean
           sector?: string | null
@@ -1562,7 +1609,15 @@ export type Database = {
           valid_until?: string | null
           version?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "quality_documents_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "document_folders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       quality_indicators: {
         Row: {

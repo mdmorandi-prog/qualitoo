@@ -1,10 +1,11 @@
 import { useEffect, useState, useRef } from "react";
-import { Plus, Search, Eye, Upload, FileUp, AlertTriangle, ArrowRight, CheckCircle2, FileText, Lock, FileSignature, Shield, ScrollText, Clock, XCircle, BookOpenCheck } from "lucide-react";
+import { Plus, Search, Eye, Upload, FileUp, AlertTriangle, ArrowRight, CheckCircle2, FileText, Lock, FileSignature, Shield, ScrollText, Clock, XCircle, BookOpenCheck, FolderInput } from "lucide-react";
 import PdfWatermarkViewer from "@/components/documents/PdfWatermarkViewer";
 import SignatureDialog from "@/components/documents/SignatureDialog";
 import SignatureVerifier from "@/components/documents/SignatureVerifier";
 import SignatureAuditLog from "@/components/documents/SignatureAuditLog";
 import DocumentSignatureBlock from "@/components/documents/DocumentSignatureBlock";
+import FolderTree from "@/components/documents/FolderTree";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -22,6 +23,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { executeWorkflowRules } from "@/lib/workflowEngine";
+import {
+  ResizableHandle, ResizablePanel, ResizablePanelGroup,
+} from "@/components/ui/resizable";
 
 type DocStatus = "rascunho" | "em_revisao" | "aprovado" | "obsoleto";
 
@@ -30,6 +34,7 @@ interface Doc {
   category: string | null; sector: string | null; version: number;
   status: DocStatus; content: string | null; valid_until: string | null;
   created_at: string; is_signed: boolean; file_url: string | null;
+  folder_id: string | null;
 }
 
 const statusConfig: Record<DocStatus, { label: string; color: string; icon: string }> = {
@@ -130,11 +135,10 @@ const parseDocumentHeader = (text: string, fileName: string) => {
   return result;
 };
 
-const initialForm = { title: "", code: "", description: "", category: "", sector: "", content: "", valid_until: "" };
+const initialForm = { title: "", code: "", description: "", category: "", sector: "", content: "", valid_until: "", folder_id: "" };
 
-// Workflow permission rules: who can transition to each status
 const workflowPermissions: Record<DocStatus, { from: DocStatus[]; requiredRole: "admin" | "analyst" | "any" }> = {
-  rascunho: { from: [], requiredRole: "any" }, // initial state
+  rascunho: { from: [], requiredRole: "any" },
   em_revisao: { from: ["rascunho"], requiredRole: "any" },
   aprovado: { from: ["em_revisao"], requiredRole: "admin" },
   obsoleto: { from: ["aprovado"], requiredRole: "admin" },
@@ -171,17 +175,25 @@ const Documents = () => {
   const [auditDoc, setAuditDoc] = useState<Doc | null>(null);
   const [readConfirmations, setReadConfirmations] = useState<Record<string, boolean>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
+  const [folders, setFolders] = useState<{ id: string; name: string; sector: string | null; parent_id: string | null }[]>([]);
+  const [moveDocDialogOpen, setMoveDocDialogOpen] = useState(false);
+  const [moveDocTarget, setMoveDocTarget] = useState<Doc | null>(null);
 
   const [form, setForm] = useState({ ...initialForm });
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { fetchData(); fetchFolders(); }, []);
+
+  const fetchFolders = async () => {
+    const { data } = await supabase.from("document_folders").select("id, name, sector, parent_id").order("display_order");
+    if (data) setFolders(data as any[]);
+  };
 
   const fetchData = async () => {
     setLoading(true);
     const { data, error } = await supabase.from("quality_documents").select("*").order("created_at", { ascending: false });
     if (error) toast.error("Erro ao carregar");
     else setDocs((data as any[]) ?? []);
-    // Fetch read confirmations for current user
     if (user) {
       const { data: confirms } = await supabase.from("document_read_confirmations").select("document_id").eq("user_id", user.id);
       if (confirms) {
@@ -198,7 +210,6 @@ const Documents = () => {
     const { error } = await supabase.from("document_read_confirmations").insert({ document_id: docId, user_id: user.id } as any);
     if (error) { if (error.code === "23505") toast.info("Já confirmado"); else toast.error("Erro"); }
     else { toast.success("Leitura confirmada!"); setReadConfirmations(prev => ({ ...prev, [docId]: true })); }
-    // Log access
     await supabase.from("document_access_log").insert({ document_id: docId, user_id: user.id, action: "read_confirmation" } as any);
   };
 
@@ -243,6 +254,7 @@ const Documents = () => {
       category: form.category || null, sector: form.sector || null,
       content: form.content || null, valid_until: form.valid_until || null, created_by: user.id,
       file_url: fileUrl, is_signed: isSigned,
+      folder_id: form.folder_id || null,
     } as any);
     if (error) { toast.error("Erro ao criar"); console.error(error); }
     else {
@@ -276,11 +288,35 @@ const Documents = () => {
     }
   };
 
+  const moveDocToFolder = async (docId: string, folderId: string | null) => {
+    const { error } = await supabase.from("quality_documents").update({ folder_id: folderId } as any).eq("id", docId);
+    if (error) toast.error("Erro ao mover documento");
+    else { toast.success("Documento movido!"); setMoveDocDialogOpen(false); setMoveDocTarget(null); fetchData(); }
+  };
+
   const now = new Date();
   const pendingSigCount = docs.filter(d => !d.is_signed && d.status !== "obsoleto").length;
   const expiredCount = docs.filter(d => d.valid_until && new Date(d.valid_until) < now && d.status !== "obsoleto").length;
 
+  // Get breadcrumb path for selected folder
+  const getBreadcrumb = (folderId: string | null): string[] => {
+    if (!folderId) return [];
+    const path: string[] = [];
+    let current = folders.find(f => f.id === folderId);
+    while (current) {
+      path.unshift(current.name);
+      current = current.parent_id ? folders.find(f => f.id === current!.parent_id) : undefined;
+    }
+    return path;
+  };
+
+  const breadcrumb = getBreadcrumb(selectedFolderId);
+
   const filtered = docs
+    .filter(d => {
+      if (selectedFolderId) return d.folder_id === selectedFolderId;
+      return true;
+    })
     .filter(d => filterStatus === "all" || d.status === filterStatus)
     .filter(d => {
       if (specialFilter === "pending_sig") return !d.is_signed && d.status !== "obsoleto";
@@ -289,12 +325,24 @@ const Documents = () => {
     })
     .filter(d => !search || d.title.toLowerCase().includes(search.toLowerCase()) || (d.code && d.code.toLowerCase().includes(search.toLowerCase())));
 
-  return (
+  const documentContent = (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="font-display text-2xl font-bold text-foreground">Controle de Documentos</h2>
-          <p className="text-sm text-muted-foreground">Gestão de procedimentos, políticas e manuais</p>
+          {breadcrumb.length > 0 ? (
+            <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
+              <button onClick={() => setSelectedFolderId(null)} className="hover:text-primary transition-colors">📁 Raiz</button>
+              {breadcrumb.map((b, i) => (
+                <span key={i} className="flex items-center gap-1">
+                  <span>/</span>
+                  <span className={i === breadcrumb.length - 1 ? "text-foreground font-medium" : ""}>{b}</span>
+                </span>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">Gestão de procedimentos, políticas e manuais</p>
+          )}
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild><Button className="gap-2"><Plus className="h-4 w-4" /> Novo Documento</Button></DialogTrigger>
@@ -318,6 +366,20 @@ const Documents = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2"><Label>Categoria</Label><Input value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))} placeholder="POP, Manual, IT..." /></div>
                 <div className="grid gap-2"><Label>Setor</Label><Input value={form.sector} onChange={e => setForm(f => ({ ...f, sector: e.target.value }))} /></div>
+              </div>
+              <div className="grid gap-2">
+                <Label>Pasta</Label>
+                <Select value={form.folder_id || "none"} onValueChange={v => setForm(f => ({ ...f, folder_id: v === "none" ? "" : v }))}>
+                  <SelectTrigger><SelectValue placeholder="Selecione uma pasta" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">— Sem pasta —</SelectItem>
+                    {folders.map(f => (
+                      <SelectItem key={f.id} value={f.id}>
+                        {f.parent_id ? "  └ " : ""}{f.name} {f.sector ? `(${f.sector})` : ""}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="grid gap-2"><Label>Descrição</Label><Textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} /></div>
               <div className="grid gap-2"><Label>Conteúdo</Label><Textarea value={form.content} onChange={e => setForm(f => ({ ...f, content: e.target.value }))} className="min-h-[150px]" placeholder="Conteúdo do documento..." /></div>
@@ -428,7 +490,7 @@ const Documents = () => {
           </TableRow></TableHeader>
           <TableBody>
             {loading ? <TableRow><TableCell colSpan={7} className="py-8 text-center text-muted-foreground">Carregando...</TableCell></TableRow>
-            : filtered.length === 0 ? <TableRow><TableCell colSpan={7} className="py-8 text-center text-muted-foreground">Nenhum documento.</TableCell></TableRow>
+            : filtered.length === 0 ? <TableRow><TableCell colSpan={7} className="py-8 text-center text-muted-foreground">Nenhum documento{selectedFolderId ? " nesta pasta" : ""}.</TableCell></TableRow>
             : filtered.map(d => {
               const isExpired = d.valid_until && new Date(d.valid_until) < now && d.status !== "obsoleto";
               return (
@@ -487,6 +549,9 @@ const Documents = () => {
                   <Button variant="ghost" size="sm" onClick={() => { setAuditDoc(d); setAuditOpen(true); }} title="Trilha de auditoria">
                     <ScrollText className="h-4 w-4" />
                   </Button>
+                  <Button variant="ghost" size="sm" onClick={() => { setMoveDocTarget(d); setMoveDocDialogOpen(true); }} title="Mover para pasta">
+                    <FolderInput className="h-4 w-4" />
+                  </Button>
                   {d.file_url && (
                     <Button variant="ghost" size="sm" onClick={() => { setPdfViewerDoc(d); setPdfViewerOpen(true); }} title="Visualizar com marca d'água">
                       <FileText className="h-4 w-4" />
@@ -500,12 +565,12 @@ const Documents = () => {
         </Table>
       </div>
 
+      {/* Detail Dialog */}
       <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader><DialogTitle className="font-display">{selected?.code ? `${selected.code} - ` : ""}{selected?.title}</DialogTitle></DialogHeader>
           {selected && (
             <div className="space-y-4">
-              {/* Workflow progress for this document */}
               <div className="flex items-center gap-1">
                 {workflowSteps.map((step, idx) => {
                   const stepIdx = workflowSteps.findIndex(s => s.status === selected.status);
@@ -522,7 +587,6 @@ const Documents = () => {
                   );
                 })}
               </div>
-
               <div className="flex flex-wrap gap-3 text-sm">
                 <span className={`rounded-full px-2 py-1 text-xs font-medium ${statusConfig[selected.status].color}`}>{statusConfig[selected.status].label}</span>
                 <span className="text-muted-foreground">Versão {selected.version}</span>
@@ -534,6 +598,9 @@ const Documents = () => {
               </div>
               {selected.category && <p className="text-xs text-muted-foreground">Categoria: <span className="font-medium text-foreground">{selected.category}</span></p>}
               {selected.sector && <p className="text-xs text-muted-foreground">Setor: <span className="font-medium text-foreground">{selected.sector}</span></p>}
+              {selected.folder_id && (
+                <p className="text-xs text-muted-foreground">Pasta: <span className="font-medium text-foreground">{getBreadcrumb(selected.folder_id).join(" / ")}</span></p>
+              )}
               {selected.file_url && <Button variant="link" size="sm" className="h-auto p-0 gap-1 text-xs text-primary" onClick={() => { setDetailOpen(false); setPdfViewerDoc(selected); setPdfViewerOpen(true); }}><FileUp className="h-3 w-3" /> Ver arquivo original</Button>}
               {selected.description && <div className="rounded-lg bg-secondary/50 p-3"><p className="text-sm text-foreground">{selected.description}</p></div>}
               {selected.content && <div className="rounded-lg border p-4"><pre className="whitespace-pre-wrap text-sm text-foreground">{selected.content}</pre></div>}
@@ -553,6 +620,27 @@ const Documents = () => {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Move to Folder Dialog */}
+      <Dialog open={moveDocDialogOpen} onOpenChange={setMoveDocDialogOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader><DialogTitle>Mover para Pasta</DialogTitle></DialogHeader>
+          <div className="grid gap-4 py-2">
+            <p className="text-sm text-muted-foreground">Mover "<span className="font-medium text-foreground">{moveDocTarget?.title}</span>" para:</p>
+            <Select onValueChange={v => moveDocTarget && moveDocToFolder(moveDocTarget.id, v === "none" ? null : v)}>
+              <SelectTrigger><SelectValue placeholder="Selecione a pasta destino" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">— Sem pasta (raiz) —</SelectItem>
+                {folders.map(f => (
+                  <SelectItem key={f.id} value={f.id}>
+                    {f.parent_id ? "  └ " : ""}{f.name} {f.sector ? `(${f.sector})` : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </DialogContent>
       </Dialog>
 
@@ -591,6 +679,20 @@ const Documents = () => {
         />
       )}
     </div>
+  );
+
+  return (
+    <ResizablePanelGroup direction="horizontal" className="min-h-[600px] rounded-xl border">
+      <ResizablePanel defaultSize={20} minSize={15} maxSize={35} className="bg-card">
+        <FolderTree selectedFolderId={selectedFolderId} onSelectFolder={setSelectedFolderId} />
+      </ResizablePanel>
+      <ResizableHandle withHandle />
+      <ResizablePanel defaultSize={80}>
+        <div className="p-6 overflow-auto h-full">
+          {documentContent}
+        </div>
+      </ResizablePanel>
+    </ResizablePanelGroup>
   );
 };
 
