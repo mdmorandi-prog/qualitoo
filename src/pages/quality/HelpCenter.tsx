@@ -234,10 +234,26 @@ const helpSections: HelpSection[] = [
     ],
   },
   {
-    id: "usuarios", title: "Gerenciamento de Usuários", icon: Users2, description: "Cadastro e permissões",
+    id: "usuarios", title: "Gerenciamento de Usuários", icon: Users2, description: "Cadastro, perfis e permissões por módulo",
     faqs: [
-      { question: "Como cadastrar um novo usuário?", answer: "Acesse 'Gerenciamento de Usuários', clique em 'Novo Usuário', preencha nome, e-mail, função e defina as permissões de acesso por módulo." },
-      { question: "Como redefinir a senha de um usuário?", answer: "Nos detalhes do usuário, clique em 'Redefinir Senha'. Uma nova senha temporária será gerada e deverá ser informada ao colaborador." },
+      { question: "Como cadastrar um novo usuário?", answer: "Acesse 'Gerenciamento de Usuários' no menu lateral, clique em 'Novo Usuário'. Preencha: nome de exibição, nome de usuário (formato: inicial + sobrenome, ex: dmorandi), senha temporária e perfil (Administrador ou Analista). O nome de usuário será mapeado internamente para @sgq.local." },
+      { question: "Qual a diferença entre Administrador e Analista?", answer: "Administrador: acesso irrestrito a todos os módulos, setores e configurações do sistema. Analista: acesso restrito aos módulos habilitados e aos setores vinculados aos seus Grupos de Acesso. Sem grupo, o analista não visualiza registros com setor definido." },
+      { question: "Como definir quais módulos um usuário pode acessar?", answer: "Nos detalhes do usuário, a seção 'Acesso por Módulo' permite habilitar/desabilitar cada módulo individualmente. Apenas os módulos marcados aparecerão no menu lateral do usuário." },
+      { question: "Como redefinir a senha de um usuário?", answer: "Nos detalhes do usuário, clique em 'Redefinir Senha'. Uma nova senha temporária será gerada e deverá ser informada ao colaborador para que ele acesse o sistema." },
+      { question: "Qual o passo a passo completo para dar acesso a um novo colaborador?", answer: "1) Crie o usuário em 'Gerenciamento de Usuários' com perfil Analista. 2) Habilite os módulos necessários na seção 'Acesso por Módulo'. 3) Acesse 'Grupos de Acesso' e adicione o usuário ao grupo correspondente aos setores dele (ex: grupo 'Assistencial' para enfermeiros). 4) Defina o nível de permissão (Leitura, Escrita ou Admin) e, se necessário, uma data de expiração." },
+    ],
+  },
+  {
+    id: "grupos_acesso", title: "Grupos de Acesso", icon: ShieldCheck, description: "Controle de acesso por setor (similar ao Active Directory)",
+    faqs: [
+      { question: "O que são Grupos de Acesso?", answer: "Grupos de Acesso organizam os setores da instituição em conjuntos funcionais (ex: 'Assistencial' agrupa Enfermagem, Fisioterapia, Nutrição). Ao vincular um usuário a um grupo, ele passa a visualizar e editar apenas os registros dos setores daquele grupo, garantindo segregação de dados." },
+      { question: "Como criar um Grupo de Acesso?", answer: "Acesse 'Grupos de Acesso' no menu lateral, clique em 'Novo Grupo'. Defina um nome (ex: 'Administrativo'), uma cor identificadora, uma descrição e selecione os setores que compõem o grupo (ex: RH, Financeiro, Compras, Jurídico). Clique em 'Criar Grupo'." },
+      { question: "Como adicionar um usuário a um grupo?", answer: "Abra o grupo desejado, clique na aba 'Membros' e depois em 'Adicionar Membro'. Selecione o usuário, defina o nível de permissão (Leitura, Escrita ou Admin) e, opcionalmente, uma data de expiração para acesso temporário." },
+      { question: "Quais são os níveis de permissão?", answer: "Leitura: o usuário visualiza documentos e registros dos setores do grupo, mas não pode editá-los. Escrita: além de visualizar, pode criar e editar registros nos setores do grupo. Admin: acesso total ao grupo, incluindo a gestão de permissões e membros." },
+      { question: "O que acontece se um analista não estiver em nenhum grupo?", answer: "O analista verá apenas registros que não possuem setor definido (campo setor nulo). Todos os registros vinculados a um setor específico ficarão invisíveis até que ele seja adicionado a um grupo que inclua aquele setor." },
+      { question: "Posso dar acesso temporário a um setor?", answer: "Sim. Ao adicionar um membro ao grupo, defina uma data de expiração. Após essa data, o acesso é automaticamente revogado. Útil para auditores externos, consultores ou projetos com prazo definido." },
+      { question: "Um usuário pode pertencer a vários grupos?", answer: "Sim. O acesso é cumulativo: se um analista está no grupo 'Assistencial' (Enfermagem, UTI) e no grupo 'Apoio' (TI, Manutenção), ele verá registros de todos esses setores." },
+      { question: "Como editar os setores de um grupo existente?", answer: "Abra o grupo, na aba 'Setores', clique em 'Editar'. Marque ou desmarque os setores desejados e clique em 'Salvar'. A alteração afeta imediatamente todos os membros do grupo." },
     ],
   },
   {
