@@ -95,8 +95,7 @@ const allTabs = [
   { key: "usuarios", label: "Usuários", icon: Users2, adminOnly: true },
 ] as const;
 
-const contentMap: Record<string, React.FC> = {
-  meu_dashboard: CustomizableDashboard,
+const contentMap: Record<string, React.FC<any>> = {
   ncs: NonConformities, indicadores: Indicators, documentos: Documents,
   auditorias: Audits, planos: ActionPlans, riscos: RiskManagement,
   treinamentos: Trainings, atas: MeetingMinutes, eventos: AdverseEvents,
@@ -318,6 +317,8 @@ const AdminDashboard = () => {
         <main className="flex-1 overflow-auto p-4 sm:p-6">
           {activeTab === "resumo" ? (
             <DashboardSummary onNavigate={setTab} />
+          ) : activeTab === "meu_dashboard" ? (
+            <CustomizableDashboard onNavigate={setTab} />
           ) : ActiveContent ? (
             <ActiveContent />
           ) : null}

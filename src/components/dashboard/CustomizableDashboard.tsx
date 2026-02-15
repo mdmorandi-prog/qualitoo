@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Plus, Save, RotateCcw, X, GripVertical, Lock, Unlock, Share2, Users, Globe } from "lucide-react";
+import { Plus, Save, RotateCcw, X, GripVertical, Lock, Unlock, Share2, Users, Globe, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { WidgetRenderer, widgetRegistry, type WidgetDefinition } from "./DashboardWidgets";
 
@@ -59,7 +59,7 @@ const generateDefaultLayouts = (widgets: WidgetConfig[]): Record<string, Layout[
   return { lg, md: lg, sm: lg.map((l) => ({ ...l, w: 6, x: (lg.indexOf(l) % 2) * 6 })) };
 };
 
-const CustomizableDashboard = () => {
+const CustomizableDashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }) => {
   const { user } = useAuth();
   const [config, setConfig] = useState<DashboardConfig | null>(null);
   const [editing, setEditing] = useState(false);
@@ -323,17 +323,24 @@ const CustomizableDashboard = () => {
       >
         {config.widgets.map((w) => {
           const def = widgetRegistry.find((r) => r.id === w.widgetId);
+          const canNavigate = locked && def?.navigateTo && onNavigate;
           return (
             <div key={w.layoutKey}>
-              <Card className="flex h-full flex-col overflow-hidden">
+              <Card
+                className={`flex h-full flex-col overflow-hidden transition-shadow ${canNavigate ? "cursor-pointer hover:shadow-lg hover:border-primary/40" : ""}`}
+                onClick={() => { if (canNavigate) onNavigate(def.navigateTo!); }}
+              >
                 <CardHeader className="flex flex-row items-center gap-2 space-y-0 px-3 py-2">
                   {!locked && (
                     <GripVertical className="widget-drag-handle h-4 w-4 cursor-grab text-muted-foreground active:cursor-grabbing" />
                   )}
                   {def && <def.icon className="h-4 w-4 text-muted-foreground" />}
                   <CardTitle className="flex-1 text-xs font-medium">{def?.label ?? w.widgetId}</CardTitle>
+                  {canNavigate && (
+                    <ExternalLink className="h-3 w-3 text-muted-foreground" />
+                  )}
                   {!locked && (
-                    <button onClick={() => removeWidget(w.layoutKey)} className="text-muted-foreground hover:text-destructive">
+                    <button onClick={(e) => { e.stopPropagation(); removeWidget(w.layoutKey); }} className="text-muted-foreground hover:text-destructive">
                       <X className="h-3 w-3" />
                     </button>
                   )}
