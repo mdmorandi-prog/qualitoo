@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertTriangle, BarChart3, FileText, ClipboardCheck, Target, TriangleAlert, ShieldAlert, GraduationCap, Heart, Truck, GitBranch, Crosshair, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { AlertTriangle, BarChart3, FileText, ClipboardCheck, Target, TriangleAlert, ShieldAlert, GraduationCap, Heart, Truck, GitBranch, Crosshair, TrendingUp, TrendingDown, Minus, Handshake, MessageSquare, FileSignature, Users, Wrench, FolderKanban, Shield, Brain, FlaskConical } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, LineChart, Line, CartesianGrid, RadarChart, PolarGrid, PolarAngleAxis, Radar } from "recharts";
 
 // Widget registry
@@ -29,6 +29,16 @@ export const widgetRegistry: WidgetDefinition[] = [
   { id: "capas_summary", label: "CAPAs Resumo", icon: Target, category: "CAPA", defaultW: 3, defaultH: 2 },
   { id: "trainings_summary", label: "Treinamentos", icon: GraduationCap, category: "Treinamentos", defaultW: 3, defaultH: 2 },
   { id: "maturity_radar", label: "Radar Maturidade", icon: BarChart3, category: "Geral", defaultW: 6, defaultH: 4 },
+  { id: "suppliers_summary", label: "Fornecedores", icon: Truck, category: "Fornecedores", defaultW: 3, defaultH: 2 },
+  { id: "surveys_summary", label: "Pesquisas Satisfação", icon: MessageSquare, category: "Pesquisas", defaultW: 3, defaultH: 2 },
+  { id: "contracts_summary", label: "Contratos", icon: FileSignature, category: "Contratos", defaultW: 3, defaultH: 2 },
+  { id: "meetings_summary", label: "Atas de Reunião", icon: Users, category: "Reuniões", defaultW: 3, defaultH: 2 },
+  { id: "metrology_summary", label: "Metrologia", icon: Wrench, category: "Metrologia", defaultW: 3, defaultH: 2 },
+  { id: "changes_summary", label: "Gestão de Mudanças", icon: GitBranch, category: "Mudanças", defaultW: 3, defaultH: 2 },
+  { id: "projects_summary", label: "Projetos", icon: FolderKanban, category: "Projetos", defaultW: 3, defaultH: 2 },
+  { id: "lgpd_summary", label: "LGPD", icon: Shield, category: "LGPD", defaultW: 3, defaultH: 2 },
+  { id: "competencies_summary", label: "Competências", icon: Brain, category: "Competências", defaultW: 3, defaultH: 2 },
+  { id: "fmea_summary", label: "FMEA", icon: FlaskConical, category: "FMEA", defaultW: 3, defaultH: 2 },
 ];
 
 const COLORS = [
@@ -55,6 +65,16 @@ export const WidgetRenderer = ({ widgetId }: { widgetId: string }) => {
     case "capas_summary": return <CapasSummaryWidget />;
     case "trainings_summary": return <TrainingsSummaryWidget />;
     case "maturity_radar": return <MaturityRadarWidget />;
+    case "suppliers_summary": return <SuppliersSummaryWidget />;
+    case "surveys_summary": return <SurveysSummaryWidget />;
+    case "contracts_summary": return <ContractsSummaryWidget />;
+    case "meetings_summary": return <MeetingsSummaryWidget />;
+    case "metrology_summary": return <MetrologySummaryWidget />;
+    case "changes_summary": return <ChangesSummaryWidget />;
+    case "projects_summary": return <ProjectsSummaryWidget />;
+    case "lgpd_summary": return <LgpdSummaryWidget />;
+    case "competencies_summary": return <CompetenciesSummaryWidget />;
+    case "fmea_summary": return <FmeaSummaryWidget />;
     default: return <p className="text-xs text-muted-foreground">Widget não encontrado</p>;
   }
 };
@@ -313,4 +333,123 @@ const MaturityRadarWidget = () => {
       </RadarChart>
     </ResponsiveContainer>
   );
+};
+
+// --- New module widgets ---
+
+const SuppliersSummaryWidget = () => {
+  const [data, setData] = useState({ critical: 0, total: 0 });
+  useEffect(() => {
+    supabase.from("suppliers" as any).select("id, status").then(({ data: items }: any) => {
+      const list = items ?? [];
+      setData({ critical: list.filter((s: any) => s.status === "bloqueado" || s.status === "reprovado").length, total: list.length });
+    });
+  }, []);
+  return <StatCard label="Fornecedores" value={data.total} sub={`${data.critical} bloqueados/reprovados`} danger={data.critical > 0} />;
+};
+
+const SurveysSummaryWidget = () => {
+  const [data, setData] = useState({ active: 0, total: 0 });
+  useEffect(() => {
+    supabase.from("satisfaction_surveys").select("id, status").then(({ data: items }) => {
+      const list = items ?? [];
+      setData({ active: list.filter((s: any) => s.status === "ativa").length, total: list.length });
+    });
+  }, []);
+  return <StatCard label="Pesquisas Ativas" value={data.active} sub={`de ${data.total} total`} />;
+};
+
+const ContractsSummaryWidget = () => {
+  const [data, setData] = useState({ expiring: 0, total: 0 });
+  useEffect(() => {
+    supabase.from("contracts").select("id, end_date, status").then(({ data: items }) => {
+      const list = items ?? [];
+      const thirtyDays = new Date(); thirtyDays.setDate(thirtyDays.getDate() + 30);
+      setData({
+        expiring: list.filter((c: any) => c.status === "ativo" && c.end_date && new Date(c.end_date) < thirtyDays).length,
+        total: list.length,
+      });
+    });
+  }, []);
+  return <StatCard label="Contratos a Vencer" value={data.expiring} sub={`próx. 30 dias (de ${data.total})`} danger={data.expiring > 0} />;
+};
+
+const MeetingsSummaryWidget = () => {
+  const [data, setData] = useState({ pending: 0, total: 0 });
+  useEffect(() => {
+    supabase.from("meeting_minutes").select("id, status").then(({ data: items }) => {
+      const list = items ?? [];
+      setData({ pending: list.filter((m: any) => m.status === "rascunho").length, total: list.length });
+    });
+  }, []);
+  return <StatCard label="Atas Pendentes" value={data.pending} sub={`de ${data.total} total`} danger={data.pending > 0} />;
+};
+
+const MetrologySummaryWidget = () => {
+  const [data, setData] = useState({ expiring: 0, total: 0 });
+  useEffect(() => {
+    supabase.from("equipment").select("id, status").then(({ data: items }) => {
+      const list = items ?? [];
+      setData({
+        expiring: list.filter((e: any) => e.status === "vencido" || e.status === "em_calibração").length,
+        total: list.length,
+      });
+    });
+  }, []);
+  return <StatCard label="Equipamentos" value={data.total} sub={`${data.expiring} requerem atenção`} danger={data.expiring > 0} />;
+};
+
+const ChangesSummaryWidget = () => {
+  const [data, setData] = useState({ open: 0, total: 0 });
+  useEffect(() => {
+    supabase.from("change_requests").select("id, status").then(({ data: items }) => {
+      const list = items ?? [];
+      setData({ open: list.filter((c: any) => c.status !== "concluída" && c.status !== "rejeitada").length, total: list.length });
+    });
+  }, []);
+  return <StatCard label="Mudanças Abertas" value={data.open} sub={`de ${data.total} total`} danger={data.open > 0} />;
+};
+
+const ProjectsSummaryWidget = () => {
+  const [data, setData] = useState({ active: 0, total: 0 });
+  useEffect(() => {
+    supabase.from("projects").select("id, status").then(({ data: items }) => {
+      const list = items ?? [];
+      setData({ active: list.filter((p: any) => p.status === "em_andamento" || p.status === "ativo").length, total: list.length });
+    });
+  }, []);
+  return <StatCard label="Projetos Ativos" value={data.active} sub={`de ${data.total} total`} />;
+};
+
+const LgpdSummaryWidget = () => {
+  const [data, setData] = useState({ sensitive: 0, total: 0 });
+  useEffect(() => {
+    supabase.from("lgpd_data_mappings").select("id, is_sensitive").then(({ data: items }) => {
+      const list = items ?? [];
+      setData({ sensitive: list.filter((l: any) => l.is_sensitive).length, total: list.length });
+    });
+  }, []);
+  return <StatCard label="Dados Sensíveis" value={data.sensitive} sub={`de ${data.total} mapeamentos`} danger={data.sensitive > 0} />;
+};
+
+const CompetenciesSummaryWidget = () => {
+  const [data, setData] = useState({ mandatory: 0, total: 0 });
+  useEffect(() => {
+    supabase.from("competencies").select("id, is_mandatory").then(({ data: items }) => {
+      const list = items ?? [];
+      setData({ mandatory: list.filter((c: any) => c.is_mandatory).length, total: list.length });
+    });
+  }, []);
+  return <StatCard label="Competências" value={data.total} sub={`${data.mandatory} obrigatórias`} />;
+};
+
+const FmeaSummaryWidget = () => {
+  const [data, setData] = useState({ active: 0, total: 0 });
+  useEffect(() => {
+    supabase.from("fmea_analyses").select("id, status").then(({ data: items }) => {
+      const list = items ?? [];
+      setData({ active: list.filter((f: any) => f.status === "em_andamento" || f.status === "ativa").length, total: list.length });
+    });
+  }, []);
+  return <StatCard label="FMEA Ativas" value={data.active} sub={`de ${data.total} análises`} />;
 };
