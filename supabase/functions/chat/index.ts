@@ -21,7 +21,8 @@ async function fetchSystemContext(supabaseAdmin: any) {
     { key: "adverse_events", query: supabaseAdmin.from("adverse_events").select("title, event_type, severity, status, sector, description, patient_involved, patient_outcome").order("event_date", { ascending: false }).limit(20) },
     { key: "documents", query: supabaseAdmin.from("quality_documents").select("title, category, status, version, sector, code").order("updated_at", { ascending: false }).limit(30) },
     { key: "suppliers", query: supabaseAdmin.from("suppliers").select("name, status, criticality, category").limit(20) },
-    { key: "trainings", query: supabaseAdmin.rpc("has_role", { _user_id: "00000000-0000-0000-0000-000000000000", _role: "admin" }).then(() => null).catch(() => null) },
+    { key: "projects", query: supabaseAdmin.from("projects").select("title, description, status, progress, sector, responsible, start_date, end_date").order("created_at", { ascending: false }).limit(20) },
+    { key: "project_tasks", query: supabaseAdmin.from("project_tasks").select("title, status, progress, start_date, end_date, responsible, is_milestone, project_id").order("created_at", { ascending: false }).limit(50) },
   ];
 
   await Promise.all(
@@ -131,6 +132,25 @@ function buildContextSummary(data: Record<string, any>): string {
     parts.push(`Por criticidade: ${Object.entries(byCriticality).map(([k, v]) => `${k}: ${v}`).join(", ")}`);
   }
 
+  if (data.projects?.length) {
+    parts.push(`\n## Projetos (${data.projects.length})`);
+    const byStatus: Record<string, number> = {};
+    for (const p of data.projects) {
+      byStatus[p.status] = (byStatus[p.status] || 0) + 1;
+    }
+    parts.push(`Por status: ${Object.entries(byStatus).map(([k, v]) => `${k}: ${v}`).join(", ")}`);
+    for (const p of data.projects) {
+      parts.push(`- [${p.status}] ${p.title} - Progresso: ${p.progress || 0}% (Setor: ${p.sector || "Geral"}, Início: ${p.start_date || "N/A"}, Fim: ${p.end_date || "N/A"})`);
+    }
+  }
+
+  if (data.project_tasks?.length) {
+    parts.push(`\n## Tarefas de Projetos (${data.project_tasks.length})`);
+    for (const t of data.project_tasks.slice(0, 15)) {
+      parts.push(`- [${t.status}] ${t.title} - Progresso: ${t.progress || 0}% (${t.start_date} a ${t.end_date})${t.is_milestone ? " ⭐ Marco" : ""}`);
+    }
+  }
+
   return parts.length > 0 ? parts.join("\n") : "Nenhum dado encontrado no sistema.";
 }
 
@@ -183,6 +203,7 @@ Você possui conhecimento profundo sobre:
 - Gestão de riscos: ISO 31000, FMEA, Matriz de Riscos
 - Controle de documentos: ISO 9001, boas práticas de gestão documental
 - Indicadores de desempenho: BSC, KPIs hospitalares, benchmarking
+- Gestão de projetos: cronogramas, Gantt, marcos, tarefas e progresso
 - CAPAs, 5 Porquês, Ishikawa, PDCA, A3, 5W2H
 - Eventos adversos: classificação, notificação NOTIVISA
 - LGPD na saúde
