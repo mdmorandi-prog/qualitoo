@@ -58,6 +58,7 @@ import HelpCenter from "@/pages/quality/HelpCenter";
 import BulkImport from "@/pages/quality/BulkImport";
 import Contracts from "@/pages/quality/Contracts";
 import Projects from "@/pages/quality/Projects";
+import AccessGroupManagement from "@/pages/quality/AccessGroupManagement";
 
 const allTabs = [
   { key: "resumo", label: "Resumo", icon: LayoutDashboard },
@@ -90,6 +91,7 @@ const allTabs = [
   { key: "contratos", label: "Contratos", icon: ScrollText },
   { key: "projetos", label: "Projetos", icon: FolderKanban },
   { key: "ajuda", label: "Central de Ajuda", icon: HelpCircle },
+  { key: "grupos_acesso", label: "Grupos de Acesso", icon: Shield, adminOnly: true },
   { key: "auditoria_global", label: "Log de Auditoria", icon: History, adminOnly: true },
   { key: "configuracoes", label: "Configurações", icon: Settings, adminOnly: true },
   { key: "usuarios", label: "Usuários", icon: Users2, adminOnly: true },
@@ -104,7 +106,7 @@ const contentMap: Record<string, React.FC<any>> = {
   processos: ProcessMapping, workflows: WorkflowConfig,
   portal: EmployeePortal, metrologia: Metrology, mudancas: ChangeManagement, exportacao: DataExport,
   consultas: QueryBuilder, importacao: BulkImport, fmea: FmeaAnalysis, lgpd: LgpdCompliance, contratos: Contracts, projetos: Projects, ajuda: HelpCenter,
-  auditoria_global: AuditLogViewer,
+  auditoria_global: AuditLogViewer, grupos_acesso: AccessGroupManagement,
   configuracoes: SystemSettings, usuarios: UserManagement,
 };
 

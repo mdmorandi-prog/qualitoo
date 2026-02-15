@@ -14,6 +14,68 @@ export type Database = {
   }
   public: {
     Tables: {
+      access_group_sectors: {
+        Row: {
+          created_at: string
+          group_id: string
+          id: string
+          sector: string
+        }
+        Insert: {
+          created_at?: string
+          group_id: string
+          id?: string
+          sector: string
+        }
+        Update: {
+          created_at?: string
+          group_id?: string
+          id?: string
+          sector?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "access_group_sectors_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "access_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      access_groups: {
+        Row: {
+          color: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       action_plans: {
         Row: {
           created_at: string
@@ -2220,6 +2282,47 @@ export type Database = {
         }
         Relationships: []
       }
+      user_group_access: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          granted_by: string
+          group_id: string
+          id: string
+          permission_level: Database["public"]["Enums"]["permission_level"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          granted_by: string
+          group_id: string
+          id?: string
+          permission_level?: Database["public"]["Enums"]["permission_level"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          granted_by?: string
+          group_id?: string
+          id?: string
+          permission_level?: Database["public"]["Enums"]["permission_level"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_group_access_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "access_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_module_access: {
         Row: {
           can_access: boolean
@@ -2466,9 +2569,29 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_user_sectors: {
+        Args: { _user_id: string }
+        Returns: {
+          group_name: string
+          permission_level: Database["public"]["Enums"]["permission_level"]
+          sector: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      has_sector_access: {
+        Args: { _sector: string; _user_id: string }
+        Returns: boolean
+      }
+      has_sector_permission: {
+        Args: {
+          _level: Database["public"]["Enums"]["permission_level"]
+          _sector: string
           _user_id: string
         }
         Returns: boolean
@@ -2519,6 +2642,7 @@ export type Database = {
         | "em_execucao"
         | "verificacao"
         | "concluida"
+      permission_level: "read" | "write" | "admin"
       report_status: "nova" | "em_analise" | "concluida" | "arquivada"
       supplier_criticality: "baixa" | "media" | "alta" | "critica"
       supplier_status: "ativo" | "inativo" | "em_avaliacao" | "bloqueado"
@@ -2693,6 +2817,7 @@ export const Constants = {
         "verificacao",
         "concluida",
       ],
+      permission_level: ["read", "write", "admin"],
       report_status: ["nova", "em_analise", "concluida", "arquivada"],
       supplier_criticality: ["baixa", "media", "alta", "critica"],
       supplier_status: ["ativo", "inativo", "em_avaliacao", "bloqueado"],
