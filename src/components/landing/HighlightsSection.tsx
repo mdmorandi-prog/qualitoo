@@ -5,7 +5,7 @@ const highlights = [
   { icon: Award, title: "Acreditação ONA/JCI", description: "Ferramentas alinhadas aos padrões de acreditação hospitalar mais exigentes do mercado." },
   { icon: Shield, title: "Segurança & LGPD", description: "Dados protegidos com controle de acesso granular, RLS e conformidade total com a LGPD." },
   { icon: Users, title: "Gestão Colaborativa", description: "Papéis e permissões granulares para equipes multidisciplinares de qualquer porte." },
-  { icon: Zap, title: "IA Integrada", description: "Análise de causa raiz, revisão de contratos e assistência inteligente em todo o sistema." },
+  { icon: Zap, title: "IA Integrada (RAG + ML)", description: "Inteligência artificial baseada em RAG e Machine Learning para análise de causa raiz, revisão de contratos e assistência inteligente em todo o sistema." },
   { icon: Globe, title: "100% Web", description: "Acesse de qualquer dispositivo, sem instalação. Responsivo e otimizado para mobile." },
   { icon: Lock, title: "Assinatura Digital", description: "Assinatura eletrônica avançada com hash SHA-256 e trilha de auditoria completa." },
 ];
