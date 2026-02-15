@@ -43,11 +43,12 @@ Deno.serve(async (req) => {
 
     const { action, ...payload } = await req.json();
 
+    // ==================== USER ACTIONS ====================
+
     if (action === "create") {
       const { username, password, display_name, role, module_keys } = payload;
       const email = `${username}@sgq.local`;
 
-      // Create user
       const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
         email,
         password,
@@ -62,16 +63,12 @@ Deno.serve(async (req) => {
       }
 
       const userId = newUser.user.id;
-
-      // Update profile with username
       await adminClient.from("profiles").update({ username, display_name }).eq("user_id", userId);
 
-      // Assign role
       if (role) {
         await adminClient.from("user_roles").insert({ user_id: userId, role });
       }
 
-      // Assign module access
       if (module_keys && module_keys.length > 0) {
         const rows = module_keys.map((mk: string) => ({ user_id: userId, module_key: mk, can_access: true }));
         await adminClient.from("user_module_access").insert(rows);
@@ -110,7 +107,6 @@ Deno.serve(async (req) => {
 
     if (action === "update_modules") {
       const { user_id, module_keys } = payload;
-      // Delete existing, then insert new
       await adminClient.from("user_module_access").delete().eq("user_id", user_id);
       if (module_keys && module_keys.length > 0) {
         const rows = module_keys.map((mk: string) => ({ user_id, module_key: mk, can_access: true }));
@@ -148,6 +144,122 @@ Deno.serve(async (req) => {
     if (action === "delete") {
       const { user_id } = payload;
       await adminClient.auth.admin.deleteUser(user_id);
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ==================== GROUP ACTIONS ====================
+
+    if (action === "list_groups") {
+      const { data: groups } = await adminClient.from("access_groups").select("*").order("name");
+      const { data: sectors } = await adminClient.from("access_group_sectors").select("*");
+      const { data: members } = await adminClient.from("user_group_access").select("*");
+      const { data: profiles } = await adminClient.from("profiles").select("*");
+
+      const enrichedGroups = (groups ?? []).map((g: any) => {
+        const groupSectors = (sectors ?? []).filter((s: any) => s.group_id === g.id).map((s: any) => s.sector);
+        const groupMembers = (members ?? []).filter((m: any) => m.group_id === g.id).map((m: any) => {
+          const profile = (profiles ?? []).find((p: any) => p.user_id === m.user_id);
+          return {
+            id: m.id,
+            user_id: m.user_id,
+            username: profile?.username ?? "unknown",
+            display_name: profile?.display_name ?? "",
+            permission_level: m.permission_level,
+            expires_at: m.expires_at,
+          };
+        });
+        return {
+          id: g.id,
+          name: g.name,
+          description: g.description ?? "",
+          color: g.color ?? "#6366f1",
+          is_active: g.is_active,
+          sectors: groupSectors,
+          members: groupMembers,
+        };
+      });
+
+      return new Response(JSON.stringify({ groups: enrichedGroups }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (action === "create_group") {
+      const { name, description, color, sectors } = payload;
+      const { data: group, error: groupError } = await adminClient
+        .from("access_groups")
+        .insert({ name, description, color, created_by: caller.id })
+        .select()
+        .single();
+
+      if (groupError) {
+        return new Response(JSON.stringify({ error: groupError.message }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      if (sectors && sectors.length > 0) {
+        const rows = sectors.map((s: string) => ({ group_id: group.id, sector: s }));
+        await adminClient.from("access_group_sectors").insert(rows);
+      }
+
+      return new Response(JSON.stringify({ success: true, group_id: group.id }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (action === "delete_group") {
+      const { group_id } = payload;
+      await adminClient.from("access_groups").delete().eq("id", group_id);
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (action === "update_group_sectors") {
+      const { group_id, sectors } = payload;
+      await adminClient.from("access_group_sectors").delete().eq("group_id", group_id);
+      if (sectors && sectors.length > 0) {
+        const rows = sectors.map((s: string) => ({ group_id, sector: s }));
+        await adminClient.from("access_group_sectors").insert(rows);
+      }
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (action === "add_group_member") {
+      const { group_id, user_id, permission_level, expires_at } = payload;
+      const { error: memberError } = await adminClient.from("user_group_access").insert({
+        group_id,
+        user_id,
+        permission_level: permission_level || "read",
+        granted_by: caller.id,
+        expires_at: expires_at || null,
+      });
+      if (memberError) {
+        return new Response(JSON.stringify({ error: memberError.message }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (action === "remove_group_member") {
+      const { group_id, user_id } = payload;
+      await adminClient.from("user_group_access").delete().eq("group_id", group_id).eq("user_id", user_id);
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (action === "update_member_permission") {
+      const { group_id, user_id, permission_level } = payload;
+      await adminClient.from("user_group_access").update({ permission_level }).eq("group_id", group_id).eq("user_id", user_id);
       return new Response(JSON.stringify({ success: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
