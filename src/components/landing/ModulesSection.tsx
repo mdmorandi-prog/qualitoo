@@ -3,7 +3,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ClipboardCheck, BarChart3, FileText, Search, AlertTriangle, Activity,
   Truck, Heart, FileBarChart, GitBranch, BrainCircuit, GraduationCap,
-  Workflow, Ruler, RefreshCw, BookOpen, Filter,
+  Workflow, Ruler, RefreshCw, BookOpen, Filter, Crosshair, Users2,
+  UserCircle, Database, Upload, GitMerge, ShieldCheck, HelpCircle,
+  Settings, Gauge, FileSignature, FolderKanban, Handshake,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -106,6 +108,91 @@ const modules = [
     description: "Controle de alterações em processos com análise de impacto e aprovação.",
     regulatory: "ISO 9001:2015 (6.3) · ISO 13485 · FDA · ICH Q10",
     features: ["Análise de impacto", "Aprovação formal", "Rastreabilidade"],
+  },
+  // --- Novos módulos adicionados ---
+  {
+    icon: Crosshair, title: "Planos de Ação (5W2H)", category: "gestao",
+    description: "Criação e acompanhamento de planos de ação estruturados vinculados a NCs, auditorias e CAPAs.",
+    regulatory: "ISO 9001:2015 (10.2) · ONA · JCI",
+    features: ["Metodologia 5W2H", "Progresso em tempo real", "Vínculos automáticos"],
+  },
+  {
+    icon: BookOpen, title: "Atas de Reunião", category: "gestao",
+    description: "Registro de reuniões com pauta, decisões, responsáveis e transcrição de voz por IA.",
+    regulatory: "ISO 9001:2015 (7.5) · ONA",
+    features: ["Transcrição de voz", "Itens de ação", "Histórico completo"],
+  },
+  {
+    icon: Users2, title: "Matriz de Competências", category: "gestao",
+    description: "Mapeamento de competências por função com avaliações periódicas e gap analysis.",
+    regulatory: "ISO 9001:2015 (7.2) · ONA · NR-32",
+    features: ["Avaliação por níveis", "Gap analysis", "Plano de desenvolvimento"],
+  },
+  {
+    icon: Gauge, title: "Dashboard Personalizado", category: "analise",
+    description: "Painel customizável com widgets arrastáveis e navegação direta aos módulos.",
+    regulatory: "ISO 9001:2015 (9.1) · ONA",
+    features: ["Widgets drag-and-drop", "20+ widgets", "Persistência por usuário"],
+  },
+  {
+    icon: Settings, title: "Workflows Configuráveis", category: "operacional",
+    description: "Fluxos de aprovação personalizáveis com níveis hierárquicos e notificações.",
+    regulatory: "ISO 9001:2015 (4.4) · ONA · JCI",
+    features: ["Multi-nível", "Notificações automáticas", "Log de aprovações"],
+  },
+  {
+    icon: UserCircle, title: "Portal do Colaborador", category: "operacional",
+    description: "Acesso individual para colaboradores consultarem treinamentos, documentos e pendências.",
+    regulatory: "ISO 9001:2015 (7.3) · ONA · NR-32",
+    features: ["Meus treinamentos", "Documentos pendentes", "Autoatendimento"],
+  },
+  {
+    icon: Handshake, title: "Gestão de Contratos", category: "gestao",
+    description: "Upload, acompanhamento de vigência e análise jurídica por IA especializada.",
+    regulatory: "Código Civil · LGPD · CDC · RDCs Anvisa",
+    features: ["Vigência automática", "IA Jurídica", "Alertas de vencimento"],
+  },
+  {
+    icon: FolderKanban, title: "Projetos e Gantt", category: "operacional",
+    description: "Gestão de projetos de qualidade com gráfico de Gantt, marcos e dependências.",
+    regulatory: "ISO 9001:2015 (6.2) · PMBOK · ONA",
+    features: ["Gráfico de Gantt", "Marcos e dependências", "Progresso visual"],
+  },
+  {
+    icon: GitMerge, title: "FMEA", category: "analise",
+    description: "Análise de Modos de Falha e Efeitos com cálculo automático de RPN e priorização.",
+    regulatory: "ISO 14971 · IATF 16949 · FDA · IEC 60812",
+    features: ["Cálculo RPN", "Severidade × Ocorrência × Detecção", "Planos de mitigação"],
+  },
+  {
+    icon: ShieldCheck, title: "Conformidade LGPD", category: "conformidade",
+    description: "Mapeamento de dados pessoais, bases legais e monitoramento de conformidade.",
+    regulatory: "LGPD (Lei 13.709/2018) · ANPD · ISO 27701",
+    features: ["Mapeamento de dados", "Bases legais", "Relatório de impacto"],
+  },
+  {
+    icon: Database, title: "Exportação BI", category: "analise",
+    description: "Exportação de dados em CSV, JSON e Excel para integração com ferramentas de BI.",
+    regulatory: "ISO 9001:2015 (9.1) · ONA",
+    features: ["CSV / JSON / Excel", "Filtros avançados", "Agendamento"],
+  },
+  {
+    icon: FileSignature, title: "Consultas (Query Builder)", category: "analise",
+    description: "Construtor visual de consultas para cruzamento de dados entre módulos.",
+    regulatory: "ISO 9001:2015 (9.1) · ONA",
+    features: ["Consultas visuais", "Cruzamento de módulos", "Exportação direta"],
+  },
+  {
+    icon: Upload, title: "Importação em Massa", category: "operacional",
+    description: "Importação de dados via planilhas CSV/Excel com validação e mapeamento de campos.",
+    regulatory: "ISO 9001:2015 (7.5) · ONA",
+    features: ["CSV / Excel", "Validação automática", "Mapeamento de campos"],
+  },
+  {
+    icon: HelpCircle, title: "Central de Ajuda", category: "operacional",
+    description: "Guias, tutoriais e FAQ integrados para suporte imediato ao usuário.",
+    regulatory: "ISO 9001:2015 (7.4) · ONA",
+    features: ["Guias por módulo", "FAQ interativo", "Busca inteligente"],
   },
 ];
 
