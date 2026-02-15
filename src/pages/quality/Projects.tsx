@@ -78,8 +78,9 @@ const Projects = () => {
   const [tasks, setTasks] = useState<ProjectTask[]>([]);
   const [showTaskDialog, setShowTaskDialog] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [editingTask, setEditingTask] = useState<ProjectTask | null>(null);
   const [form, setForm] = useState({ title: "", description: "", sector: "", responsible: "", start_date: "", end_date: "" });
-  const [taskForm, setTaskForm] = useState({ title: "", responsible: "", start_date: "", end_date: "", is_milestone: false });
+  const [taskForm, setTaskForm] = useState({ title: "", responsible: "", start_date: "", end_date: "", is_milestone: false, progress: 0 });
   const [viewMode, setViewMode] = useState<"gantt" | "list">("gantt");
 
   const fetchProjects = async () => {
@@ -137,22 +138,39 @@ const Projects = () => {
     fetchProjects();
   };
 
-  const handleCreateTask = async () => {
+  const handleCreateOrUpdateTask = async () => {
     if (!taskForm.title.trim() || !selectedProject) return toast.error("Título é obrigatório");
     if (!taskForm.start_date || !taskForm.end_date) return toast.error("Datas são obrigatórias");
-    const { error } = await supabase.from("project_tasks").insert({
-      project_id: selectedProject.id,
-      title: taskForm.title,
-      responsible: taskForm.responsible || null,
-      start_date: taskForm.start_date,
-      end_date: taskForm.end_date,
-      is_milestone: taskForm.is_milestone,
-      display_order: tasks.length,
-    } as any);
-    if (error) return toast.error("Erro ao criar tarefa");
-    toast.success("Tarefa criada!");
+
+    if (editingTask) {
+      const status = taskForm.progress === 100 ? "concluida" : taskForm.progress > 0 ? "em_andamento" : "pendente";
+      const { error } = await supabase.from("project_tasks").update({
+        title: taskForm.title,
+        responsible: taskForm.responsible || null,
+        start_date: taskForm.start_date,
+        end_date: taskForm.end_date,
+        is_milestone: taskForm.is_milestone,
+        progress: taskForm.progress,
+        status,
+      } as any).eq("id", editingTask.id);
+      if (error) return toast.error("Erro ao atualizar tarefa");
+      toast.success("Tarefa atualizada!");
+    } else {
+      const { error } = await supabase.from("project_tasks").insert({
+        project_id: selectedProject.id,
+        title: taskForm.title,
+        responsible: taskForm.responsible || null,
+        start_date: taskForm.start_date,
+        end_date: taskForm.end_date,
+        is_milestone: taskForm.is_milestone,
+        display_order: tasks.length,
+      } as any);
+      if (error) return toast.error("Erro ao criar tarefa");
+      toast.success("Tarefa criada!");
+    }
     setShowTaskDialog(false);
-    setTaskForm({ title: "", responsible: "", start_date: "", end_date: "", is_milestone: false });
+    setEditingTask(null);
+    setTaskForm({ title: "", responsible: "", start_date: "", end_date: "", is_milestone: false, progress: 0 });
     fetchTasks(selectedProject.id);
     recalcProgress(selectedProject.id);
   };
@@ -228,7 +246,7 @@ const Projects = () => {
             <ListTodo className="mr-1 h-3 w-3" /> Lista
           </Button>
           <div className="flex-1" />
-          <Button size="sm" onClick={() => { setTaskForm({ title: "", responsible: "", start_date: pStart, end_date: pEnd || pStart, is_milestone: false }); setShowTaskDialog(true); }}>
+          <Button size="sm" onClick={() => { setEditingTask(null); setTaskForm({ title: "", responsible: "", start_date: pStart, end_date: pEnd || pStart, is_milestone: false, progress: 0 }); setShowTaskDialog(true); }}>
             <Plus className="mr-1 h-3 w-3" /> Nova Tarefa
           </Button>
         </div>
@@ -280,9 +298,18 @@ const Projects = () => {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeleteTask(t.id)}>
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => {
+                          setEditingTask(t);
+                          setTaskForm({ title: t.title, responsible: t.responsible || "", start_date: t.start_date, end_date: t.end_date, is_milestone: t.is_milestone, progress: t.progress });
+                          setShowTaskDialog(true);
+                        }}>
+                          <Edit2 className="h-3 w-3" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeleteTask(t.id)}>
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -292,9 +319,9 @@ const Projects = () => {
         )}
 
         {/* Task dialog */}
-        <Dialog open={showTaskDialog} onOpenChange={setShowTaskDialog}>
+        <Dialog open={showTaskDialog} onOpenChange={v => { if (!v) { setEditingTask(null); } setShowTaskDialog(v); }}>
           <DialogContent>
-            <DialogHeader><DialogTitle>Nova Tarefa</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>{editingTask ? "Editar Tarefa" : "Nova Tarefa"}</DialogTitle></DialogHeader>
             <div className="space-y-4">
               <Input placeholder="Título da tarefa *" value={taskForm.title} onChange={e => setTaskForm({ ...taskForm, title: e.target.value })} />
               <Input placeholder="Responsável" value={taskForm.responsible} onChange={e => setTaskForm({ ...taskForm, responsible: e.target.value })} />
@@ -308,14 +335,25 @@ const Projects = () => {
                   <Input type="date" value={taskForm.end_date} onChange={e => setTaskForm({ ...taskForm, end_date: e.target.value })} />
                 </div>
               </div>
+              {editingTask && (
+                <div>
+                  <label className="text-xs text-muted-foreground">Progresso: {taskForm.progress}%</label>
+                  <Slider
+                    value={[taskForm.progress]}
+                    max={100}
+                    step={5}
+                    onValueChange={([v]) => setTaskForm({ ...taskForm, progress: v })}
+                  />
+                </div>
+              )}
               <div className="flex items-center gap-2">
                 <Checkbox checked={taskForm.is_milestone} onCheckedChange={v => setTaskForm({ ...taskForm, is_milestone: !!v })} />
                 <label className="text-sm">Marcar como Marco (Milestone)</label>
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setShowTaskDialog(false)}>Cancelar</Button>
-              <Button onClick={handleCreateTask}>Criar</Button>
+              <Button variant="outline" onClick={() => { setShowTaskDialog(false); setEditingTask(null); }}>Cancelar</Button>
+              <Button onClick={handleCreateOrUpdateTask}>{editingTask ? "Salvar" : "Criar"}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
