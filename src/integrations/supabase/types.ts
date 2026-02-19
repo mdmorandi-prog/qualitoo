@@ -918,6 +918,54 @@ export type Database = {
           },
         ]
       }
+      document_permissions: {
+        Row: {
+          document_id: string
+          expires_at: string | null
+          granted_at: string
+          granted_by: string
+          group_id: string | null
+          id: string
+          permission_level: string
+          user_id: string | null
+        }
+        Insert: {
+          document_id: string
+          expires_at?: string | null
+          granted_at?: string
+          granted_by: string
+          group_id?: string | null
+          id?: string
+          permission_level?: string
+          user_id?: string | null
+        }
+        Update: {
+          document_id?: string
+          expires_at?: string | null
+          granted_at?: string
+          granted_by?: string
+          group_id?: string | null
+          id?: string
+          permission_level?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_permissions_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "quality_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_permissions_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "access_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_read_confirmations: {
         Row: {
           confirmed_at: string
@@ -1023,6 +1071,181 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      document_templates: {
+        Row: {
+          category: string
+          content_template: string
+          created_at: string
+          created_by: string
+          description: string | null
+          header_fields: Json | null
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          content_template: string
+          created_at?: string
+          created_by: string
+          description?: string | null
+          header_fields?: Json | null
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          content_template?: string
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          header_fields?: Json | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      document_versions: {
+        Row: {
+          category: string | null
+          change_summary: string | null
+          code: string | null
+          content: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          document_id: string
+          file_url: string | null
+          id: string
+          title: string
+          version_number: number
+        }
+        Insert: {
+          category?: string | null
+          change_summary?: string | null
+          code?: string | null
+          content?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          document_id: string
+          file_url?: string | null
+          id?: string
+          title: string
+          version_number: number
+        }
+        Update: {
+          category?: string | null
+          change_summary?: string | null
+          code?: string | null
+          content?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          document_id?: string
+          file_url?: string | null
+          id?: string
+          title?: string
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_versions_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "quality_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_workflow_steps: {
+        Row: {
+          assigned_role: string | null
+          assigned_to: string | null
+          comments: string | null
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string
+          document_id: string
+          id: string
+          status: string
+          step_name: string
+          step_order: number
+          step_type: string
+        }
+        Insert: {
+          assigned_role?: string | null
+          assigned_to?: string | null
+          comments?: string | null
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          document_id: string
+          id?: string
+          status?: string
+          step_name: string
+          step_order: number
+          step_type?: string
+        }
+        Update: {
+          assigned_role?: string | null
+          assigned_to?: string | null
+          comments?: string | null
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          document_id?: string
+          id?: string
+          status?: string
+          step_name?: string
+          step_order?: number
+          step_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_workflow_steps_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "quality_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_workflow_templates: {
+        Row: {
+          category: string | null
+          created_at: string
+          created_by: string
+          id: string
+          is_active: boolean
+          name: string
+          steps: Json
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          created_by: string
+          id?: string
+          is_active?: boolean
+          name: string
+          steps?: Json
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          steps?: Json
+        }
+        Relationships: []
       }
       email_queue: {
         Row: {
@@ -1617,13 +1840,17 @@ export type Database = {
           category: string | null
           code: string | null
           content: string | null
+          content_html: string | null
+          content_type: string
           created_at: string
           created_by: string
           description: string | null
           file_url: string | null
           folder_id: string | null
           id: string
+          is_restricted: boolean
           is_signed: boolean
+          search_vector: unknown
           sector: string | null
           status: Database["public"]["Enums"]["doc_status"]
           title: string
@@ -1637,13 +1864,17 @@ export type Database = {
           category?: string | null
           code?: string | null
           content?: string | null
+          content_html?: string | null
+          content_type?: string
           created_at?: string
           created_by: string
           description?: string | null
           file_url?: string | null
           folder_id?: string | null
           id?: string
+          is_restricted?: boolean
           is_signed?: boolean
+          search_vector?: unknown
           sector?: string | null
           status?: Database["public"]["Enums"]["doc_status"]
           title: string
@@ -1657,13 +1888,17 @@ export type Database = {
           category?: string | null
           code?: string | null
           content?: string | null
+          content_html?: string | null
+          content_type?: string
           created_at?: string
           created_by?: string
           description?: string | null
           file_url?: string | null
           folder_id?: string | null
           id?: string
+          is_restricted?: boolean
           is_signed?: boolean
+          search_vector?: unknown
           sector?: string | null
           status?: Database["public"]["Enums"]["doc_status"]
           title?: string
