@@ -19,7 +19,10 @@ async function fetchSystemContext(supabaseAdmin: any) {
     { key: "capas", query: supabaseAdmin.from("capas").select("title, capa_type, status, description, root_cause_analysis, corrective_action, preventive_action, sector, is_effective").order("created_at", { ascending: false }).limit(20) },
     { key: "audits", query: supabaseAdmin.from("audits").select("title, audit_type, status, scheduled_date, sector, conclusion, findings").order("scheduled_date", { ascending: false }).limit(15) },
     { key: "adverse_events", query: supabaseAdmin.from("adverse_events").select("title, event_type, severity, status, sector, description, patient_involved, patient_outcome").order("event_date", { ascending: false }).limit(20) },
-    { key: "documents", query: supabaseAdmin.from("quality_documents").select("title, category, status, version, sector, code").order("updated_at", { ascending: false }).limit(30) },
+    { key: "documents", query: supabaseAdmin.from("quality_documents").select("title, category, status, version, sector, code, is_restricted, content_type, is_signed").order("updated_at", { ascending: false }).limit(30) },
+    { key: "document_versions", query: supabaseAdmin.from("document_versions").select("document_id, version_number, change_summary, created_at").order("created_at", { ascending: false }).limit(30) },
+    { key: "document_workflow_steps", query: supabaseAdmin.from("document_workflow_steps").select("document_id, step_name, step_type, status, assigned_role, completed_at").order("created_at", { ascending: false }).limit(30) },
+    { key: "document_permissions", query: supabaseAdmin.from("document_permissions").select("document_id, user_id, group_id, permission_level, expires_at, granted_at").order("granted_at", { ascending: false }).limit(20) },
     { key: "suppliers", query: supabaseAdmin.from("suppliers").select("name, status, criticality, category").limit(20) },
     { key: "projects", query: supabaseAdmin.from("projects").select("title, description, status, progress, sector, responsible, start_date, end_date").order("created_at", { ascending: false }).limit(20) },
     { key: "project_tasks", query: supabaseAdmin.from("project_tasks").select("title, status, progress, start_date, end_date, responsible, is_milestone, project_id").order("created_at", { ascending: false }).limit(50) },
@@ -117,10 +120,40 @@ function buildContextSummary(data: Record<string, any>): string {
   if (data.documents?.length) {
     parts.push(`\n## Documentos da Qualidade (${data.documents.length})`);
     const byStatus: Record<string, number> = {};
+    let restrictedCount = 0;
+    let signedCount = 0;
     for (const d of data.documents) {
       byStatus[d.status] = (byStatus[d.status] || 0) + 1;
+      if (d.is_restricted) restrictedCount++;
+      if (d.is_signed) signedCount++;
     }
     parts.push(`Por status: ${Object.entries(byStatus).map(([k, v]) => `${k}: ${v}`).join(", ")}`);
+    parts.push(`Documentos com acesso restrito: ${restrictedCount}, Assinados: ${signedCount}`);
+    for (const d of data.documents.slice(0, 15)) {
+      parts.push(`- [${d.status}/v${d.version}] ${d.code || "S/C"} - ${d.title} (${d.sector || "Geral"})${d.is_restricted ? " 🔒" : ""}${d.is_signed ? " ✍️" : ""}`);
+    }
+  }
+
+  if (data.document_versions?.length) {
+    parts.push(`\n## Histórico de Versões de Documentos (${data.document_versions.length} revisões recentes)`);
+    for (const v of data.document_versions.slice(0, 10)) {
+      parts.push(`- Doc ${v.document_id.slice(0, 8)}... v${v.version_number}: "${v.change_summary || "Sem descrição"}" (${v.created_at})`);
+    }
+  }
+
+  if (data.document_workflow_steps?.length) {
+    parts.push(`\n## Workflows de Documentos (${data.document_workflow_steps.length} etapas recentes)`);
+    const wfByStatus: Record<string, number> = {};
+    for (const ws of data.document_workflow_steps) {
+      wfByStatus[ws.status] = (wfByStatus[ws.status] || 0) + 1;
+    }
+    parts.push(`Etapas por status: ${Object.entries(wfByStatus).map(([k, v]) => `${k}: ${v}`).join(", ")}`);
+  }
+
+  if (data.document_permissions?.length) {
+    parts.push(`\n## Permissões de Documentos (${data.document_permissions.length})`);
+    const expiredPerms = data.document_permissions.filter((p: any) => p.expires_at && new Date(p.expires_at) < new Date()).length;
+    if (expiredPerms > 0) parts.push(`⚠️ ${expiredPerms} permissão(ões) expirada(s) detectada(s)`);
   }
 
   if (data.suppliers?.length) {
@@ -201,7 +234,7 @@ Você possui conhecimento profundo sobre:
 - Normas regulatórias: RDCs da ANVISA (RDC 36/2013, RDC 63/2011, RDC 302/2005, etc.)
 - Segurança do paciente: Metas internacionais, protocolos de segurança
 - Gestão de riscos: ISO 31000, FMEA, Matriz de Riscos
-- Controle de documentos: ISO 9001, boas práticas de gestão documental
+- Controle de documentos: ISO 9001, boas práticas de gestão documental, versionamento automático com histórico e comparação visual (diff), editor WYSIWYG, busca Full-Text, templates de documentos (POP, IT, Manual, Protocolo), permissões granulares por documento com expiração temporal, workflows multi-etapa com progresso visual e distribuição automática na aprovação
 - Indicadores de desempenho: BSC, KPIs hospitalares, benchmarking
 - Gestão de projetos: cronogramas, Gantt, marcos, tarefas e progresso
 - CAPAs, 5 Porquês, Ishikawa, PDCA, A3, 5W2H
