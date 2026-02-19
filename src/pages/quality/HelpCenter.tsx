@@ -49,12 +49,21 @@ const helpSections: HelpSection[] = [
     ],
   },
   {
-    id: "documentos", title: "Documentos", icon: FileText, description: "Controle documental com versionamento",
+    id: "documentos", title: "Documentos", icon: FileText, description: "Controle documental com versionamento, workflow e permissões",
     faqs: [
-      { question: "Qual o fluxo de aprovação?", answer: "Rascunho → Em Revisão (qualquer usuário) → Aprovado (apenas admin) → Obsoleto (apenas admin). A transição respeitará as permissões do seu perfil." },
+      { question: "Qual o fluxo de aprovação?", answer: "Rascunho → Em Revisão (qualquer usuário) → Aprovado (apenas admin) → Obsoleto (apenas admin). A transição respeitará as permissões do seu perfil. Além disso, workflows multi-etapa podem ser configurados com templates customizáveis." },
       { question: "Como importar documentos?", answer: "Ao criar novo documento, clique em 'Importar Arquivo'. O sistema extrai automaticamente título, código, setor e categoria do conteúdo do arquivo." },
       { question: "Como funciona a assinatura digital?", answer: "Documentos aprovados podem ser assinados eletronicamente. O sistema gera um hash SHA-256, registra geolocalização, IP e timestamp, criando uma trilha de auditoria completa e verificável." },
       { question: "Como organizar documentos em pastas?", answer: "Use a árvore de pastas no painel lateral para criar hierarquias. Clique com botão direito para criar subpastas, renomear ou mover documentos entre pastas." },
+      { question: "Como funciona o versionamento automático?", answer: "Ao editar um documento, a versão atual é arquivada automaticamente no histórico antes de salvar as alterações. O sistema exige um resumo da alteração e incrementa a versão automaticamente (ex: v1 → v2). Você pode acessar todas as versões anteriores pelo botão 'Histórico'." },
+      { question: "Como comparar versões de um documento?", answer: "No Histórico de Versões, ative o modo 'Comparar', selecione duas versões e o sistema exibirá um diff visual linha-a-linha: linhas adicionadas aparecem em verde, removidas em vermelho, com uma barra de proporção e contadores de alterações." },
+      { question: "Como usar o editor visual (WYSIWYG)?", answer: "Ao criar ou editar um documento, alterne para 'Editor Visual' nas abas de conteúdo. O editor suporta formatação rica: negrito, itálico, sublinhado, títulos, listas, tabelas e alinhamento de texto. O conteúdo é salvo em HTML para renderização fiel." },
+      { question: "Como usar templates de documentos?", answer: "Ao criar novo documento, clique em 'Usar Template'. Selecione entre os modelos disponíveis (POP, IT, Manual, Protocolo Clínico). O template preenche automaticamente a estrutura do conteúdo com seções padrão para o tipo de documento." },
+      { question: "Como configurar permissões por documento?", answer: "Clique no ícone de 'Permissões' na tabela de documentos. Ative 'Acesso restrito' para limitar o acesso apenas a usuários ou grupos específicos, sobrepondo a permissão de setor padrão. Cada permissão pode ter nível (Leitura, Escrita, Admin) e data de expiração." },
+      { question: "O que são permissões temporárias?", answer: "Ao adicionar uma permissão individual a um documento, você pode definir uma data de expiração. Após essa data, a permissão é automaticamente revogada. O sistema exibe indicadores visuais: barra de progresso de validade, alertas para permissões vencidas ou prestes a vencer (≤7 dias)." },
+      { question: "Como funciona o workflow multi-etapa?", answer: "Clique em 'Workflow' nos detalhes do documento. Aplique um template de workflow (ex: Elaboração → Revisão → Validação → Aprovação Final). Cada etapa possui responsável, tipo e status. O progresso é exibido com um indicador circular de etapas e uma barra de porcentagem (%). Quando todas as etapas são aprovadas, o workflow é marcado como completo." },
+      { question: "O que acontece quando um documento é aprovado?", answer: "Ao aprovar um documento, o sistema aciona automaticamente a distribuição: uma notificação é enviada a todos os colaboradores do setor relevante, informando sobre a nova versão publicada. O registro de aprovação inclui data, hora e responsável." },
+      { question: "Como funciona a busca Full-Text?", answer: "Ative o modo 'FULL-TEXT' na barra de busca. O sistema pesquisará no conteúdo completo dos documentos (título, código, descrição, texto e categoria) usando indexação GIN do PostgreSQL com suporte a idioma português." },
     ],
   },
   {
