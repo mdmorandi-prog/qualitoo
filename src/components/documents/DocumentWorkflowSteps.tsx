@@ -2,12 +2,13 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { CheckCircle2, XCircle, Clock, GitBranch, MessageSquare, Loader2 } from "lucide-react";
+import { CheckCircle2, XCircle, Clock, GitBranch, MessageSquare, Loader2, Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import StepIndicator from "@/components/StepIndicator";
 
 interface WorkflowStep {
   id: string;
@@ -88,9 +89,7 @@ const DocumentWorkflowSteps = ({ open, onOpenChange, documentId, documentTitle, 
 
   const applyTemplate = async (template: WorkflowTemplate) => {
     if (!user) return;
-    // Delete existing steps first
     await supabase.from("document_workflow_steps").delete().eq("document_id", documentId);
-
     const stepsToInsert = template.steps.map((s: any, i: number) => ({
       document_id: documentId,
       step_order: i + 1,
@@ -99,7 +98,6 @@ const DocumentWorkflowSteps = ({ open, onOpenChange, documentId, documentTitle, 
       assigned_role: s.assigned_role,
       status: "pendente",
     }));
-
     const { error } = await supabase.from("document_workflow_steps").insert(stepsToInsert);
     if (error) { toast.error("Erro ao aplicar template"); console.error(error); }
     else { toast.success(`Template "${template.name}" aplicado!`); fetchSteps(); }
@@ -123,8 +121,6 @@ const DocumentWorkflowSteps = ({ open, onOpenChange, documentId, documentTitle, 
       toast.success(action === "aprovado" ? "Etapa aprovada!" : "Etapa rejeitada!");
       setActionComment("");
       fetchSteps();
-
-      // Check if all steps are approved
       const updatedSteps = steps.map(s => s.id === stepId ? { ...s, status: action } : s);
       const allApproved = updatedSteps.every(s => s.status === "aprovado" || s.status === "pulado");
       if (allApproved && onWorkflowComplete) onWorkflowComplete();
@@ -134,10 +130,8 @@ const DocumentWorkflowSteps = ({ open, onOpenChange, documentId, documentTitle, 
 
   const canActOnStep = (step: WorkflowStep): boolean => {
     if (step.status !== "pendente") return false;
-    // Check if previous steps are complete
     const prevStep = steps.find(s => s.step_order === step.step_order - 1);
     if (prevStep && prevStep.status === "pendente") return false;
-    // Check role
     if (step.assigned_role === "admin" && !isAdmin) return false;
     if (step.assigned_role === "analyst" && !isAdmin && !isAnalyst) return false;
     if (step.assigned_to && step.assigned_to !== user?.id && !isAdmin) return false;
@@ -148,9 +142,13 @@ const DocumentWorkflowSteps = ({ open, onOpenChange, documentId, documentTitle, 
     t => !t.category || t.category === documentCategory
   );
 
-  const progress = steps.length > 0
-    ? Math.round((steps.filter(s => s.status === "aprovado" || s.status === "pulado").length / steps.length) * 100)
-    : 0;
+  const completedCount = steps.filter(s => s.status === "aprovado" || s.status === "pulado").length;
+  const rejectedCount = steps.filter(s => s.status === "rejeitado").length;
+  const progress = steps.length > 0 ? Math.round((completedCount / steps.length) * 100) : 0;
+
+  // Find current active step index for StepIndicator
+  const currentStepIndex = steps.findIndex(s => s.status === "pendente");
+  const effectiveCurrentStep = currentStepIndex === -1 ? steps.length : currentStepIndex;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -163,16 +161,37 @@ const DocumentWorkflowSteps = ({ open, onOpenChange, documentId, documentTitle, 
         </DialogHeader>
 
         {steps.length > 0 && (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Progresso</span>
-              <span className="font-bold text-foreground">{progress}%</span>
-            </div>
-            <div className="h-2 rounded-full bg-muted overflow-hidden">
-              <div
-                className="h-full rounded-full bg-primary transition-all"
-                style={{ width: `${progress}%` }}
+          <div className="space-y-4">
+            {/* Visual Step Indicator */}
+            <div className="py-2">
+              <StepIndicator
+                steps={steps.map(s => s.step_name)}
+                currentStep={effectiveCurrentStep}
               />
+            </div>
+
+            {/* Progress Bar with Percentage */}
+            <div className="space-y-2 rounded-lg border bg-card p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-foreground">Progresso do Workflow</span>
+                  {rejectedCount > 0 && (
+                    <Badge variant="destructive" className="text-[10px]">
+                      {rejectedCount} rejeitada{rejectedCount > 1 ? "s" : ""}
+                    </Badge>
+                  )}
+                </div>
+                <span className="text-2xl font-bold text-primary">{progress}%</span>
+              </div>
+              <Progress value={progress} className="h-3" />
+              <div className="flex justify-between text-[10px] text-muted-foreground">
+                <span>{completedCount} de {steps.length} etapas concluídas</span>
+                {progress === 100 && (
+                  <span className="text-safe font-bold flex items-center gap-1">
+                    <Check className="h-3 w-3" /> Workflow completo
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         )}
@@ -214,8 +233,9 @@ const DocumentWorkflowSteps = ({ open, onOpenChange, documentId, documentTitle, 
                 <div
                   key={step.id}
                   className={`rounded-xl border p-4 transition-all ${
-                    canAct ? "ring-1 ring-primary/30 border-primary/30" : ""
-                  }`}
+                    canAct ? "ring-1 ring-primary/30 border-primary/30 bg-primary/[0.02]" : ""
+                  } ${step.status === "aprovado" ? "border-safe/30 bg-safe/[0.02]" : ""}
+                    ${step.status === "rejeitado" ? "border-destructive/30 bg-destructive/[0.02]" : ""}`}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
