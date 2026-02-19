@@ -794,7 +794,7 @@ const Documents = () => {
       </Dialog>
 
       {/* Edit/New Version Dialog */}
-      <Dialog open={editMode} onOpenChange={v => { if (!v) { setEditMode(false); setEditDoc(null); } }}>
+      <Dialog open={editMode} onOpenChange={v => { if (!v) { setEditMode(false); setEditDoc(null); setChangeSummary(""); } }}>
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 font-display">
@@ -804,8 +804,15 @@ const Documents = () => {
           </DialogHeader>
           {editDoc && (
             <div className="grid gap-4 py-4">
-              <div className="rounded-lg bg-muted/30 p-3">
-                <p className="text-xs text-muted-foreground">Ao salvar, a versão atual (v{editDoc.version}) será arquivada no histórico.</p>
+              <div className="rounded-lg border border-warning/30 bg-warning/5 p-3 flex items-start gap-3">
+                <History className="h-4 w-4 text-warning mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-foreground">Versionamento automático</p>
+                  <p className="text-xs text-muted-foreground">
+                    A versão atual (v{editDoc.version}) será arquivada automaticamente no histórico.
+                    Você pode comparar versões depois pelo botão <span className="font-medium text-foreground">Histórico</span>.
+                  </p>
+                </div>
               </div>
               <div className="grid gap-2">
                 <Label>Resumo da Alteração *</Label>
