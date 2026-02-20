@@ -213,6 +213,103 @@ export type Database = {
           },
         ]
       }
+      audit_checklist_items: {
+        Row: {
+          checklist_id: string
+          clause: string | null
+          created_at: string
+          display_order: number | null
+          evidence_notes: string | null
+          evidence_urls: string[] | null
+          id: string
+          max_score: number | null
+          requirement: string
+          score: number | null
+          status: string
+        }
+        Insert: {
+          checklist_id: string
+          clause?: string | null
+          created_at?: string
+          display_order?: number | null
+          evidence_notes?: string | null
+          evidence_urls?: string[] | null
+          id?: string
+          max_score?: number | null
+          requirement: string
+          score?: number | null
+          status?: string
+        }
+        Update: {
+          checklist_id?: string
+          clause?: string | null
+          created_at?: string
+          display_order?: number | null
+          evidence_notes?: string | null
+          evidence_urls?: string[] | null
+          id?: string
+          max_score?: number | null
+          requirement?: string
+          score?: number | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_checklist_items_checklist_id_fkey"
+            columns: ["checklist_id"]
+            isOneToOne: false
+            referencedRelation: "audit_checklists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      audit_checklists: {
+        Row: {
+          audit_id: string
+          compliance_percentage: number | null
+          created_at: string
+          created_by: string
+          id: string
+          max_score: number | null
+          standard: string | null
+          title: string
+          total_score: number | null
+          updated_at: string
+        }
+        Insert: {
+          audit_id: string
+          compliance_percentage?: number | null
+          created_at?: string
+          created_by: string
+          id?: string
+          max_score?: number | null
+          standard?: string | null
+          title: string
+          total_score?: number | null
+          updated_at?: string
+        }
+        Update: {
+          audit_id?: string
+          compliance_percentage?: number | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          max_score?: number | null
+          standard?: string | null
+          title?: string
+          total_score?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_checklists_audit_id_fkey"
+            columns: ["audit_id"]
+            isOneToOne: false
+            referencedRelation: "audits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_findings: {
         Row: {
           audit_id: string
@@ -486,6 +583,73 @@ export type Database = {
           version?: number
         }
         Relationships: []
+      }
+      bsc_objectives: {
+        Row: {
+          action_plan_id: string | null
+          created_at: string
+          current_value: number | null
+          description: string | null
+          id: string
+          indicator_id: string | null
+          objective: string
+          perspective: string
+          plan_id: string
+          status: string | null
+          target_value: number | null
+          unit: string | null
+        }
+        Insert: {
+          action_plan_id?: string | null
+          created_at?: string
+          current_value?: number | null
+          description?: string | null
+          id?: string
+          indicator_id?: string | null
+          objective: string
+          perspective: string
+          plan_id: string
+          status?: string | null
+          target_value?: number | null
+          unit?: string | null
+        }
+        Update: {
+          action_plan_id?: string | null
+          created_at?: string
+          current_value?: number | null
+          description?: string | null
+          id?: string
+          indicator_id?: string | null
+          objective?: string
+          perspective?: string
+          plan_id?: string
+          status?: string | null
+          target_value?: number | null
+          unit?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bsc_objectives_action_plan_id_fkey"
+            columns: ["action_plan_id"]
+            isOneToOne: false
+            referencedRelation: "action_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bsc_objectives_indicator_id_fkey"
+            columns: ["indicator_id"]
+            isOneToOne: false
+            referencedRelation: "quality_indicators"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bsc_objectives_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "strategic_plans"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       calibrations: {
         Row: {
@@ -1521,6 +1685,84 @@ export type Database = {
         }
         Relationships: []
       }
+      management_reviews: {
+        Row: {
+          aggregated_data: Json | null
+          created_at: string
+          created_by: string
+          id: string
+          input_audit_results: string | null
+          input_changes: string | null
+          input_customer_feedback: string | null
+          input_improvement_opportunities: string | null
+          input_indicator_performance: string | null
+          input_nc_summary: string | null
+          input_previous_actions: string | null
+          input_risk_assessment: string | null
+          input_supplier_performance: string | null
+          output_action_items: string | null
+          output_decisions: string | null
+          output_improvements: string | null
+          output_resources: string | null
+          participants: string | null
+          review_date: string
+          sector: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          aggregated_data?: Json | null
+          created_at?: string
+          created_by: string
+          id?: string
+          input_audit_results?: string | null
+          input_changes?: string | null
+          input_customer_feedback?: string | null
+          input_improvement_opportunities?: string | null
+          input_indicator_performance?: string | null
+          input_nc_summary?: string | null
+          input_previous_actions?: string | null
+          input_risk_assessment?: string | null
+          input_supplier_performance?: string | null
+          output_action_items?: string | null
+          output_decisions?: string | null
+          output_improvements?: string | null
+          output_resources?: string | null
+          participants?: string | null
+          review_date: string
+          sector?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          aggregated_data?: Json | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          input_audit_results?: string | null
+          input_changes?: string | null
+          input_customer_feedback?: string | null
+          input_improvement_opportunities?: string | null
+          input_indicator_performance?: string | null
+          input_nc_summary?: string | null
+          input_previous_actions?: string | null
+          input_risk_assessment?: string | null
+          input_supplier_performance?: string | null
+          output_action_items?: string | null
+          output_decisions?: string | null
+          output_improvements?: string | null
+          output_resources?: string | null
+          participants?: string | null
+          review_date?: string
+          sector?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       meeting_minutes: {
         Row: {
           action_items: string | null
@@ -2186,6 +2428,48 @@ export type Database = {
         }
         Relationships: []
       }
+      scheduled_reports: {
+        Row: {
+          created_at: string
+          created_by: string
+          frequency: string
+          id: string
+          include_modules: string[] | null
+          is_active: boolean | null
+          last_sent_at: string | null
+          next_send_at: string | null
+          recipients: string[] | null
+          report_type: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          frequency?: string
+          id?: string
+          include_modules?: string[] | null
+          is_active?: boolean | null
+          last_sent_at?: string | null
+          next_send_at?: string | null
+          recipients?: string[] | null
+          report_type?: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          frequency?: string
+          id?: string
+          include_modules?: string[] | null
+          is_active?: boolean | null
+          last_sent_at?: string | null
+          next_send_at?: string | null
+          recipients?: string[] | null
+          report_type?: string
+          title?: string
+        }
+        Relationships: []
+      }
       signature_audit_log: {
         Row: {
           action: string
@@ -2246,6 +2530,45 @@ export type Database = {
           },
         ]
       }
+      strategic_plans: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          period_end: string | null
+          period_start: string | null
+          plan_type: string
+          sector: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          period_end?: string | null
+          period_start?: string | null
+          plan_type?: string
+          sector?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          period_end?: string | null
+          period_start?: string | null
+          plan_type?: string
+          sector?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       supplier_evaluations: {
         Row: {
           compliance_score: number
@@ -2299,10 +2622,126 @@ export type Database = {
           },
         ]
       }
+      supplier_portal_documents: {
+        Row: {
+          document_name: string
+          document_type: string | null
+          file_url: string | null
+          id: string
+          notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string | null
+          supplier_id: string
+          uploaded_at: string
+        }
+        Insert: {
+          document_name: string
+          document_type?: string | null
+          file_url?: string | null
+          id?: string
+          notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+          supplier_id: string
+          uploaded_at?: string
+        }
+        Update: {
+          document_name?: string
+          document_type?: string | null
+          file_url?: string | null
+          id?: string
+          notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+          supplier_id?: string
+          uploaded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_portal_documents_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      supplier_portal_tokens: {
+        Row: {
+          created_at: string
+          email: string
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          last_accessed_at: string | null
+          supplier_id: string
+          token: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_accessed_at?: string | null
+          supplier_id: string
+          token: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_accessed_at?: string | null
+          supplier_id?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_portal_tokens_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      supplier_scoring_criteria: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          weight: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          weight?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          weight?: number
+        }
+        Relationships: []
+      }
       suppliers: {
         Row: {
           address: string | null
           category: string | null
+          classification: string | null
           cnpj: string | null
           contact_email: string | null
           contact_name: string | null
@@ -2317,10 +2756,12 @@ export type Database = {
           qualification_date: string | null
           status: Database["public"]["Enums"]["supplier_status"]
           updated_at: string
+          weighted_score: number | null
         }
         Insert: {
           address?: string | null
           category?: string | null
+          classification?: string | null
           cnpj?: string | null
           contact_email?: string | null
           contact_name?: string | null
@@ -2335,10 +2776,12 @@ export type Database = {
           qualification_date?: string | null
           status?: Database["public"]["Enums"]["supplier_status"]
           updated_at?: string
+          weighted_score?: number | null
         }
         Update: {
           address?: string | null
           category?: string | null
+          classification?: string | null
           cnpj?: string | null
           contact_email?: string | null
           contact_name?: string | null
@@ -2353,6 +2796,7 @@ export type Database = {
           qualification_date?: string | null
           status?: Database["public"]["Enums"]["supplier_status"]
           updated_at?: string
+          weighted_score?: number | null
         }
         Relationships: []
       }
@@ -2393,6 +2837,51 @@ export type Database = {
             columns: ["survey_id"]
             isOneToOne: false
             referencedRelation: "satisfaction_surveys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      swot_items: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          linked_action_plan_id: string | null
+          plan_id: string
+          priority: string | null
+          quadrant: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          linked_action_plan_id?: string | null
+          plan_id: string
+          priority?: string | null
+          quadrant: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          linked_action_plan_id?: string | null
+          plan_id?: string
+          priority?: string | null
+          quadrant?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "swot_items_linked_action_plan_id_fkey"
+            columns: ["linked_action_plan_id"]
+            isOneToOne: false
+            referencedRelation: "action_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "swot_items_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "strategic_plans"
             referencedColumns: ["id"]
           },
         ]

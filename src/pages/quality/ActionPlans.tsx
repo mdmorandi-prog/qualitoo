@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, List, Columns } from "lucide-react";
+import KanbanBoard from "@/components/kanban/KanbanBoard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -57,6 +58,7 @@ const ActionPlans = () => {
   const [detailPlan, setDetailPlan] = useState<ActionPlan | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [editForm, setEditForm] = useState(emptyForm);
+  const [viewMode, setViewMode] = useState<"lista" | "kanban">("lista");
 
   const [form, setForm] = useState(emptyForm);
 
@@ -121,6 +123,11 @@ const ActionPlans = () => {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div><h2 className="font-display text-2xl font-bold text-foreground">Planos de Ação (5W2H)</h2><p className="text-sm text-muted-foreground">Metodologia 5W2H para planejamento e execução</p></div>
+        <div className="flex gap-2">
+          <div className="flex rounded-lg border overflow-hidden">
+            <Button variant={viewMode === "lista" ? "default" : "ghost"} size="sm" className="rounded-none gap-1" onClick={() => setViewMode("lista")}><List className="h-3 w-3" /> Lista</Button>
+            <Button variant={viewMode === "kanban" ? "default" : "ghost"} size="sm" className="rounded-none gap-1" onClick={() => setViewMode("kanban")}><Columns className="h-3 w-3" /> Kanban</Button>
+          </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild><Button className="gap-2"><Plus className="h-4 w-4" /> Novo Plano</Button></DialogTrigger>
           <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
@@ -146,6 +153,7 @@ const ActionPlans = () => {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       <div className="relative"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar..." className="pl-10" /></div>
@@ -161,6 +169,13 @@ const ActionPlans = () => {
         ))}
       </div>
 
+      {viewMode === "kanban" ? (
+        <KanbanBoard
+          items={filtered.map(p => ({ ...p, status: p.status }))}
+          onStatusChange={(id, newStatus) => updateStatus(id, newStatus)}
+          onItemClick={(item) => openDetail(filtered.find(p => p.id === item.id)!)}
+        />
+      ) : (
       <div className="rounded-xl border bg-card shadow-[var(--card-shadow)]">
         <Table>
           <TableHeader><TableRow><TableHead>Título</TableHead><TableHead>Responsável</TableHead><TableHead>Status</TableHead><TableHead>Progresso</TableHead><TableHead>Prazo</TableHead></TableRow></TableHeader>
@@ -184,6 +199,7 @@ const ActionPlans = () => {
           </TableBody>
         </Table>
       </div>
+      )}
 
       {/* Detail / Edit Dialog */}
       <Dialog open={detailOpen} onOpenChange={setDetailOpen}>

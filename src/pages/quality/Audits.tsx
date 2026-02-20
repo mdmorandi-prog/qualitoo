@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Plus, Search, Eye, Crosshair } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import AuditChecklist from "@/components/audit/AuditChecklist";
 import { Input } from "@/components/ui/input";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
@@ -209,10 +210,11 @@ const Audits = () => {
                 <div className="grid gap-2"><Label className="text-xs font-semibold">Achados</Label><Textarea defaultValue={selected.findings ?? ""} onBlur={e => updateField(selected.id, "findings", e.target.value)} placeholder="Registre os achados da auditoria..." /></div>
                 <div className="grid gap-2"><Label className="text-xs font-semibold">Conclusão</Label><Textarea defaultValue={selected.conclusion ?? ""} onBlur={e => updateField(selected.id, "conclusion", e.target.value)} placeholder="Conclusão da auditoria..." /></div>
               </div>
-              <div className="border-t pt-4">
+              <div className="border-t pt-4 space-y-4">
                 <Button variant="outline" size="sm" className="w-full gap-2" onClick={() => createActionPlanFromAudit(selected)}>
                   <Crosshair className="h-4 w-4" /> Criar Plano de Ação a partir desta Auditoria
                 </Button>
+                <AuditChecklist auditId={selected.id} />
               </div>
             </div>
           )}
