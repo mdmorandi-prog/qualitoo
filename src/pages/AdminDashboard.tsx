@@ -31,6 +31,7 @@ import QrCodeIncidentReporter from "@/components/innovations/QrCodeIncidentRepor
 import SlaEscalationPanel from "@/components/innovations/SlaEscalationPanel";
 import PredictiveKpiAlerts from "@/components/innovations/PredictiveKpiAlerts";
 import BenchmarkPanel from "@/components/innovations/BenchmarkPanel";
+import SectorRiskHeatMap from "@/components/innovations/SectorRiskHeatMap";
 
 import AdverseEvents from "@/pages/quality/AdverseEvents";
 import Capas from "@/pages/quality/Capas";
@@ -476,6 +477,8 @@ const DashboardSummary = ({ onNavigate }: { onNavigate: (tab: string) => void })
         <SlaEscalationPanel />
         <PredictiveKpiAlerts />
       </div>
+
+      <SectorRiskHeatMap />
 
       <div className="grid gap-4 lg:grid-cols-2">
         <DeadlinesPanel />
