@@ -358,6 +358,18 @@ O SGQ possui os seguintes módulos integrados:
 32. **Relatórios Agendados** — Envio automático periódico (diário/semanal/mensal), múltiplos formatos (PDF/Excel/CSV)
 33. **Central de Ajuda** — FAQs por módulo, busca inteligente, guias detalhados
 
+## 10 Inovações Exclusivas (funcionalidades que nenhum concorrente possui)
+1. **Cascata Inteligente NC→CAPA→Plano→KPI** — Ao registrar NC crítica, cria automaticamente CAPA vinculada, Plano de Ação 5W2H e monitoramento do indicador afetado
+2. **Auto-Escalonamento por SLA** — Itens vencidos são escalados automaticamente para nível hierárquico superior com contagem regressiva visual e notificação em tempo real
+3. **Classificação de NC por IA** — IA analisa título/descrição e sugere severidade, causas raiz prováveis, categoria e ações recomendadas antes do registro
+4. **Score de Maturidade SGQ** — Índice composto ponderado em 9 dimensões com gráfico radar e classificação automática (Inicial → Excelência)
+5. **Alertas Preditivos de KPI** — Regressão linear sobre histórico projeta tendências e alerta quando indicador tende a sair da meta nos próximos períodos
+6. **Relatório Executivo Narrativo por IA** — Gera relatório gerencial narrativo com análise de tendências, insights e recomendações estratégicas baseadas nos dados reais
+7. **QR Code para Reporte de Ocorrências** — QR Codes por setor para reporte instantâneo por celular, sem login
+8. **Heat Map de Riscos por Setor** — Mapa de calor dinâmico para identificar hotspots de risco na instituição
+9. **Briefing de Auditoria por IA** — IA gera briefing personalizado com NCs abertas, riscos críticos, indicadores fora da meta e checklist sugerido
+10. **Benchmarking Anônimo** — Compare desempenho do SGQ com benchmarks do setor hospitalar em indicadores-chave
+
 ## Dados Atuais do Sistema
 Abaixo estão os dados reais cadastrados no SGQ da instituição. Use-os para responder perguntas sobre a situação atual:
 
