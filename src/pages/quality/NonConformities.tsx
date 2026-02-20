@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Plus, Search, Eye, LayoutGrid, Table as TableIcon, GripVertical } from "lucide-react";
+import { Plus, Search, Eye, LayoutGrid, Table as TableIcon, GripVertical, Zap } from "lucide-react";
+import AiClassifyButton from "@/components/innovations/AiClassifyButton";
 import { useSearchParams } from "react-router-dom";
 import NcDetailContent from "@/components/nc/NcDetailContent";
 import { Button } from "@/components/ui/button";
@@ -185,6 +186,7 @@ const NonConformities = () => {
                 </div>
                 <div className="grid gap-2"><Label>Setor</Label><Input value={form.sector} onChange={e => setForm(f => ({ ...f, sector: e.target.value }))} /></div>
                 <div className="grid gap-2"><Label>Descrição *</Label><Textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} className="min-h-[100px]" /></div>
+                <AiClassifyButton title={form.title} description={form.description} sector={form.sector} onApplySeverity={(sev) => setForm(f => ({ ...f, severity: sev as NcSeverity }))} />
                 <Button onClick={handleCreate} className="w-full">Registrar NC</Button>
               </div>
             </DialogContent>

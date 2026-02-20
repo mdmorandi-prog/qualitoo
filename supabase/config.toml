@@ -14,3 +14,12 @@ verify_jwt = false
 
 [functions.distribute-document]
 verify_jwt = false
+
+[functions.ai-classify-nc]
+verify_jwt = false
+
+[functions.ai-executive-report]
+verify_jwt = false
+
+[functions.ai-audit-briefing]
+verify_jwt = false

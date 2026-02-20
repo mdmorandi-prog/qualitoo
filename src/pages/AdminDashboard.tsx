@@ -26,6 +26,11 @@ import GlobalSearch from "@/components/GlobalSearch";
 import DeadlinesPanel from "@/components/DeadlinesPanel";
 import OnboardingTour from "@/components/OnboardingTour";
 import AuditLogViewer from "@/components/AuditLogViewer";
+import AiExecutiveReport from "@/components/innovations/AiExecutiveReport";
+import QrCodeIncidentReporter from "@/components/innovations/QrCodeIncidentReporter";
+import SlaEscalationPanel from "@/components/innovations/SlaEscalationPanel";
+import PredictiveKpiAlerts from "@/components/innovations/PredictiveKpiAlerts";
+import BenchmarkPanel from "@/components/innovations/BenchmarkPanel";
 
 import AdverseEvents from "@/pages/quality/AdverseEvents";
 import Capas from "@/pages/quality/Capas";
@@ -448,9 +453,13 @@ const DashboardSummary = ({ onNavigate }: { onNavigate: (tab: string) => void })
           <h2 className="font-display text-2xl font-bold text-foreground">Resumo Executivo</h2>
           <p className="text-sm text-muted-foreground">Visão consolidada do Sistema de Gestão da Qualidade</p>
         </div>
-        <Button variant="outline" size="sm" className="gap-2" onClick={() => { exportDashboardPdf(); }}>
-          <Download className="h-4 w-4" /> Exportar PDF
-        </Button>
+        <div className="flex items-center gap-2">
+          <AiExecutiveReport />
+          <QrCodeIncidentReporter />
+          <Button variant="outline" size="sm" className="gap-2" onClick={() => { exportDashboardPdf(); }}>
+            <Download className="h-4 w-4" /> Exportar PDF
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
@@ -463,7 +472,15 @@ const DashboardSummary = ({ onNavigate }: { onNavigate: (tab: string) => void })
         ))}
       </div>
 
-      <DeadlinesPanel />
+      <div className="grid gap-4 lg:grid-cols-2">
+        <SlaEscalationPanel />
+        <PredictiveKpiAlerts />
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <DeadlinesPanel />
+        <BenchmarkPanel stats={stats} />
+      </div>
 
       {/* Date Filter */}
       <div className="flex flex-wrap items-center gap-3 rounded-xl border bg-card p-4 shadow-[var(--card-shadow)]">
