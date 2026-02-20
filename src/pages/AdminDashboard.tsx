@@ -8,7 +8,7 @@ import {
   UserCircle, Ruler, GitPullRequest, Database, Search, Upload, HelpCircle, ShieldCheck, GitMerge, History,
   ScrollText, FolderKanban, ClipboardList, TrendingUp, Calendar, ExternalLink,
 } from "lucide-react";
-import sgqLogo from "@/assets/sgq-logo.png";
+// Logo removed — using text-only branding
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -212,13 +212,12 @@ const AdminDashboard = () => {
         {/* Sidebar Header */}
         <div className={`flex h-16 shrink-0 items-center border-b border-sidebar-border ${collapsed && !isMobile ? "justify-center px-2" : "justify-between px-4"}`}>
           {collapsed && !isMobile ? (
-            <img src={sgqLogo} alt="SGQ" className="h-9 w-9 shrink-0 rounded-lg object-contain" />
+            <span className="text-sm font-bold">Q</span>
           ) : (
             <>
               <div className="flex items-center gap-2.5">
-                <img src={sgqLogo} alt="SGQ" className="h-9 w-9 shrink-0 rounded-lg object-contain" />
                 <div className="flex flex-col">
-                  <span className="text-sm font-semibold leading-tight">SGQ Hospitalar</span>
+                  <span className="text-sm font-semibold leading-tight">Qualitoo</span>
                   <Badge className="mt-0.5 w-fit border-0 bg-sidebar-accent text-[10px] text-sidebar-accent-foreground">
                     {isAdmin ? "Admin" : "Analista"}
                   </Badge>
@@ -319,7 +318,7 @@ const AdminDashboard = () => {
               <Menu className="h-5 w-5" />
             </Button>
             <div className="flex items-center gap-1.5 text-sm">
-              <span className="text-muted-foreground">SGQ</span>
+              <span className="text-muted-foreground">Qualitoo</span>
               <span className="text-muted-foreground">/</span>
               <span className="font-semibold text-foreground">
                 {tabs.find(t => t.key === activeTab)?.label ?? "Resumo"}
@@ -516,7 +515,7 @@ const DashboardSummary = ({ onNavigate }: { onNavigate: (tab: string) => void })
       </div>
 
       <div className="rounded-xl border bg-card p-6 shadow-[var(--card-shadow)]">
-        <h3 className="mb-4 font-display text-lg font-bold text-foreground">Módulos do SGQ</h3>
+        <h3 className="mb-4 font-display text-lg font-bold text-foreground">Módulos do Qualitoo</h3>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {allTabs.filter(t => t.key !== "resumo" && !("adminOnly" in t && t.adminOnly)).map((t, i) => (
             <button key={i} onClick={() => onNavigate(t.key)} className="flex items-center gap-3 rounded-lg border bg-secondary/30 p-3 text-left transition-colors hover:bg-secondary/60">

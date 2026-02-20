@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
-import sgqLogo from "@/assets/sgq-logo.png";
 
 const AdminLogin = () => {
   const [username, setUsername] = useState("");
@@ -20,7 +19,6 @@ const AdminLogin = () => {
     e.preventDefault();
     setError("");
     setLoading(true);
-    // Convert username to internal email format
     const email = username === "admin" ? "admin@sgq.local" : `${username}@sgq.local`;
     const { error } = await signIn(email, password);
     setLoading(false);
@@ -39,13 +37,8 @@ const AdminLogin = () => {
         className="w-full max-w-sm"
       >
         <div className="mb-8 text-center">
-          <img
-            src={sgqLogo}
-            alt="SGQ Hospitalar"
-            className="mx-auto mb-4 h-16 w-16 rounded-xl object-contain"
-          />
-          <h1 className="font-display text-2xl font-bold text-foreground">SGQ Hospitalar</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Sistema de Gestão da Qualidade</p>
+          <h1 className="font-display text-2xl font-bold text-foreground">Qualitoo</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Gestão da Qualidade Hospitalar</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border bg-card p-6 shadow-[var(--card-shadow)]">

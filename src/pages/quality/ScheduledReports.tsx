@@ -122,7 +122,7 @@ const ScheduledReports = () => {
             <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
               <DialogHeader><DialogTitle>Agendar Relatório</DialogTitle></DialogHeader>
               <div className="grid gap-4 py-4">
-                <div className="grid gap-2"><Label>Título *</Label><Input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="Relatório Semanal SGQ" /></div>
+                <div className="grid gap-2"><Label>Título *</Label><Input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="Relatório Semanal Qualitoo" /></div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2"><Label>Tipo</Label>
                     <Select value={form.report_type} onValueChange={v => setForm(f => ({ ...f, report_type: v }))}>
