@@ -79,16 +79,60 @@ const NonConformities = () => {
 
   const handleCreate = async () => {
     if (!form.title || !form.description || !user) { toast.error("Preencha os campos obrigatórios"); return; }
-    const { error } = await supabase.from("non_conformities").insert({
+    const { data: inserted, error } = await supabase.from("non_conformities").insert({
       title: form.title, description: form.description, severity: form.severity,
       sector: form.sector || null, deadline: form.deadline || null, created_by: user.id,
-    } as any);
+    } as any).select().single();
     if (error) { toast.error("Erro ao criar NC"); console.error(error); }
     else {
-      toast.success("NC registrada!"); setDialogOpen(false); setForm({ title: "", description: "", severity: "media", sector: "", deadline: "" });
-      // Trigger workflow rules for record creation
-      const { data: created } = await supabase.from("non_conformities").select("*").eq("title", form.title).order("created_at", { ascending: false }).limit(1).maybeSingle();
-      if (created) executeWorkflowRules("non_conformities", "record_created", created, undefined, user.id);
+      toast.success("NC registrada!");
+      setDialogOpen(false);
+
+      // Trigger workflow rules
+      if (inserted) executeWorkflowRules("non_conformities", "record_created", inserted, undefined, user.id);
+
+      // 🚀 CASCATA INTELIGENTE: NC crítica/alta → auto CAPA + Plano de Ação
+      if (inserted && (form.severity === "critica" || form.severity === "alta")) {
+        try {
+          // 1. Create CAPA linked to the NC
+          const { data: capaData } = await supabase.from("capas").insert({
+            title: `CAPA — ${form.title}`,
+            description: `CAPA gerada automaticamente pela Cascata Inteligente a partir da NC: ${form.description}`,
+            origin_type: "non_conformity",
+            origin_id: inserted.id,
+            origin_title: form.title,
+            sector: form.sector || null,
+            capa_type: "corretiva",
+            created_by: user.id,
+            deadline: form.deadline || null,
+          } as any).select().single();
+
+          // 2. Create Action Plan (5W2H) linked to the NC
+          await supabase.from("action_plans").insert({
+            title: `Plano de Ação — ${form.title}`,
+            description: `Plano gerado automaticamente pela Cascata Inteligente para tratamento da NC crítica.`,
+            origin_type: "non_conformity",
+            origin_id: inserted.id,
+            sector: form.sector || null,
+            what: `Tratar NC: ${form.title}`,
+            why: `NC ${form.severity} identificada: ${form.description.substring(0, 200)}`,
+            who: user.email || "Responsável a definir",
+            created_by: user.id,
+          } as any);
+
+          // 3. Update the NC with the CAPA link if created
+          if (capaData) {
+            await supabase.from("non_conformities").update({ capa_id: capaData.id } as any).eq("id", inserted.id);
+          }
+
+          toast.success("🚀 Cascata Inteligente: CAPA e Plano de Ação criados automaticamente!", { duration: 5000 });
+        } catch (cascadeErr) {
+          console.error("Cascata error:", cascadeErr);
+          toast.info("NC registrada, mas houve erro na cascata automática.");
+        }
+      }
+
+      setForm({ title: "", description: "", severity: "media", sector: "", deadline: "" });
       fetchData();
     }
   };
