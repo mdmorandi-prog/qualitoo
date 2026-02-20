@@ -77,7 +77,7 @@ const HeroSection = () => {
           <h1 className="mb-6 text-4xl font-bold leading-tight tracking-tight text-primary-foreground md:text-5xl lg:text-6xl">
             A plataforma completa para{" "}
             <span className="relative">
-              <span className="relative z-10 text-accent-foreground">qualidade hospitalar</span>
+              <span className="relative z-10 text-accent-foreground">gestão da qualidade</span>
               <motion.span
                 initial={{ scaleX: 0 }}
                 animate={{ scaleX: 1 }}

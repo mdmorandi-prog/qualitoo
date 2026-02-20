@@ -113,7 +113,7 @@ const NcDetailContent = ({
         className="w-full gap-2 bg-gradient-to-r from-primary to-accent text-primary-foreground hover:opacity-90"
       >
         {aiLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Bot className="h-4 w-4" />}
-        {aiLoading ? "Analisando com IA..." : "🤖 SGQ IA — Análise de Causa Raiz"}
+        {aiLoading ? "Analisando com IA..." : "🤖 Qualitoo IA — Análise de Causa Raiz"}
       </Button>
 
       <p className="text-center text-xs text-muted-foreground">

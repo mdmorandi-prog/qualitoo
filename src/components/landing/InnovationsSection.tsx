@@ -30,7 +30,7 @@ const innovations = [
   },
   {
     icon: Gauge,
-    title: "Score de Maturidade SGQ",
+    title: "Score de Maturidade Qualitoo",
     description: "Índice composto ponderado que avalia a maturidade do sistema em 9 dimensões com gráfico radar e classificação automática.",
     tag: "Analytics",
     features: ["9 dimensões avaliadas", "Gráfico radar interativo", "Classificação Inicial → Excelência", "Evolução temporal"],
@@ -73,7 +73,7 @@ const innovations = [
   {
     icon: BarChart,
     title: "Benchmarking Anônimo",
-    description: "Compare o desempenho do seu SGQ com benchmarks do setor hospitalar em indicadores-chave como taxa de NC, tempo de resolução e conformidade.",
+    description: "Compare o desempenho do seu sistema com benchmarks do setor hospitalar em indicadores-chave como taxa de NC, tempo de resolução e conformidade.",
     tag: "Benchmark",
     features: ["Comparação com setor", "Indicadores-chave", "Dados anonimizados", "Posição no ranking"],
   },
@@ -121,7 +121,7 @@ const InnovationsSection = () => {
             Inovações & Exclusividades
           </h2>
           <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
-            Funcionalidades exclusivas com IA integrada, automações inteligentes e ferramentas que elevam seu SGQ a outro patamar.
+            Funcionalidades exclusivas com IA integrada, automações inteligentes e ferramentas que elevam seu sistema a outro patamar.
           </p>
         </motion.div>
 

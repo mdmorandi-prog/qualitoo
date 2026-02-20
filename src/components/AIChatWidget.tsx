@@ -13,7 +13,7 @@ const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
 const AIChatWidget = () => {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Msg[]>([
-    { role: "assistant", content: "Olá! Sou o **Assistente SGQ** com acesso aos dados do seu sistema. Posso ajudar com:\n\n- 📊 **Indicadores** e medições cadastradas\n- ⚠️ **Não conformidades** e CAPAs\n- 🎯 **Riscos** e planos de ação\n- 📋 **Auditorias** e documentos\n- 📚 **Normas** (ANVISA, ONA, JCI)\n\nComo posso ajudar?" },
+    { role: "assistant", content: "Olá! Sou o **Assistente Qualitoo** com acesso aos dados do seu sistema. Posso ajudar com:\n\n- 📊 **Indicadores** e medições cadastradas\n- ⚠️ **Não conformidades** e CAPAs\n- 🎯 **Riscos** e planos de ação\n- 📋 **Auditorias** e documentos\n- 📚 **Normas** (ANVISA, ONA, JCI)\n\nComo posso ajudar?" },
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -133,7 +133,7 @@ const AIChatWidget = () => {
               <div className="flex items-center gap-2">
                 <Bot className="h-5 w-5" />
                 <div>
-                  <span className="text-sm font-semibold">Assistente SGQ</span>
+                  <span className="text-sm font-semibold">Assistente Qualitoo</span>
                   <span className="ml-2 rounded bg-white/20 px-1.5 py-0.5 text-[10px]">RAG</span>
                 </div>
               </div>

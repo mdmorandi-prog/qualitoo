@@ -18,7 +18,7 @@ const CtaSection = () => {
             Pronto para elevar a qualidade?
           </h2>
           <p className="mb-8 text-primary-foreground/75 max-w-lg mx-auto">
-            Acesse o painel administrativo e comece a gerenciar a qualidade hospitalar de forma integrada, segura e em conformidade.
+            Acesse o painel administrativo e comece a gerenciar a qualidade hospitalar com o Qualitoo de forma integrada, segura e em conformidade.
           </p>
           <Button
             asChild
