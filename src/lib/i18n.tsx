@@ -46,7 +46,7 @@ const translations: Record<string, Record<Locale, string>> = {
   // Dashboard
   "dashboard.title": { pt: "Resumo Executivo", en: "Executive Summary" },
   "dashboard.subtitle": { pt: "Visão consolidada do Sistema de Gestão da Qualidade", en: "Consolidated view of the Quality Management System" },
-  "dashboard.qms_modules": { pt: "Módulos do SGQ", en: "QMS Modules" },
+  "dashboard.qms_modules": { pt: "Módulos do Qualitoo", en: "Qualitoo Modules" },
   "dashboard.chart_period": { pt: "Período dos gráficos:", en: "Chart period:" },
 
   // Auth

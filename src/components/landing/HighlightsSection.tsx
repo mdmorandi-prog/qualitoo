@@ -21,7 +21,7 @@ const HighlightsSection = () => {
           className="text-center mb-12"
         >
           <Award className="mx-auto mb-4 h-10 w-10 opacity-80" />
-          <h2 className="mb-4 text-3xl font-bold md:text-4xl">Por que o SGQ Hospitalar?</h2>
+          <h2 className="mb-4 text-3xl font-bold md:text-4xl">Por que o Qualitoo?</h2>
           <p className="mx-auto max-w-2xl text-primary-foreground/75">
             Uma solução completa para hospitais que buscam excelência operacional e acreditação.
           </p>
