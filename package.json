@@ -61,6 +61,7 @@
     "framer-motion": "^12.34.0",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.462.0",
+    "mammoth": "^1.11.0",
     "next-themes": "^0.3.0",
     "pdfjs-dist": "^4.9.155",
     "qrcode.react": "^4.2.0",
