@@ -160,6 +160,40 @@ const canTransition = (currentStatus: DocStatus, newStatus: DocStatus, isAdmin: 
   return true;
 };
 
+// Build hierarchical folder options for select dropdown
+const buildFolderOptions = (flatFolders: { id: string; name: string; sector: string | null; parent_id: string | null }[]) => {
+  const map: Record<string, typeof flatFolders[0] & { children: string[] }> = {};
+  const rootIds: string[] = [];
+
+  // Build lookup
+  for (const f of flatFolders) {
+    map[f.id] = { ...f, children: [] };
+  }
+  for (const f of flatFolders) {
+    if (f.parent_id && map[f.parent_id]) {
+      map[f.parent_id].children.push(f.id);
+    } else {
+      rootIds.push(f.id);
+    }
+  }
+
+  // Flatten tree with indentation
+  const result: { id: string; name: string; prefix: string }[] = [];
+  const walk = (id: string, depth: number) => {
+    const node = map[id];
+    if (!node) return;
+    const indent = depth === 0 ? "" : "    ".repeat(depth - 1) + "└ ";
+    result.push({ id: node.id, name: node.name, prefix: indent });
+    for (const childId of node.children) {
+      walk(childId, depth + 1);
+    }
+  };
+  for (const rootId of rootIds) {
+    walk(rootId, 0);
+  }
+  return result;
+};
+
 const Documents = () => {
   const { user, isAdmin, isAnalyst } = useAuth();
   const [docs, setDocs] = useState<Doc[]>([]);
@@ -503,9 +537,9 @@ const Documents = () => {
                   <SelectTrigger><SelectValue placeholder="Selecione uma pasta" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">— Sem pasta —</SelectItem>
-                    {folders.map(f => (
-                      <SelectItem key={f.id} value={f.id}>
-                        {f.parent_id ? "  └ " : ""}{f.name} {f.sector ? `(${f.sector})` : ""}
+                    {buildFolderOptions(folders).map(opt => (
+                      <SelectItem key={opt.id} value={opt.id}>
+                        {opt.prefix}{opt.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -904,7 +938,19 @@ const Documents = () => {
         <DocumentVersionHistory open={versionHistoryOpen} onOpenChange={setVersionHistoryOpen} documentId={versionHistoryDoc.id} documentTitle={versionHistoryDoc.title} currentVersion={versionHistoryDoc.version} />
       )}
 
-      <DocumentTemplateSelector open={templateSelectorOpen} onOpenChange={setTemplateSelectorOpen} onSelect={handleTemplateSelect} />
+      <DocumentTemplateSelector
+        open={templateSelectorOpen}
+        onOpenChange={setTemplateSelectorOpen}
+        onSelect={handleTemplateSelect}
+        onSelectHtml={(html, fileName) => {
+          setForm(f => ({
+            ...f,
+            content_html: html,
+            content_type: "html",
+            title: f.title || fileName.replace(/\.docx?$/i, "").replace(/[-_]/g, " "),
+          }));
+        }}
+      />
 
       {permissionsDoc && (
         <DocumentPermissions
