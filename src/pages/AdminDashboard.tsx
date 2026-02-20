@@ -6,7 +6,7 @@ import {
   TriangleAlert, Crosshair, BookOpen, Users2, Menu, X, PanelLeftClose, PanelLeft,
   Download, Shield, Settings, Truck, Heart, FileBarChart, GitBranch, Gauge, Workflow,
   UserCircle, Ruler, GitPullRequest, Database, Search, Upload, HelpCircle, ShieldCheck, GitMerge, History,
-  ScrollText, FolderKanban,
+  ScrollText, FolderKanban, ClipboardList, TrendingUp, Calendar, ExternalLink,
 } from "lucide-react";
 import sgqLogo from "@/assets/sgq-logo.png";
 import { Button } from "@/components/ui/button";
@@ -59,6 +59,10 @@ import BulkImport from "@/pages/quality/BulkImport";
 import Contracts from "@/pages/quality/Contracts";
 import Projects from "@/pages/quality/Projects";
 import AccessGroupManagement from "@/pages/quality/AccessGroupManagement";
+import ManagementReview from "@/pages/quality/ManagementReview";
+import StrategicPlanning from "@/pages/quality/StrategicPlanning";
+import SupplierPortal from "@/pages/quality/SupplierPortal";
+import ScheduledReports from "@/pages/quality/ScheduledReports";
 
 const allTabs = [
   { key: "resumo", label: "Resumo", icon: LayoutDashboard },
@@ -90,6 +94,10 @@ const allTabs = [
   { key: "lgpd", label: "LGPD", icon: ShieldCheck },
   { key: "contratos", label: "Contratos", icon: ScrollText },
   { key: "projetos", label: "Projetos", icon: FolderKanban },
+  { key: "analise_critica", label: "Análise Crítica", icon: ClipboardList },
+  { key: "estrategia", label: "BSC / SWOT", icon: TrendingUp },
+  { key: "portal_fornecedor", label: "Portal Fornecedor", icon: ExternalLink },
+  { key: "relatorios_agendados", label: "Relatórios Agendados", icon: Calendar },
   { key: "ajuda", label: "Central de Ajuda", icon: HelpCircle },
   { key: "grupos_acesso", label: "Grupos de Acesso", icon: Shield, adminOnly: true },
   { key: "auditoria_global", label: "Log de Auditoria", icon: History, adminOnly: true },
@@ -105,7 +113,10 @@ const contentMap: Record<string, React.FC<any>> = {
   fornecedores: Suppliers, pesquisas: SatisfactionSurveys, regulatorio: RegulatoryReports,
   processos: ProcessMapping, workflows: WorkflowConfig,
   portal: EmployeePortal, metrologia: Metrology, mudancas: ChangeManagement, exportacao: DataExport,
-  consultas: QueryBuilder, importacao: BulkImport, fmea: FmeaAnalysis, lgpd: LgpdCompliance, contratos: Contracts, projetos: Projects, ajuda: HelpCenter,
+  consultas: QueryBuilder, importacao: BulkImport, fmea: FmeaAnalysis, lgpd: LgpdCompliance, contratos: Contracts, projetos: Projects,
+  analise_critica: ManagementReview, estrategia: StrategicPlanning,
+  portal_fornecedor: SupplierPortal, relatorios_agendados: ScheduledReports,
+  ajuda: HelpCenter,
   auditoria_global: AuditLogViewer, grupos_acesso: AccessGroupManagement,
   configuracoes: SystemSettings, usuarios: UserManagement,
 };
