@@ -162,18 +162,11 @@ export const exportDashboardPdf = async () => {
   ];
 
   const html = `<!DOCTYPE html>
-<html><head><meta charset="utf-8"><title>Relatório SGQ - ${dateStr}</title>
+<html><head><meta charset="utf-8"><title>Relatório Qualitoo - ${dateStr}</title>
 <style>
-  body{font-family:Arial,sans-serif;margin:40px;color:#1a3a4a}
-  h1{font-size:22px;border-bottom:2px solid #1a5f73;padding-bottom:8px;margin-bottom:4px}
-  .date{color:#666;font-size:13px;margin-bottom:24px}
-  h2{font-size:16px;color:#1a5f73;margin-top:24px;margin-bottom:8px;border-left:4px solid #1a5f73;padding-left:8px}
-  ul{margin:0 0 8px 0;padding-left:20px}
-  li{font-size:13px;line-height:1.8}
-  .footer{margin-top:40px;border-top:1px solid #ccc;padding-top:8px;font-size:11px;color:#999;text-align:center}
-  @media print{body{margin:20px}}
+...
 </style></head><body>
-<h1>Relatório Consolidado — SGQ Hospitalar</h1>
+<h1>Relatório Consolidado — Qualitoo</h1>
 <p class="date">Gerado em: ${dateStr} às ${now.toLocaleTimeString("pt-BR")}</p>
 ${sections.map(s => `<h2>${s.title}</h2><ul>${s.items.map(i => `<li>${i}</li>`).join("")}</ul>`).join("")}
 <div class="footer">Sistema de Gestão da Qualidade — Relatório gerado automaticamente</div>

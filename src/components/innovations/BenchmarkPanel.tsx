@@ -2,13 +2,13 @@ import { useEffect, useState } from "react";
 import { BarChart, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
-// Simulated benchmark data for hospital SGQ metrics
+// Simulated benchmark data for hospital quality metrics
 const benchmarkData = [
   { metric: "Taxa de NC/mês", yourValue: 0, benchmark: 8, unit: "", lowerIsBetter: true },
   { metric: "Tempo médio resolução NC", yourValue: 0, benchmark: 15, unit: " dias", lowerIsBetter: true },
   { metric: "% Indicadores na meta", yourValue: 0, benchmark: 72, unit: "%", lowerIsBetter: false },
   { metric: "% Documentos atualizados", yourValue: 0, benchmark: 85, unit: "%", lowerIsBetter: false },
-  { metric: "Score Maturidade SGQ", yourValue: 0, benchmark: 65, unit: "%", lowerIsBetter: false },
+  { metric: "Score Maturidade Qualitoo", yourValue: 0, benchmark: 65, unit: "%", lowerIsBetter: false },
   { metric: "% CAPAs eficazes", yourValue: 0, benchmark: 78, unit: "%", lowerIsBetter: false },
   { metric: "Riscos críticos ativos", yourValue: 0, benchmark: 3, unit: "", lowerIsBetter: true },
   { metric: "% Treinamentos válidos", yourValue: 0, benchmark: 88, unit: "%", lowerIsBetter: false },
@@ -41,7 +41,7 @@ const BenchmarkPanel = ({ stats }: Props) => {
       case "% Documentos atualizados":
         yourValue = stats.docs_total > 0 ? Math.round(((stats.docs_total - stats.docs_expiring) / stats.docs_total) * 100) : 0;
         break;
-      case "Score Maturidade SGQ": yourValue = 58; break; // Will be calculated
+      case "Score Maturidade Qualitoo": yourValue = 58; break; // Will be calculated
       case "% CAPAs eficazes":
         yourValue = stats.capas_total > 0 ? Math.round(((stats.capas_total - stats.capas_open) / stats.capas_total) * 100) : 0;
         break;
