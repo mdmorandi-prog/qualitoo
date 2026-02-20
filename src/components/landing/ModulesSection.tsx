@@ -5,7 +5,8 @@ import {
   Truck, Heart, FileBarChart, GitBranch, BrainCircuit, GraduationCap,
   Workflow, Ruler, RefreshCw, BookOpen, Filter, Crosshair, Users2,
   UserCircle, Database, Upload, GitMerge, ShieldCheck, HelpCircle,
-  Settings, Gauge, FileSignature, FolderKanban, Handshake,
+  Settings, Gauge, FileSignature, FolderKanban, Handshake, Globe,
+  ListChecks, Target, Calendar, BarChart,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,7 @@ const categories = [
   { id: "gestao", label: "Gestão" },
   { id: "analise", label: "Análise" },
   { id: "operacional", label: "Operacional" },
+  { id: "estrategia", label: "Estratégia" },
 ];
 
 const modules = [
@@ -39,9 +41,9 @@ const modules = [
   },
   {
     icon: Search, title: "Auditorias Internas", category: "conformidade",
-    description: "Planejamento, execução e acompanhamento de auditorias com registro de achados.",
+    description: "Planejamento, execução e acompanhamento de auditorias com checklists e coleta de evidências.",
     regulatory: "ISO 9001:2015 (9.2) · ISO 19011 · ONA · JCI",
-    features: ["Checklists customizáveis", "Achados vinculados", "Planos de ação"],
+    features: ["Checklists com pontuação", "Evidências (foto/vídeo)", "Conformidade %"],
   },
   {
     icon: AlertTriangle, title: "Eventos Adversos", category: "conformidade",
@@ -57,9 +59,15 @@ const modules = [
   },
   {
     icon: Truck, title: "Gestão de Fornecedores", category: "operacional",
-    description: "Cadastro, avaliação periódica e qualificação com classificação de criticidade.",
+    description: "Cadastro, avaliação periódica com scoring ponderado e classificação automática A/B/C.",
     regulatory: "ISO 9001:2015 (8.4) · ISO 13485 · Anvisa · ONA",
-    features: ["Score de desempenho", "Qualificação periódica", "Criticidade"],
+    features: ["Scoring A/B/C ponderado", "Qualificação periódica", "Histórico de avaliações"],
+  },
+  {
+    icon: Globe, title: "Portal do Fornecedor", category: "operacional",
+    description: "Área self-service para fornecedores enviarem documentos e acompanharem pendências.",
+    regulatory: "ISO 9001:2015 (8.4) · ONA",
+    features: ["Acesso por token", "Upload de documentos", "Self-service externo"],
   },
   {
     icon: Heart, title: "Pesquisa de Satisfação", category: "gestao",
@@ -109,12 +117,11 @@ const modules = [
     regulatory: "ISO 9001:2015 (6.3) · ISO 13485 · FDA · ICH Q10",
     features: ["Análise de impacto", "Aprovação formal", "Rastreabilidade"],
   },
-  // --- Novos módulos adicionados ---
   {
     icon: Crosshair, title: "Planos de Ação (5W2H)", category: "gestao",
-    description: "Criação e acompanhamento de planos de ação estruturados vinculados a NCs, auditorias e CAPAs.",
+    description: "Criação e acompanhamento de planos estruturados com visualização Kanban.",
     regulatory: "ISO 9001:2015 (10.2) · ONA · JCI",
-    features: ["Metodologia 5W2H", "Progresso em tempo real", "Vínculos automáticos"],
+    features: ["Metodologia 5W2H", "Kanban drag-and-drop", "Vínculos automáticos"],
   },
   {
     icon: BookOpen, title: "Atas de Reunião", category: "gestao",
@@ -194,6 +201,31 @@ const modules = [
     regulatory: "ISO 9001:2015 (7.4) · ONA",
     features: ["Guias por módulo", "FAQ interativo", "Busca inteligente"],
   },
+  // --- Novos módulos (Gaps implementados) ---
+  {
+    icon: BarChart, title: "Análise Crítica pela Direção", category: "estrategia",
+    description: "Reuniões formais ISO 9001 §9.3 com inputs/outputs obrigatórios e agregação automática de dados.",
+    regulatory: "ISO 9001:2015 (9.3) · ONA · JCI",
+    features: ["9 inputs obrigatórios", "Agregação automática", "Outputs rastreáveis"],
+  },
+  {
+    icon: Target, title: "Planejamento Estratégico (BSC/SWOT)", category: "estrategia",
+    description: "Balanced Scorecard com 4 perspectivas e análise SWOT vinculada a planos de ação.",
+    regulatory: "ISO 9001:2015 (6.2) · ONA · JCI · PMBOK",
+    features: ["BSC 4 perspectivas", "Matriz SWOT", "Vínculo indicadores → ações"],
+  },
+  {
+    icon: Calendar, title: "Relatórios Agendados", category: "analise",
+    description: "Envio automático de relatórios periódicos por email em PDF, Excel ou CSV.",
+    regulatory: "ISO 9001:2015 (9.1) · ONA",
+    features: ["Diário / Semanal / Mensal", "PDF / Excel / CSV", "Multi-destinatários"],
+  },
+  {
+    icon: ListChecks, title: "Checklists de Auditoria", category: "conformidade",
+    description: "Checklists estruturados com pontuação por requisito, conformidade % e evidências.",
+    regulatory: "ISO 19011 · ISO 9001:2015 (9.2) · ONA · JCI",
+    features: ["Pontuação por item", "Upload de evidências", "Conformidade automática"],
+  },
 ];
 
 const ModulesSection = () => {
@@ -214,7 +246,7 @@ const ModulesSection = () => {
           className="mb-8 text-center"
         >
           <h2 className="mb-3 text-3xl font-bold text-foreground md:text-4xl">
-            Módulos Integrados
+            {modules.length} Módulos Integrados
           </h2>
           <p className="mx-auto max-w-2xl text-muted-foreground">
             Gerencie todos os processos de qualidade hospitalar em uma única plataforma.
