@@ -5,6 +5,7 @@ import {
   HelpCircle, ChevronDown, ChevronRight, Crosshair, Users2, UserCircle,
   Workflow, Gauge, RefreshCw, Upload, Database, GitMerge, ShieldCheck,
   Handshake, FolderKanban, Settings, Activity, BrainCircuit, FishSymbol,
+  ListChecks, BarChart, Calendar, Globe, FileBarChart, Kanban,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -26,10 +27,11 @@ const helpSections: HelpSection[] = [
   {
     id: "geral", title: "Visão Geral", icon: BookOpen, description: "Conceitos gerais do SGQ",
     faqs: [
-      { question: "O que é o SGQ Hospitalar?", answer: "O SGQ é um Sistema de Gestão da Qualidade projetado para instituições de saúde, alinhado com normas de acreditação ONA e JCI. Ele integra todos os processos de qualidade em uma plataforma digital unificada." },
+      { question: "O que é o SGQ Hospitalar?", answer: "O SGQ é um Sistema de Gestão da Qualidade projetado para instituições de saúde, alinhado com normas de acreditação ONA e JCI. Ele integra todos os processos de qualidade em uma plataforma digital unificada com mais de 30 módulos integrados." },
       { question: "Como acessar o sistema?", answer: "Acesse com seu e-mail e senha fornecidos pelo administrador. Na tela de login (/admin/login), insira suas credenciais. Se for seu primeiro acesso, solicite as credenciais ao gestor da qualidade." },
       { question: "Como personalizar meu dashboard?", answer: "Acesse 'Meu Dashboard', clique no cadeado para desbloquear a edição, arraste e redimensione widgets, adicione novos clicando em '+ Widget' e salve suas configurações." },
       { question: "Como usar a busca global?", answer: "Pressione Ctrl+K (ou ⌘K no Mac) para abrir a busca rápida. Digite o nome de qualquer módulo ou funcionalidade para navegar instantaneamente." },
+      { question: "Quais módulos estão disponíveis?", answer: "O sistema possui 30+ módulos: Não Conformidades, Indicadores, Documentos, Auditorias (com Checklists), Planos de Ação (com Kanban), Riscos, CAPAs, Causa Raiz (IA), Eventos Adversos, Treinamentos, Competências, Fornecedores (com Scoring A/B/C e Portal), Pesquisas, Atas de Reunião, Relatórios Regulatórios, BPMN, Workflows, Metrologia, Mudanças, Contratos (IA Jurídica), Projetos/Gantt, FMEA, LGPD, Portal do Colaborador, Dashboard Personalizado, Exportação BI, Query Builder, Importação em Massa, Análise Crítica pela Direção, Planejamento Estratégico (BSC/SWOT), Relatórios Agendados e Central de Ajuda." },
     ],
   },
   {
@@ -67,18 +69,24 @@ const helpSections: HelpSection[] = [
     ],
   },
   {
-    id: "auditorias", title: "Auditorias", icon: ClipboardCheck, description: "Auditorias internas e externas",
+    id: "auditorias", title: "Auditorias", icon: ClipboardCheck, description: "Auditorias internas e externas com checklists",
     faqs: [
       { question: "Como planejar uma auditoria?", answer: "Clique em 'Nova Auditoria', defina título, tipo, data, escopo e auditor líder. A auditoria inicia como 'Planejada' e pode ser executada via dispositivo móvel." },
       { question: "Como registrar achados?", answer: "Durante a execução, clique em 'Adicionar Achado' para registrar não conformidades ou observações. Cada achado pode ser vinculado a uma NC ou plano de ação." },
+      { question: "Como usar o Checklist de Auditoria?", answer: "Nos detalhes da auditoria, acesse a aba 'Checklists'. Clique em 'Novo Checklist', defina título e norma de referência (ISO 9001, ONA, JCI, etc.). Adicione itens de verificação com requisito, cláusula da norma e pontuação máxima." },
+      { question: "Como funciona a pontuação do checklist?", answer: "Cada item do checklist pode receber uma pontuação de 0 até o máximo definido (padrão: 10). O status de cada item pode ser: Conforme, Não Conforme, Parcial, Não Aplicável ou Não Avaliado. O sistema calcula automaticamente a pontuação total, pontuação máxima e o percentual de conformidade (%)." },
+      { question: "Como anexar evidências aos itens do checklist?", answer: "Em cada item do checklist, clique no ícone de câmera ou upload para adicionar evidências (fotos, vídeos, documentos). As URLs das evidências são registradas junto com notas de evidência descritivas. Isso permite auditoria baseada em evidências conforme exigido pela ISO 19011." },
+      { question: "Posso ter múltiplos checklists por auditoria?", answer: "Sim. Cada auditoria pode ter múltiplos checklists, permitindo verificação por norma diferente (ex: um checklist ISO 9001 e outro ONA na mesma auditoria). Cada checklist tem sua própria pontuação e percentual de conformidade independentes." },
     ],
   },
   {
-    id: "planos", title: "Planos de Ação (5W2H)", icon: Crosshair, description: "Ações corretivas estruturadas",
+    id: "planos", title: "Planos de Ação (5W2H)", icon: Crosshair, description: "Ações corretivas com Kanban",
     faqs: [
       { question: "Como criar um plano de ação?", answer: "Clique em 'Novo Plano', preencha o título e os campos 5W2H: O quê (What), Por quê (Why), Quem (Who), Quando (When), Onde (Where), Como (How) e Quanto (How Much)." },
       { question: "Como vincular a uma NC ou auditoria?", answer: "Ao criar o plano, selecione a origem (NC, Auditoria ou CAPA). O vínculo será registrado automaticamente, permitindo rastreabilidade completa." },
       { question: "Como acompanhar o progresso?", answer: "Cada plano possui uma barra de progresso atualizável. Filtre por status (Pendente, Em Andamento, Concluído, Atrasado) para priorizar ações críticas." },
+      { question: "Como usar a visualização Kanban?", answer: "Alterne entre as visualizações 'Lista' e 'Kanban' usando os botões no topo da página. No modo Kanban, os planos são exibidos em colunas por status (Pendente, Em Andamento, Concluído, Atrasado, Cancelado). Arraste e solte os cards entre as colunas para atualizar o status automaticamente." },
+      { question: "O Kanban atualiza o status automaticamente?", answer: "Sim. Ao arrastar um card para uma nova coluna, o sistema atualiza o status do plano de ação no banco de dados em tempo real. O card exibe título, responsável, progresso (%) e prazos para fácil identificação visual." },
     ],
   },
   {
@@ -124,10 +132,21 @@ const helpSections: HelpSection[] = [
     ],
   },
   {
-    id: "fornecedores", title: "Fornecedores", icon: Truck, description: "Qualificação e avaliação",
+    id: "fornecedores", title: "Fornecedores", icon: Truck, description: "Qualificação, scoring A/B/C e portal externo",
     faqs: [
       { question: "Como avaliar um fornecedor?", answer: "Nos detalhes do fornecedor, registre avaliações com notas de 0-100 em Qualidade, Entrega, Custo e Conformidade. O score geral é calculado automaticamente." },
       { question: "Como classificar a criticidade?", answer: "Fornecedores são classificados como Alta, Média ou Baixa criticidade. Fornecedores críticos exigem qualificação periódica mais rigorosa." },
+      { question: "Como funciona o Scoring A/B/C com critérios ponderados?", answer: "Acesse 'Gestão de Fornecedores' e configure os critérios de avaliação (ex: Qualidade 40%, Prazo de Entrega 25%, Preço 20%, Certificações 15%). O sistema calcula o score ponderado e classifica automaticamente: A (≥80 pontos - Excelente), B (60-79 - Regular) e C (<60 - Insatisfatório). O histórico de avaliações é mantido para análise de tendência." },
+      { question: "Como registrar uma avaliação periódica?", answer: "Clique em 'Nova Avaliação' no fornecedor. Preencha as notas para cada critério ponderado. O sistema calcula o score total, atribui a classificação A/B/C e registra no histórico com data e avaliador." },
+    ],
+  },
+  {
+    id: "portal_fornecedor", title: "Portal do Fornecedor", icon: Globe, description: "Área self-service para fornecedores externos",
+    faqs: [
+      { question: "O que é o Portal do Fornecedor?", answer: "É uma área autenticada exclusiva para fornecedores acessarem externamente. O fornecedor pode visualizar pendências, enviar documentos (certidões, certificados, laudos), responder avaliações e acompanhar NCs vinculadas ao seu cadastro." },
+      { question: "Como gerar um token de acesso para o fornecedor?", answer: "Acesse 'Portal do Fornecedor', selecione o fornecedor na lista e clique em 'Gerar Token'. O sistema cria um token de acesso único com validade configurável. Compartilhe o link de acesso com o fornecedor para que ele entre na área self-service." },
+      { question: "Que documentos o fornecedor pode enviar?", answer: "O fornecedor pode fazer upload de certidões negativas, certificações ISO, laudos técnicos, alvarás e qualquer documento exigido no processo de qualificação. Os documentos são armazenados no bucket 'supplier-docs' com rastreabilidade completa." },
+      { question: "Como revogar o acesso do fornecedor?", answer: "No Portal do Fornecedor, localize o token ativo e clique em 'Revogar'. O acesso é imediatamente cancelado e o fornecedor não poderá mais utilizar o link." },
     ],
   },
   {
@@ -205,6 +224,36 @@ const helpSections: HelpSection[] = [
     faqs: [
       { question: "Como mapear dados pessoais?", answer: "Clique em 'Novo Mapeamento', identifique o tipo de dado, categoria, finalidade, base legal, período de retenção e local de armazenamento." },
       { question: "Quais bases legais são suportadas?", answer: "O sistema suporta todas as bases legais da LGPD: Consentimento, Obrigação Legal, Execução de Contrato, Legítimo Interesse, Proteção da Vida, Tutela da Saúde, entre outras." },
+    ],
+  },
+  {
+    id: "analise_critica", title: "Análise Crítica pela Direção", icon: BarChart, description: "Reuniões formais ISO 9001 §9.3",
+    faqs: [
+      { question: "O que é a Análise Crítica pela Direção?", answer: "É a reunião formal exigida pela ISO 9001:2015 (cláusula 9.3) onde a Alta Direção avalia o desempenho do SGQ. O módulo estrutura os inputs obrigatórios (status de NCs, auditorias, indicadores, riscos, feedback de clientes, fornecedores, ações anteriores, oportunidades de melhoria e mudanças) e os outputs (decisões, recursos necessários e melhorias)." },
+      { question: "Como criar uma análise crítica?", answer: "Clique em 'Nova Análise Crítica', defina título, data, participantes e setor. O formulário possui campos estruturados para todos os 9 inputs e 4 outputs conforme ISO 9001 §9.3." },
+      { question: "Como funciona a agregação automática de dados?", answer: "Clique em 'Auto-agregar dados do sistema'. O sistema consulta automaticamente NCs (total, abertas, por severidade), auditorias recentes, indicadores fora da meta, riscos críticos e status de ações anteriores, preenchendo os campos de input com um snapshot real dos dados do SGQ." },
+      { question: "Quais são os inputs obrigatórios da ISO 9001 §9.3?", answer: "1) Status de ações de análises anteriores, 2) Mudanças internas/externas, 3) Desempenho (NCs, auditorias, indicadores, satisfação), 4) Adequação de recursos, 5) Eficácia de ações para riscos/oportunidades, 6) Oportunidades de melhoria, 7) Desempenho de fornecedores, 8) Resultados de auditorias, 9) Feedback de clientes." },
+      { question: "Quais são os outputs obrigatórios?", answer: "1) Decisões e ações tomadas, 2) Oportunidades de melhoria identificadas, 3) Necessidades de recursos, 4) Ações específicas a serem implementadas. Cada output pode ser vinculado a planos de ação para rastreabilidade." },
+    ],
+  },
+  {
+    id: "estrategia", title: "Planejamento Estratégico (BSC/SWOT)", icon: Target, description: "Balanced Scorecard e análise SWOT",
+    faqs: [
+      { question: "O que é o Balanced Scorecard (BSC)?", answer: "O BSC organiza objetivos estratégicos em 4 perspectivas: Financeira, Cliente, Processos Internos e Aprendizado/Crescimento. Cada objetivo pode ter indicadores vinculados, metas quantitativas e planos de ação associados para execução estratégica." },
+      { question: "Como criar um plano estratégico?", answer: "Clique em 'Novo Plano', defina título, período, responsável e descrição. O plano servirá como container para objetivos BSC e itens SWOT." },
+      { question: "Como adicionar objetivos BSC?", answer: "Dentro do plano, acesse a aba 'BSC' e clique em 'Novo Objetivo'. Selecione a perspectiva (Financeira, Cliente, Processos, Aprendizado), defina o objetivo, meta, unidade e valor atual. O progresso é calculado automaticamente como (valor atual / meta × 100)." },
+      { question: "Como vincular indicadores e planos de ação ao BSC?", answer: "Ao criar um objetivo BSC, você pode vincular um indicador existente do módulo de Indicadores e um plano de ação do módulo de Planos de Ação 5W2H. Isso cria rastreabilidade completa: Estratégia → Indicador → Ação." },
+      { question: "O que é a análise SWOT?", answer: "SWOT (Strengths, Weaknesses, Opportunities, Threats) é uma ferramenta de análise estratégica. O sistema permite cadastrar itens em cada quadrante, classificar por prioridade (Alta, Média, Baixa), definir ações associadas e vincular planos de ação para tratamento." },
+      { question: "Como usar o SWOT integrado?", answer: "Dentro do plano estratégico, acesse a aba 'SWOT'. Adicione itens clicando no quadrante desejado (Forças, Fraquezas, Oportunidades, Ameaças). Para cada item, defina descrição, prioridade e ação associada. Vincule a um plano de ação existente para execução." },
+    ],
+  },
+  {
+    id: "relatorios_agendados", title: "Relatórios Agendados", icon: Calendar, description: "Envio automático de relatórios periódicos",
+    faqs: [
+      { question: "O que são relatórios agendados?", answer: "São relatórios configurados para serem gerados e enviados automaticamente por email em frequências definidas (diário, semanal ou mensal). Ideal para gestores que precisam de atualizações periódicas sem acessar o sistema." },
+      { question: "Como configurar um relatório agendado?", answer: "Clique em 'Novo Relatório Agendado', selecione o módulo (NCs, Indicadores, Auditorias, Planos de Ação, etc.), defina a frequência (diário, semanal, mensal), formato (PDF, Excel, CSV) e os emails dos destinatários." },
+      { question: "Quais módulos podem ser agendados?", answer: "Todos os principais módulos: Não Conformidades, Indicadores, Auditorias (com checklists), Planos de Ação, CAPAs, Riscos, Eventos Adversos, Fornecedores, Treinamentos e Análise Crítica." },
+      { question: "Como pausar ou cancelar um agendamento?", answer: "Na lista de relatórios agendados, alterne o switch 'Ativo' para pausar o envio temporariamente. Para excluir definitivamente, clique no ícone de lixeira." },
     ],
   },
   {
@@ -298,7 +347,7 @@ const HelpCenter = () => {
     <div className="space-y-6">
       <div>
         <h2 className="font-display text-2xl font-bold text-foreground flex items-center gap-2"><HelpCircle className="h-6 w-6" /> Central de Ajuda</h2>
-        <p className="text-sm text-muted-foreground">Guias, FAQs e base de conhecimento do SGQ</p>
+        <p className="text-sm text-muted-foreground">Guias, FAQs e base de conhecimento do SGQ — {helpSections.length} módulos documentados</p>
       </div>
 
       <div className="relative">
