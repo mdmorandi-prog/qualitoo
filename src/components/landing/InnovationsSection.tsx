@@ -102,13 +102,13 @@ const InnovationsSection = () => {
             <Sparkles className="h-8 w-8 text-primary-foreground" />
           </motion.div>
           <Badge className="mb-4 border-primary/20 bg-primary/5 text-primary" variant="outline">
-            EXCLUSIVO — Não existe em outros sistemas
+            Tecnologia Exclusiva
           </Badge>
           <h2 className="mb-3 text-3xl font-bold text-foreground md:text-4xl lg:text-5xl">
-            10 Inovações que Só Nós Temos
+            Inovações & Exclusividades
           </h2>
           <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
-            Automações inteligentes, IA preditiva e ferramentas que nenhum outro SGQ do mercado oferece.
+            Funcionalidades exclusivas com IA integrada, automações inteligentes e ferramentas que elevam seu SGQ a outro patamar.
           </p>
         </motion.div>
 
