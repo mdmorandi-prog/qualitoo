@@ -1,4 +1,5 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
+import DOMPurify from "dompurify";
 import { Plus, Search, Eye, Upload, FileUp, AlertTriangle, ArrowRight, CheckCircle2, FileText, Lock, FileSignature, Shield, ScrollText, Clock, XCircle, BookOpenCheck, FolderInput, History, LayoutTemplate, GitBranch, Pencil, Users } from "lucide-react";
 import PdfWatermarkViewer from "@/components/documents/PdfWatermarkViewer";
 import SignatureDialog from "@/components/documents/SignatureDialog";
@@ -795,7 +796,11 @@ const Documents = () => {
               {selected.file_url && <Button variant="link" size="sm" className="h-auto p-0 gap-1 text-xs text-primary" onClick={() => { setDetailOpen(false); setPdfViewerDoc(selected); setPdfViewerOpen(true); }}><FileUp className="h-3 w-3" /> Ver arquivo original</Button>}
               {selected.description && <div className="rounded-lg bg-secondary/50 p-3"><p className="text-sm text-foreground">{selected.description}</p></div>}
               {(selected as any).content_html ? (
-                <div className="rounded-lg border p-4 prose prose-sm max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: (selected as any).content_html }} />
+                <div className="rounded-lg border p-4 prose prose-sm max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize((selected as any).content_html, {
+                  ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'table', 'thead', 'tbody', 'tr', 'td', 'th', 'blockquote', 'code', 'pre', 'a', 'span', 'div', 'hr', 's', 'sub', 'sup'],
+                  ALLOWED_ATTR: ['class', 'style', 'href', 'target', 'rel', 'colspan', 'rowspan'],
+                  ALLOW_DATA_ATTR: false,
+                }) }} />
               ) : selected.content ? (
                 <div className="rounded-lg border p-4"><pre className="whitespace-pre-wrap text-sm text-foreground">{selected.content}</pre></div>
               ) : null}
