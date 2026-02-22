@@ -3,8 +3,19 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
+
+function escapeHtml(text: string): string {
+  const map: Record<string, string> = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  };
+  return text.replace(/[&<>"']/g, m => map[m]);
+}
 
 async function sendEmailViaResend(to: string, subject: string, htmlBody: string) {
   const resendApiKey = Deno.env.get("RESEND_API_KEY");
@@ -19,7 +30,7 @@ async function sendEmailViaResend(to: string, subject: string, htmlBody: string)
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: "SGQ Hospitalar <sgq@hbsc.com.br>",
+      from: "Qualitoo <sgq@hbsc.com.br>",
       to: [to],
       subject,
       html: htmlBody,
@@ -37,19 +48,21 @@ function buildEmailHtml(subject: string, body: string): string {
   return `
     <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0;">
       <div style="background: linear-gradient(135deg, #0f766e, #0d9488); padding: 24px 32px;">
-        <h1 style="color: #ffffff; margin: 0; font-size: 20px;">SGQ Hospitalar</h1>
+        <h1 style="color: #ffffff; margin: 0; font-size: 20px;">Qualitoo</h1>
         <p style="color: #ccfbf1; margin: 4px 0 0; font-size: 13px;">Sistema de Gestão da Qualidade</p>
       </div>
       <div style="padding: 32px;">
-        <h2 style="color: #1e293b; font-size: 18px; margin: 0 0 16px;">${subject}</h2>
-        <div style="color: #475569; font-size: 15px; line-height: 1.6;">${body}</div>
+        <h2 style="color: #1e293b; font-size: 18px; margin: 0 0 16px;">${escapeHtml(subject)}</h2>
+        <div style="color: #475569; font-size: 15px; line-height: 1.6;">${escapeHtml(body).replace(/\n/g, '<br>')}</div>
       </div>
       <div style="background: #f8fafc; padding: 16px 32px; border-top: 1px solid #e2e8f0;">
-        <p style="color: #94a3b8; font-size: 12px; margin: 0;">Este é um e-mail automático do SGQ Hospitalar. Não responda.</p>
+        <p style="color: #94a3b8; font-size: 12px; margin: 0;">Este é um e-mail automático do Qualitoo. Não responda.</p>
       </div>
     </div>
   `;
 }
+
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -58,12 +71,75 @@ serve(async (req) => {
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, serviceKey);
 
+    // --- Authentication ---
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const userClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const callerId = claimsData.claims.sub;
+
+    // --- Parse & validate input ---
     const { action, user_id, subject, body, module, reference_id } = await req.json();
 
+    if (!action || typeof action !== "string") {
+      return new Response(JSON.stringify({ error: "Invalid action" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const supabase = createClient(supabaseUrl, serviceKey);
+
     if (action === "notify") {
+      // Validate required fields
+      if (!subject || typeof subject !== "string" || !body || typeof body !== "string") {
+        return new Response(JSON.stringify({ error: "subject and body are required" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      if (subject.length > 200 || subject.includes('\n') || subject.includes('\r')) {
+        return new Response(JSON.stringify({ error: "Invalid subject" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      if (body.length > 5000) {
+        return new Response(JSON.stringify({ error: "Body too long" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      if (user_id && !UUID_REGEX.test(user_id)) {
+        return new Response(JSON.stringify({ error: "Invalid user_id" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
       // Create in-app notification
       if (user_id) {
         await supabase.from("notifications").insert({
@@ -95,7 +171,6 @@ serve(async (req) => {
               sent_at: new Date().toISOString(),
             });
           } catch (emailError) {
-            // Queue for retry if sending fails
             await supabase.from("email_queue").insert({
               to_user_id: user_id,
               to_email: authUser.email,
@@ -113,8 +188,23 @@ serve(async (req) => {
       });
     }
 
-    // Process pending/failed emails (called by cron or manually)
+    // Process pending/failed emails — admin only
     if (action === "process_queue") {
+      // Verify caller is admin
+      const { data: roleData } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", callerId)
+        .eq("role", "admin")
+        .maybeSingle();
+
+      if (!roleData) {
+        return new Response(JSON.stringify({ error: "Forbidden: admin only" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
       const { data: pending } = await supabase
         .from("email_queue")
         .select("*")
@@ -155,7 +245,8 @@ serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
+    console.error("Send-email error:", error);
+    return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
