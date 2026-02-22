@@ -48,12 +48,21 @@ serve(async (req) => {
       );
     }
 
-    // 3. Authorize: verify user can access this document via RLS
-    // Check if the file_url or storage path matches a document the user can see
+    // 3. Validate path — reject traversal attempts
+    const normalizedPath = storagePath.replace(/\.\./g, '').replace(/\/\//g, '/');
+    if (normalizedPath !== storagePath) {
+      return new Response(
+        JSON.stringify({ error: "Invalid path" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // 4. Authorize: verify user can access this document via RLS (exact match)
+    const fullUrl = `${bucketName}/${storagePath}`;
     const { data: doc, error: docError } = await userClient
       .from("quality_documents")
-      .select("id")
-      .or(`file_url.ilike.%${storagePath}%`)
+      .select("id, file_url")
+      .or(`file_url.eq.${fullUrl},file_url.eq.${storagePath}`)
       .limit(1)
       .maybeSingle();
 
