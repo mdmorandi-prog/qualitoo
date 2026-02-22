@@ -7,10 +7,12 @@ interface AuthContextType {
   session: Session | null;
   roles: string[];
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signIn: (email: string, password: string) => Promise<{ error: Error | null; mfaRequired: boolean }>;
   signOut: () => Promise<void>;
   isAdmin: boolean;
   isAnalyst: boolean;
+  hasMfa: boolean;
+  mfaVerified: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -20,6 +22,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [roles, setRoles] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hasMfa, setHasMfa] = useState(false);
+  const [mfaVerified, setMfaVerified] = useState(false);
 
   const fetchRoles = async (userId: string) => {
     const { data } = await supabase
@@ -29,10 +33,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setRoles(data?.map((r: any) => r.role) ?? []);
   };
 
+  const checkMfaStatus = async () => {
+    try {
+      const { data, error } = await supabase.auth.mfa.listFactors();
+      if (error) return;
+      const verifiedFactors = data.totp.filter((f) => f.status === "verified");
+      setHasMfa(verifiedFactors.length > 0);
+    } catch {
+      // ignore
+    }
+  };
+
+  const checkMfaVerified = async () => {
+    try {
+      const { data, error } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      if (error) return;
+      setMfaVerified(
+        data.currentLevel === "aal2" || data.nextLevel === "aal1"
+      );
+    } catch {
+      // ignore
+    }
+  };
+
   useEffect(() => {
     let isMounted = true;
 
-    // Listener for ONGOING auth changes (does NOT control loading)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         if (!isMounted) return;
@@ -40,13 +66,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(session?.user ?? null);
         if (session?.user) {
           setTimeout(() => fetchRoles(session.user.id), 0);
+          setTimeout(() => { checkMfaStatus(); checkMfaVerified(); }, 0);
         } else {
           setRoles([]);
+          setHasMfa(false);
+          setMfaVerified(false);
         }
       }
     );
 
-    // INITIAL load — fetch roles BEFORE setting loading to false
     const initializeAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
@@ -55,6 +83,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(session?.user ?? null);
         if (session?.user) {
           await fetchRoles(session.user.id);
+          await checkMfaStatus();
+          await checkMfaVerified();
         }
       } catch (err) {
         console.error("Auth init error:", err);
@@ -72,13 +102,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error: error as Error | null };
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) return { error: error as Error, mfaRequired: false };
+
+    // Check if MFA is required after sign in
+    const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    const mfaRequired = aalData?.nextLevel === "aal2" && aalData?.currentLevel === "aal1";
+
+    return { error: null, mfaRequired };
   };
 
   const signOut = async () => {
     await supabase.auth.signOut();
     setRoles([]);
+    setHasMfa(false);
+    setMfaVerified(false);
   };
 
   return (
@@ -92,6 +130,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         signOut,
         isAdmin: roles.includes("admin"),
         isAnalyst: roles.includes("analyst"),
+        hasMfa,
+        mfaVerified,
       }}
     >
       {children}
