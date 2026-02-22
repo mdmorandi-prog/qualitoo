@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, Search, ExternalLink, Eye, Send, FileText, Link2 } from "lucide-react";
+import { Plus, Search, ExternalLink, Eye, Send, FileText, Link2, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -175,14 +175,19 @@ const SupplierPortal = () => {
                 ) : getSupplierTokens(selectedSupplier.id).map(t => (
                   <div key={t.id} className="flex items-center justify-between rounded-lg border p-3 mb-2">
                     <div>
-                      <p className="text-xs font-mono">{t.token.slice(0, 12)}...</p>
+                      <p className="text-xs font-mono">{t.token.slice(0, 6)}••••••{t.token.slice(-4)}</p>
                       <p className="text-[10px] text-muted-foreground">
                         {t.is_active ? "Ativo" : "Revogado"} • Expira: {t.expires_at ? new Date(t.expires_at).toLocaleDateString("pt-BR") : "—"}
                       </p>
                     </div>
-                    {t.is_active && (
-                      <Button variant="outline" size="sm" onClick={() => revokeToken(t.id)} className="text-destructive">Revogar</Button>
-                    )}
+                    <div className="flex gap-1">
+                      {t.is_active && (
+                        <>
+                          <Button variant="ghost" size="sm" onClick={() => { navigator.clipboard.writeText(t.token); toast.success("Token copiado!"); }} title="Copiar token"><Copy className="h-3 w-3" /></Button>
+                          <Button variant="outline" size="sm" onClick={() => revokeToken(t.id)} className="text-destructive">Revogar</Button>
+                        </>
+                      )}
+                    </div>
                   </div>
                 ))}
                 <Button variant="outline" size="sm" className="mt-2 gap-1" onClick={() => generateToken(selectedSupplier)}>
