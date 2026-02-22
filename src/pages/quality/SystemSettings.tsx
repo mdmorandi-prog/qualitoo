@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Settings, Eye, EyeOff, Save, Loader2 } from "lucide-react";
+import { Settings, Eye, EyeOff, Save, Loader2, ShieldCheck, ShieldOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,13 +7,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import TwoFactorSetup from "@/components/auth/TwoFactorSetup";
 
 const SystemSettings = () => {
-  const { user } = useAuth();
+  const { user, hasMfa } = useAuth();
   const [elevenLabsKey, setElevenLabsKey] = useState("");
   const [showKey, setShowKey] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [showMfaSetup, setShowMfaSetup] = useState(false);
+  const [mfaEnabled, setMfaEnabled] = useState(hasMfa);
 
   useEffect(() => {
     loadSettings();
@@ -123,6 +126,61 @@ const SystemSettings = () => {
               </Button>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <ShieldCheck className="h-5 w-5 text-primary" />
+            Autenticação em Duas Etapas (2FA)
+          </CardTitle>
+          <CardDescription>
+            Adicione uma camada extra de segurança à sua conta com autenticação TOTP
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {showMfaSetup ? (
+            <TwoFactorSetup
+              onEnabled={() => {
+                setShowMfaSetup(false);
+                setMfaEnabled(true);
+                toast.success("2FA ativado com sucesso!");
+              }}
+              onCancelled={() => setShowMfaSetup(false)}
+            />
+          ) : mfaEnabled ? (
+            <div className="flex items-center gap-3">
+              <ShieldCheck className="h-5 w-5 text-primary" />
+              <div>
+                <p className="text-sm font-medium text-foreground">2FA Ativo</p>
+                <p className="text-xs text-muted-foreground">
+                  Sua conta está protegida com autenticação em duas etapas.
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="ml-auto gap-2"
+                onClick={async () => {
+                  const { data } = await supabase.auth.mfa.listFactors();
+                  if (data?.totp?.[0]) {
+                    await supabase.auth.mfa.unenroll({ factorId: data.totp[0].id });
+                    setMfaEnabled(false);
+                    toast.success("2FA desativado.");
+                  }
+                }}
+              >
+                <ShieldOff className="h-4 w-4" />
+                Desativar
+              </Button>
+            </div>
+          ) : (
+            <Button onClick={() => setShowMfaSetup(true)} className="gap-2">
+              <ShieldCheck className="h-4 w-4" />
+              Configurar 2FA
+            </Button>
+          )}
         </CardContent>
       </Card>
     </div>
