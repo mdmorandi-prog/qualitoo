@@ -131,8 +131,7 @@ const HeroSection = () => {
             <Button
               asChild
               size="lg"
-              variant="outline"
-              className="gap-2 border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/10 text-base"
+              className="gap-2 bg-accent text-accent-foreground shadow-lg hover:bg-accent/90 text-base px-8"
             >
               <a href="#modulos">
                 Conhecer Módulos
