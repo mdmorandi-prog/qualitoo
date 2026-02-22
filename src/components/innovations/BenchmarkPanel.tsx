@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { BarChart, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
 
-// Simulated benchmark data for hospital quality metrics
+// Benchmark reference data for hospital quality metrics
 const benchmarkData = [
   { metric: "Taxa de NC/mês", yourValue: 0, benchmark: 8, unit: "", lowerIsBetter: true },
   { metric: "Tempo médio resolução NC", yourValue: 0, benchmark: 15, unit: " dias", lowerIsBetter: true },
@@ -30,18 +31,62 @@ interface Props {
 }
 
 const BenchmarkPanel = ({ stats }: Props) => {
+  const [avgResolutionDays, setAvgResolutionDays] = useState<number>(0);
+  const [maturityScore, setMaturityScore] = useState<number>(0);
+
+  useEffect(() => {
+    const loadRealMetrics = async () => {
+      // Calculate real average NC resolution time
+      const { data: closedNcs } = await supabase
+        .from("non_conformities")
+        .select("created_at, closed_at")
+        .eq("status", "concluida")
+        .not("closed_at", "is", null);
+
+      if (closedNcs && closedNcs.length > 0) {
+        const totalDays = closedNcs.reduce((acc: number, nc: any) => {
+          const created = new Date(nc.created_at).getTime();
+          const closed = new Date(nc.closed_at).getTime();
+          return acc + (closed - created) / (1000 * 60 * 60 * 24);
+        }, 0);
+        setAvgResolutionDays(Math.round(totalDays / closedNcs.length));
+      }
+
+      // Calculate real maturity score from module completion rates
+      const queries = [
+        { table: "non_conformities" as const, doneValue: "concluida" },
+        { table: "quality_documents" as const, doneValue: "aprovado" },
+        { table: "audits" as const, doneValue: "concluida" },
+        { table: "action_plans" as const, doneValue: "concluido" },
+        { table: "capas" as const, doneValue: "encerrada" },
+        { table: "risks" as const, doneValue: "mitigado" },
+      ];
+      const results = await Promise.all(
+        queries.map(async (q) => {
+          const { data: items } = await supabase.from(q.table).select("id, status");
+          const all = items ?? [];
+          const done = all.filter((i: any) => i.status === q.doneValue).length;
+          return all.length > 0 ? (done / all.length) * 100 : 0;
+        })
+      );
+      const avg = results.length > 0 ? Math.round(results.reduce((a, b) => a + b, 0) / results.length) : 0;
+      setMaturityScore(avg);
+    };
+    loadRealMetrics();
+  }, []);
+
   const data = benchmarkData.map(b => {
     let yourValue = 0;
     switch (b.metric) {
       case "Taxa de NC/mês": yourValue = stats.ncs_open; break;
-      case "Tempo médio resolução NC": yourValue = 12; break; // Estimated
+      case "Tempo médio resolução NC": yourValue = avgResolutionDays; break;
       case "% Indicadores na meta":
         yourValue = stats.indicators_total > 0 ? Math.round(((stats.indicators_total - stats.indicators_below) / stats.indicators_total) * 100) : 0;
         break;
       case "% Documentos atualizados":
         yourValue = stats.docs_total > 0 ? Math.round(((stats.docs_total - stats.docs_expiring) / stats.docs_total) * 100) : 0;
         break;
-      case "Score Maturidade Qualitoo": yourValue = 58; break; // Will be calculated
+      case "Score Maturidade Qualitoo": yourValue = maturityScore; break;
       case "% CAPAs eficazes":
         yourValue = stats.capas_total > 0 ? Math.round(((stats.capas_total - stats.capas_open) / stats.capas_total) * 100) : 0;
         break;
