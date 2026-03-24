@@ -436,7 +436,7 @@ const DashboardSummary = ({ onNavigate }: { onNavigate: (tab: string) => void })
   const cards = [
     { label: "NCs Abertas", value: stats.ncs_open, sub: `${stats.ncs_critical} críticas`, color: "text-destructive", danger: stats.ncs_critical > 0, tab: "ncs" },
     { label: "Indicadores", value: stats.indicators_below, sub: `abaixo da meta (de ${stats.indicators_total})`, color: "text-warning", danger: stats.indicators_below > 0, tab: "indicadores" },
-    { label: "Docs a Vencer", value: stats.docs_expiring, sub: `próx. 30 dias (de ${stats.docs_total})`, color: "text-foreground", danger: stats.docs_expiring > 0, tab: "documentos" },
+    { label: "Documentos a Vencer", value: stats.docs_expiring, sub: `próx. 30 dias (de ${stats.docs_total})`, color: "text-foreground", danger: stats.docs_expiring > 0, tab: "documentos" },
     { label: "Auditorias", value: stats.audits_upcoming, sub: `próx. 7 dias (de ${stats.audits_total})`, color: "text-accent", danger: false, tab: "auditorias" },
     { label: "Planos Pendentes", value: stats.plans_pending, sub: `de ${stats.plans_total} total`, color: "text-warning", danger: stats.plans_pending > 5, tab: "planos" },
     { label: "Riscos Críticos", value: stats.risks_critical, sub: `de ${stats.risks_total} mapeados`, color: "text-destructive", danger: stats.risks_critical > 0, tab: "riscos" },
