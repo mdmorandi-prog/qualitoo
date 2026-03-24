@@ -90,7 +90,7 @@ const allTabs = [
   { key: "regulatorio", label: "Regulatório", icon: FileBarChart },
   { key: "processos", label: "Processos BPMN", icon: GitBranch },
   { key: "workflows", label: "Workflows", icon: Workflow },
-  { key: "portal", label: "Portal Colaborador", icon: UserCircle },
+  { key: "portal", label: "Portal do Colaborador", icon: UserCircle },
   { key: "metrologia", label: "Metrologia", icon: Ruler },
   { key: "mudancas", label: "Mudanças", icon: GitPullRequest },
   { key: "exportacao", label: "Exportação BI", icon: Database },
