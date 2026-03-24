@@ -443,7 +443,7 @@ const DashboardSummary = ({ onNavigate }: { onNavigate: (tab: string) => void })
     { label: "Treinamentos", value: stats.trainings_expiring, sub: `a vencer (de ${stats.trainings_total})`, color: "text-warning", danger: stats.trainings_expiring > 0, tab: "treinamentos" },
     { label: "Eventos Graves", value: stats.events_critical, sub: `sem investigação (de ${stats.events_total})`, color: "text-destructive", danger: stats.events_critical > 0, tab: "eventos" },
     { label: "CAPAs Abertas", value: stats.capas_open, sub: `de ${stats.capas_total} total`, color: "text-accent", danger: false, tab: "capa" },
-    { label: "Gaps Competência", value: stats.competencies_gaps, sub: "avaliações < nível 3", color: "text-warning", danger: stats.competencies_gaps > 0, tab: "competencias" },
+    { label: "Lacunas de Competência", value: stats.competencies_gaps, sub: "avaliações < nível 3", color: "text-warning", danger: stats.competencies_gaps > 0, tab: "competencias" },
   ];
 
   return (

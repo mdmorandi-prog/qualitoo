@@ -189,10 +189,10 @@ const InnovationsSection = () => {
           className="mx-auto mt-12 flex max-w-3xl flex-wrap items-center justify-center gap-6 rounded-2xl border border-primary/20 bg-primary/5 px-8 py-5"
         >
           {[
-            { value: "4", label: "Features com IA" },
-            { value: "3", label: "Automações" },
+            { value: "4", label: "Funcionalidades com IA" },
+            { value: "3", label: "Automações Inteligentes" },
             { value: "10", label: "Exclusividades" },
-            { value: "0", label: "Concorrentes com isso" },
+            { value: "100%", label: "Integração Nativa" },
           ].map((stat, i) => (
             <div key={i} className="text-center">
               <p className="text-2xl font-bold text-primary">{stat.value}</p>
