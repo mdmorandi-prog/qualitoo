@@ -102,7 +102,7 @@ const allTabs = [
   { key: "projetos", label: "Projetos", icon: FolderKanban },
   { key: "analise_critica", label: "Análise Crítica", icon: ClipboardList },
   { key: "estrategia", label: "BSC / SWOT", icon: TrendingUp },
-  { key: "portal_fornecedor", label: "Portal Fornecedor", icon: ExternalLink },
+  { key: "portal_fornecedor", label: "Portal do Fornecedor", icon: ExternalLink },
   { key: "relatorios_agendados", label: "Relatórios Agendados", icon: Calendar },
   { key: "ajuda", label: "Central de Ajuda", icon: HelpCircle },
   { key: "grupos_acesso", label: "Grupos de Acesso", icon: Shield, adminOnly: true },
