@@ -90,7 +90,7 @@ const allTabs = [
   { key: "regulatorio", label: "Regulatório", icon: FileBarChart },
   { key: "processos", label: "Processos BPMN", icon: GitBranch },
   { key: "workflows", label: "Workflows", icon: Workflow },
-  { key: "portal", label: "Portal Colaborador", icon: UserCircle },
+  { key: "portal", label: "Portal do Colaborador", icon: UserCircle },
   { key: "metrologia", label: "Metrologia", icon: Ruler },
   { key: "mudancas", label: "Mudanças", icon: GitPullRequest },
   { key: "exportacao", label: "Exportação BI", icon: Database },
@@ -102,7 +102,7 @@ const allTabs = [
   { key: "projetos", label: "Projetos", icon: FolderKanban },
   { key: "analise_critica", label: "Análise Crítica", icon: ClipboardList },
   { key: "estrategia", label: "BSC / SWOT", icon: TrendingUp },
-  { key: "portal_fornecedor", label: "Portal Fornecedor", icon: ExternalLink },
+  { key: "portal_fornecedor", label: "Portal do Fornecedor", icon: ExternalLink },
   { key: "relatorios_agendados", label: "Relatórios Agendados", icon: Calendar },
   { key: "ajuda", label: "Central de Ajuda", icon: HelpCircle },
   { key: "grupos_acesso", label: "Grupos de Acesso", icon: Shield, adminOnly: true },
@@ -436,14 +436,14 @@ const DashboardSummary = ({ onNavigate }: { onNavigate: (tab: string) => void })
   const cards = [
     { label: "NCs Abertas", value: stats.ncs_open, sub: `${stats.ncs_critical} críticas`, color: "text-destructive", danger: stats.ncs_critical > 0, tab: "ncs" },
     { label: "Indicadores", value: stats.indicators_below, sub: `abaixo da meta (de ${stats.indicators_total})`, color: "text-warning", danger: stats.indicators_below > 0, tab: "indicadores" },
-    { label: "Docs a Vencer", value: stats.docs_expiring, sub: `próx. 30 dias (de ${stats.docs_total})`, color: "text-foreground", danger: stats.docs_expiring > 0, tab: "documentos" },
+    { label: "Documentos a Vencer", value: stats.docs_expiring, sub: `próx. 30 dias (de ${stats.docs_total})`, color: "text-foreground", danger: stats.docs_expiring > 0, tab: "documentos" },
     { label: "Auditorias", value: stats.audits_upcoming, sub: `próx. 7 dias (de ${stats.audits_total})`, color: "text-accent", danger: false, tab: "auditorias" },
     { label: "Planos Pendentes", value: stats.plans_pending, sub: `de ${stats.plans_total} total`, color: "text-warning", danger: stats.plans_pending > 5, tab: "planos" },
     { label: "Riscos Críticos", value: stats.risks_critical, sub: `de ${stats.risks_total} mapeados`, color: "text-destructive", danger: stats.risks_critical > 0, tab: "riscos" },
     { label: "Treinamentos", value: stats.trainings_expiring, sub: `a vencer (de ${stats.trainings_total})`, color: "text-warning", danger: stats.trainings_expiring > 0, tab: "treinamentos" },
     { label: "Eventos Graves", value: stats.events_critical, sub: `sem investigação (de ${stats.events_total})`, color: "text-destructive", danger: stats.events_critical > 0, tab: "eventos" },
     { label: "CAPAs Abertas", value: stats.capas_open, sub: `de ${stats.capas_total} total`, color: "text-accent", danger: false, tab: "capa" },
-    { label: "Gaps Competência", value: stats.competencies_gaps, sub: "avaliações < nível 3", color: "text-warning", danger: stats.competencies_gaps > 0, tab: "competencias" },
+    { label: "Lacunas de Competência", value: stats.competencies_gaps, sub: "avaliações < nível 3", color: "text-warning", danger: stats.competencies_gaps > 0, tab: "competencias" },
   ];
 
   return (

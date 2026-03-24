@@ -35,7 +35,7 @@ const modules = [
   { key: "regulatorio", label: "Relatórios Regulatórios", icon: FileBarChart, keywords: "notivisa anvisa" },
   { key: "processos", label: "Processos BPMN", icon: GitBranch, keywords: "processo mapeamento fluxo" },
   { key: "workflows", label: "Workflows", icon: Workflow, keywords: "fluxo aprovação" },
-  { key: "portal", label: "Portal do Colaborador", icon: UserCircle, keywords: "colaborador portal" },
+  { key: "portal", label: "Portal do Colaborador", icon: UserCircle, keywords: "colaborador portal funcionário" },
   { key: "metrologia", label: "Metrologia", icon: Ruler, keywords: "calibração equipamento" },
   { key: "mudancas", label: "Gestão de Mudanças", icon: GitPullRequest, keywords: "mudança change" },
   { key: "exportacao", label: "Exportação BI", icon: Database, keywords: "exportar csv json bi" },
