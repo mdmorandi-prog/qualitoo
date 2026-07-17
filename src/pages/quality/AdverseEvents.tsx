@@ -19,6 +19,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { SectorSelect } from "@/components/SectorSelect";
 
 type EventSeverity = "leve" | "moderado" | "grave" | "sentinela";
 type EventType = "evento_adverso" | "near_miss" | "incidente" | "queixa_tecnica";
