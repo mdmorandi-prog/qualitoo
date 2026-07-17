@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 const MODULE_OPTIONS: { key: string; label: string; group: string }[] = [
   // Visão geral
   { key: "resumo", label: "Resumo Executivo", group: "Visão Geral" },
+  { key: "meu_dashboard", label: "Meu Dashboard", group: "Visão Geral" },
   { key: "indicadores", label: "Indicadores", group: "Visão Geral" },
   // Qualidade
   { key: "ncs", label: "Não Conformidades", group: "Qualidade" },
@@ -22,13 +23,13 @@ const MODULE_OPTIONS: { key: string; label: string; group: string }[] = [
   { key: "causa_raiz", label: "Causa Raiz", group: "Qualidade" },
   { key: "auditorias", label: "Auditorias", group: "Qualidade" },
   { key: "eventos", label: "Eventos Adversos", group: "Qualidade" },
-  { key: "satisfacao", label: "Pesquisa de Satisfação", group: "Qualidade" },
+  { key: "pesquisas", label: "Pesquisa de Satisfação", group: "Qualidade" },
   // Riscos & Compliance
   { key: "riscos", label: "Gestão de Riscos", group: "Riscos & Compliance" },
   { key: "fmea", label: "FMEA", group: "Riscos & Compliance" },
   { key: "mudancas", label: "Gestão de Mudanças", group: "Riscos & Compliance" },
   { key: "lgpd", label: "LGPD", group: "Riscos & Compliance" },
-  { key: "relatorios_regulatorios", label: "Relatórios Regulatórios", group: "Riscos & Compliance" },
+  { key: "regulatorio", label: "Relatórios Regulatórios", group: "Riscos & Compliance" },
   // Documentos
   { key: "documentos", label: "Documentos", group: "Documentos" },
   { key: "atas", label: "Atas de Reunião", group: "Documentos" },
@@ -37,28 +38,30 @@ const MODULE_OPTIONS: { key: string; label: string; group: string }[] = [
   { key: "treinamentos", label: "Treinamentos", group: "Pessoas" },
   { key: "competencias", label: "Matriz de Competências", group: "Pessoas" },
   // Processos & Projetos
-  { key: "bpmn", label: "Mapeamento de Processos (BPMN)", group: "Processos & Projetos" },
+  { key: "processos", label: "Mapeamento de Processos (BPMN)", group: "Processos & Projetos" },
   { key: "projetos", label: "Projetos", group: "Processos & Projetos" },
-  { key: "planejamento", label: "Planejamento Estratégico", group: "Processos & Projetos" },
-  { key: "revisao_gestao", label: "Análise Crítica da Direção", group: "Processos & Projetos" },
+  { key: "estrategia", label: "Planejamento Estratégico (BSC/SWOT)", group: "Processos & Projetos" },
+  { key: "analise_critica", label: "Análise Crítica da Direção", group: "Processos & Projetos" },
   // Fornecedores & Ativos
   { key: "fornecedores", label: "Fornecedores", group: "Fornecedores & Ativos" },
   { key: "portal_fornecedor", label: "Portal do Fornecedor", group: "Fornecedores & Ativos" },
   { key: "metrologia", label: "Metrologia / Calibrações", group: "Fornecedores & Ativos" },
   // Portais
-  { key: "portal_colaborador", label: "Portal do Colaborador", group: "Portais" },
+  { key: "portal", label: "Portal do Colaborador", group: "Portais" },
   // Dados & Relatórios
   { key: "relatorios_agendados", label: "Relatórios Agendados", group: "Dados & Relatórios" },
-  { key: "exportacao", label: "Exportação de Dados", group: "Dados & Relatórios" },
+  { key: "exportacao", label: "Exportação de Dados (BI)", group: "Dados & Relatórios" },
   { key: "importacao", label: "Importação em Massa", group: "Dados & Relatórios" },
-  { key: "query_builder", label: "Query Builder", group: "Dados & Relatórios" },
+  { key: "consultas", label: "Query Builder / Consultas", group: "Dados & Relatórios" },
   // Administração
   { key: "usuarios", label: "Gerenciamento de Usuários", group: "Administração" },
   { key: "grupos_acesso", label: "Grupos de Acesso", group: "Administração" },
-  { key: "workflow", label: "Configuração de Workflow", group: "Administração" },
+  { key: "workflows", label: "Configuração de Workflow", group: "Administração" },
+  { key: "auditoria_global", label: "Log de Auditoria", group: "Administração" },
   { key: "configuracoes", label: "Configurações do Sistema", group: "Administração" },
   { key: "ajuda", label: "Central de Ajuda", group: "Administração" },
 ];
+
 
 const MODULE_GROUPS = Array.from(new Set(MODULE_OPTIONS.map(m => m.group)));
 
