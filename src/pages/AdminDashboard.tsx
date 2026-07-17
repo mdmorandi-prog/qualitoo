@@ -139,7 +139,8 @@ const AdminDashboard = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [allowedModules, setAllowedModules] = useState<string[] | null>(null);
 
-  // Fetch module access for non-admin users
+  // Fetch module access for non-admin users. Refetches on tab change so admins updating
+  // permissions in another tab see effects when they navigate back.
   useEffect(() => {
     if (!user || isAdmin) {
       setAllowedModules(null); // Admin sees all
@@ -147,23 +148,26 @@ const AdminDashboard = () => {
     }
     supabase
       .from("user_module_access")
-      .select("module_key")
+      .select("module_key, can_access")
       .eq("user_id", user.id)
-      .eq("can_access", true)
       .then(({ data }) => {
+        // If there is ANY row for this user, treat it as an explicit permission set —
+        // even an empty allow list means "user was configured with zero modules".
+        // Only when the user has NO row at all do we treat as "not configured = show all".
         if (data && data.length > 0) {
-          setAllowedModules(data.map((d: any) => d.module_key));
+          setAllowedModules(data.filter((d: any) => d.can_access).map((d: any) => d.module_key));
         } else {
-          setAllowedModules(null); // No restrictions configured = show all
+          setAllowedModules(null);
         }
       });
-  }, [user, isAdmin]);
+  }, [user, isAdmin, activeTab]);
 
   // Filter tabs based on access
   const tabs = allTabs.filter(t => {
     if ("adminOnly" in t && t.adminOnly && !isAdmin) return false;
-    if (isAdmin || !allowedModules) return true;
+    if (isAdmin) return true;
     if (t.key === "resumo") return true; // Always show summary
+    if (allowedModules === null) return true; // No row configured = unrestricted
     return allowedModules.includes(t.key);
   });
 
