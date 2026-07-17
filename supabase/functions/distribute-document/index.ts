@@ -1,6 +1,14 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { z } from "https://deno.land/x/zod@v3.23.8/mod.ts";
 import { requireAuth, corsHeaders, AuthError } from "../_shared/auth-helper.ts";
+
+const BodySchema = z.object({
+  documentId: z.string().uuid(),
+  documentTitle: z.string().min(1).max(300),
+  documentSector: z.string().max(120).optional().nullable(),
+  documentCode: z.string().max(60).optional().nullable(),
+});
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
