@@ -41,6 +41,8 @@ interface GroupMember {
 }
 
 const AccessGroupManagement = () => {
+  const { sectors: dynamicSectors } = useSectors(true);
+  const AVAILABLE_SECTORS = dynamicSectors.map(s => s.name);
   const [groups, setGroups] = useState<AccessGroup[]>([]);
   const [users, setUsers] = useState<{ id: string; username: string; display_name: string }[]>([]);
   const [loading, setLoading] = useState(true);
