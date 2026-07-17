@@ -190,7 +190,7 @@ const UserManagement = () => {
           <DialogTrigger asChild>
             <Button className="gap-2"><UserPlus className="h-4 w-4" /> Novo Usuário</Button>
           </DialogTrigger>
-          <DialogContent className="max-h-[90vh] overflow-auto sm:max-w-lg">
+          <DialogContent className="max-h-[90vh] overflow-auto sm:max-w-3xl">
             <DialogHeader>
               <DialogTitle>Cadastrar Novo Usuário</DialogTitle>
             </DialogHeader>
@@ -229,13 +229,27 @@ const UserManagement = () => {
               </div>
 
               <div>
-                <Label className="text-xs font-semibold">Módulos Permitidos</Label>
-                <div className="mt-2 grid grid-cols-2 gap-2">
-                  {MODULE_OPTIONS.map(m => (
-                    <label key={m.key} className="flex items-center gap-2 rounded-md border p-2 text-sm hover:bg-secondary/50 cursor-pointer">
-                      <Checkbox checked={newModules.includes(m.key)} onCheckedChange={() => toggleNewModule(m.key)} />
-                      {m.label}
-                    </label>
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-semibold">Módulos Permitidos</Label>
+                  <div className="flex gap-2">
+                    <button type="button" onClick={() => setNewModules(MODULE_OPTIONS.map(m => m.key))} className="text-[10px] text-primary hover:underline">Marcar todos</button>
+                    <span className="text-[10px] text-muted-foreground">|</span>
+                    <button type="button" onClick={() => setNewModules([])} className="text-[10px] text-muted-foreground hover:underline">Limpar</button>
+                  </div>
+                </div>
+                <div className="mt-2 max-h-[45vh] space-y-3 overflow-y-auto rounded-md border p-3">
+                  {MODULE_GROUPS.map(group => (
+                    <div key={group}>
+                      <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{group}</p>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        {MODULE_OPTIONS.filter(m => m.group === group).map(m => (
+                          <label key={m.key} className="flex items-center gap-2 rounded-md border p-2 text-xs hover:bg-secondary/50 cursor-pointer">
+                            <Checkbox checked={newModules.includes(m.key)} onCheckedChange={() => toggleNewModule(m.key)} />
+                            {m.label}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
                   ))}
                 </div>
               </div>
