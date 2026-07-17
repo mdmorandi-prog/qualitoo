@@ -297,6 +297,7 @@ const UserManagement = () => {
                     </Select>
                   </TableCell>
                   <TableCell>
+                    {editingModules === u.id ? (
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
                           <button type="button" onClick={() => setSelectedModules(MODULE_OPTIONS.map(m => m.key))} className="text-[10px] text-primary hover:underline">Marcar todos</button>
@@ -314,6 +315,10 @@ const UserManagement = () => {
                                       onCheckedChange={() => toggleSelectedModule(m.key)}
                                     />
                                     {m.label}
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
                           ))}
                         </div>
                         <Button size="sm" className="gap-1" onClick={() => handleSaveModules(u.id)}>
