@@ -9,7 +9,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import TwoFactorSetup from "@/components/auth/TwoFactorSetup";
 import SectorManagement from "@/components/settings/SectorManagement";
-import { Card as SectorCard } from "@/components/ui/card";
 
 const SystemSettings = () => {
   const { user, hasMfa } = useAuth();
