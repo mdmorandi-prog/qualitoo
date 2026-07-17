@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import TwoFactorSetup from "@/components/auth/TwoFactorSetup";
+import SectorManagement from "@/components/settings/SectorManagement";
 
 const SystemSettings = () => {
   const { user, hasMfa } = useAuth();
@@ -152,6 +153,12 @@ const SystemSettings = () => {
               Configurar 2FA
             </Button>
           )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="pt-6">
+          <SectorManagement />
         </CardContent>
       </Card>
     </div>

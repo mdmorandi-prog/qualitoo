@@ -19,6 +19,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { SectorSelect } from "@/components/SectorSelect";
 
 type EventSeverity = "leve" | "moderado" | "grave" | "sentinela";
 type EventType = "evento_adverso" | "near_miss" | "incidente" | "queixa_tecnica";
@@ -202,7 +203,7 @@ const AdverseEvents = () => {
                 </div>
                 <div className="grid gap-2">
                   <Label>Setor</Label>
-                  <Input value={form.sector} onChange={e => setForm(f => ({ ...f, sector: e.target.value }))} placeholder="Ex: UTI, Centro Cirúrgico" />
+                  <SectorSelect value={form.sector} onChange={(v) => setForm(f => ({ ...f, sector: v }))} />
                 </div>
               </div>
               <div className="grid gap-2">

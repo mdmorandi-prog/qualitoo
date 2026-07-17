@@ -2470,6 +2470,54 @@ export type Database = {
         }
         Relationships: []
       }
+      sectors: {
+        Row: {
+          code: string | null
+          color: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          grid_col: number | null
+          grid_row: number | null
+          icon: string | null
+          id: string
+          is_active: boolean
+          name: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          code?: string | null
+          color?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          grid_col?: number | null
+          grid_row?: number | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          code?: string | null
+          color?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          grid_col?: number | null
+          grid_row?: number | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       signature_audit_log: {
         Row: {
           action: string
