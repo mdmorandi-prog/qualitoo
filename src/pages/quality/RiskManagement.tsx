@@ -164,7 +164,45 @@ const RiskManagement = () => {
 
       {/* Interactive Risk Heatmap */}
       <div className="rounded-xl border bg-card p-5 shadow-[var(--card-shadow)]">
-        <h3 className="mb-4 text-sm font-bold text-foreground">Matriz de Riscos — Clique para ver detalhes</h3>
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h3 className="text-sm font-bold text-foreground">
+              Matriz de Riscos {selectedSector === ALL_SECTORS ? "— Visão Institucional" : `— Setor: ${selectedSector}`}
+            </h3>
+            <p className="text-[11px] text-muted-foreground">
+              Clique em uma célula para ver os riscos ou registrar um novo naquele nível.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Label className="text-xs text-muted-foreground whitespace-nowrap">Visualizar por setor:</Label>
+            <Select value={selectedSector} onValueChange={setSelectedSector}>
+              <SelectTrigger className="h-9 w-56"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ALL_SECTORS}>Todos os setores (Institucional)</SelectItem>
+                {sectorsInUse.map(s => (
+                  <SelectItem key={s} value={s}>{s}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {selectedSector !== ALL_SECTORS && (
+          <div className="mb-3 grid gap-2 sm:grid-cols-4">
+            {[
+              { label: "Total no setor", value: matrixRisks.length, color: "text-foreground" },
+              { label: "Críticos", value: matrixRisks.filter(r => (r.risk_level ?? 0) >= 15).length, color: "text-destructive" },
+              { label: "Altos", value: matrixRisks.filter(r => (r.risk_level ?? 0) >= 10 && (r.risk_level ?? 0) < 15).length, color: "text-warning" },
+              { label: "Tratados", value: matrixRisks.filter(r => r.status === "tratado").length, color: "text-safe" },
+            ].map((s, i) => (
+              <div key={i} className="rounded-lg border bg-secondary/30 p-2 text-center">
+                <p className="text-[10px] text-muted-foreground">{s.label}</p>
+                <p className={`text-lg font-bold ${s.color}`}>{s.value}</p>
+              </div>
+            ))}
+          </div>
+        )}
+
         <div className="overflow-x-auto">
           <div className="min-w-[400px]">
             {/* Header row */}
@@ -190,16 +228,21 @@ const RiskManagement = () => {
                 </div>
                 {[1,2,3,4,5].map(i => {
                   const level = p * i;
-                  const count = risks.filter(r => r.probability === p && r.impact === i).length;
+                  const count = matrixRisks.filter(r => r.probability === p && r.impact === i).length;
                   return (
                     <button
                       key={`${p}-${i}`}
                       className={`flex flex-col items-center justify-center rounded-lg py-3 text-xs font-bold transition-all ${riskBg(level)} ${count > 0 ? "ring-2 ring-foreground/10 shadow-md" : ""}`}
-                      onClick={() => { if (count > 0) { setSelectedCell({ p, i }); setCellDialogOpen(true); } }}
-                      title={`${probLabels[p-1]} × ${impactLabels[i-1]} = ${level}`}
+                      onClick={() => {
+                        if (count > 0) { setSelectedCell({ p, i }); setCellDialogOpen(true); }
+                        else { openNewRiskForCell(p, i); }
+                      }}
+                      title={`${probLabels[p-1]} × ${impactLabels[i-1]} = ${level}${count === 0 ? " — clique para registrar" : ""}`}
                     >
                       <span className="text-lg leading-none">{level}</span>
-                      {count > 0 && <span className="mt-0.5 text-[10px] opacity-80">{count} risco{count > 1 ? "s" : ""}</span>}
+                      {count > 0
+                        ? <span className="mt-0.5 text-[10px] opacity-80">{count} risco{count > 1 ? "s" : ""}</span>
+                        : <span className="mt-0.5 text-[10px] opacity-60">+ novo</span>}
                     </button>
                   );
                 })}
