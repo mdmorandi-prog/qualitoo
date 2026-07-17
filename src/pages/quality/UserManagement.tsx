@@ -11,21 +11,56 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-const MODULE_OPTIONS = [
-  { key: "resumo", label: "Resumo Executivo" },
-  { key: "ncs", label: "Não Conformidades" },
-  { key: "indicadores", label: "Indicadores" },
-  { key: "documentos", label: "Documentos" },
-  { key: "auditorias", label: "Auditorias" },
-  { key: "planos", label: "Planos de Ação" },
-  { key: "riscos", label: "Riscos" },
-  { key: "treinamentos", label: "Treinamentos" },
-  { key: "atas", label: "Atas" },
-  { key: "eventos", label: "Eventos Adversos" },
-  { key: "capa", label: "CAPA" },
-  { key: "causa_raiz", label: "Causa Raiz" },
-  { key: "competencias", label: "Competências" },
+const MODULE_OPTIONS: { key: string; label: string; group: string }[] = [
+  // Visão geral
+  { key: "resumo", label: "Resumo Executivo", group: "Visão Geral" },
+  { key: "indicadores", label: "Indicadores", group: "Visão Geral" },
+  // Qualidade
+  { key: "ncs", label: "Não Conformidades", group: "Qualidade" },
+  { key: "capa", label: "CAPA", group: "Qualidade" },
+  { key: "planos", label: "Planos de Ação", group: "Qualidade" },
+  { key: "causa_raiz", label: "Causa Raiz", group: "Qualidade" },
+  { key: "auditorias", label: "Auditorias", group: "Qualidade" },
+  { key: "eventos", label: "Eventos Adversos", group: "Qualidade" },
+  { key: "satisfacao", label: "Pesquisa de Satisfação", group: "Qualidade" },
+  // Riscos & Compliance
+  { key: "riscos", label: "Gestão de Riscos", group: "Riscos & Compliance" },
+  { key: "fmea", label: "FMEA", group: "Riscos & Compliance" },
+  { key: "mudancas", label: "Gestão de Mudanças", group: "Riscos & Compliance" },
+  { key: "lgpd", label: "LGPD", group: "Riscos & Compliance" },
+  { key: "relatorios_regulatorios", label: "Relatórios Regulatórios", group: "Riscos & Compliance" },
+  // Documentos
+  { key: "documentos", label: "Documentos", group: "Documentos" },
+  { key: "atas", label: "Atas de Reunião", group: "Documentos" },
+  { key: "contratos", label: "Contratos", group: "Documentos" },
+  // Pessoas
+  { key: "treinamentos", label: "Treinamentos", group: "Pessoas" },
+  { key: "competencias", label: "Matriz de Competências", group: "Pessoas" },
+  // Processos & Projetos
+  { key: "bpmn", label: "Mapeamento de Processos (BPMN)", group: "Processos & Projetos" },
+  { key: "projetos", label: "Projetos", group: "Processos & Projetos" },
+  { key: "planejamento", label: "Planejamento Estratégico", group: "Processos & Projetos" },
+  { key: "revisao_gestao", label: "Análise Crítica da Direção", group: "Processos & Projetos" },
+  // Fornecedores & Ativos
+  { key: "fornecedores", label: "Fornecedores", group: "Fornecedores & Ativos" },
+  { key: "portal_fornecedor", label: "Portal do Fornecedor", group: "Fornecedores & Ativos" },
+  { key: "metrologia", label: "Metrologia / Calibrações", group: "Fornecedores & Ativos" },
+  // Portais
+  { key: "portal_colaborador", label: "Portal do Colaborador", group: "Portais" },
+  // Dados & Relatórios
+  { key: "relatorios_agendados", label: "Relatórios Agendados", group: "Dados & Relatórios" },
+  { key: "exportacao", label: "Exportação de Dados", group: "Dados & Relatórios" },
+  { key: "importacao", label: "Importação em Massa", group: "Dados & Relatórios" },
+  { key: "query_builder", label: "Query Builder", group: "Dados & Relatórios" },
+  // Administração
+  { key: "usuarios", label: "Gerenciamento de Usuários", group: "Administração" },
+  { key: "grupos_acesso", label: "Grupos de Acesso", group: "Administração" },
+  { key: "workflow", label: "Configuração de Workflow", group: "Administração" },
+  { key: "configuracoes", label: "Configurações do Sistema", group: "Administração" },
+  { key: "ajuda", label: "Central de Ajuda", group: "Administração" },
 ];
+
+const MODULE_GROUPS = Array.from(new Set(MODULE_OPTIONS.map(m => m.group)));
 
 interface UserData {
   id: string;
@@ -155,7 +190,7 @@ const UserManagement = () => {
           <DialogTrigger asChild>
             <Button className="gap-2"><UserPlus className="h-4 w-4" /> Novo Usuário</Button>
           </DialogTrigger>
-          <DialogContent className="max-h-[90vh] overflow-auto sm:max-w-lg">
+          <DialogContent className="max-h-[90vh] overflow-auto sm:max-w-3xl">
             <DialogHeader>
               <DialogTitle>Cadastrar Novo Usuário</DialogTitle>
             </DialogHeader>
@@ -194,13 +229,27 @@ const UserManagement = () => {
               </div>
 
               <div>
-                <Label className="text-xs font-semibold">Módulos Permitidos</Label>
-                <div className="mt-2 grid grid-cols-2 gap-2">
-                  {MODULE_OPTIONS.map(m => (
-                    <label key={m.key} className="flex items-center gap-2 rounded-md border p-2 text-sm hover:bg-secondary/50 cursor-pointer">
-                      <Checkbox checked={newModules.includes(m.key)} onCheckedChange={() => toggleNewModule(m.key)} />
-                      {m.label}
-                    </label>
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-semibold">Módulos Permitidos</Label>
+                  <div className="flex gap-2">
+                    <button type="button" onClick={() => setNewModules(MODULE_OPTIONS.map(m => m.key))} className="text-[10px] text-primary hover:underline">Marcar todos</button>
+                    <span className="text-[10px] text-muted-foreground">|</span>
+                    <button type="button" onClick={() => setNewModules([])} className="text-[10px] text-muted-foreground hover:underline">Limpar</button>
+                  </div>
+                </div>
+                <div className="mt-2 max-h-[45vh] space-y-3 overflow-y-auto rounded-md border p-3">
+                  {MODULE_GROUPS.map(group => (
+                    <div key={group}>
+                      <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{group}</p>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        {MODULE_OPTIONS.filter(m => m.group === group).map(m => (
+                          <label key={m.key} className="flex items-center gap-2 rounded-md border p-2 text-xs hover:bg-secondary/50 cursor-pointer">
+                            <Checkbox checked={newModules.includes(m.key)} onCheckedChange={() => toggleNewModule(m.key)} />
+                            {m.label}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -250,15 +299,26 @@ const UserManagement = () => {
                   <TableCell>
                     {editingModules === u.id ? (
                       <div className="space-y-2">
-                        <div className="grid grid-cols-2 gap-1">
-                          {MODULE_OPTIONS.map(m => (
-                            <label key={m.key} className="flex items-center gap-1.5 text-xs cursor-pointer">
-                              <Checkbox
-                                checked={selectedModules.includes(m.key)}
-                                onCheckedChange={() => toggleSelectedModule(m.key)}
-                              />
-                              {m.label}
-                            </label>
+                        <div className="flex items-center gap-2">
+                          <button type="button" onClick={() => setSelectedModules(MODULE_OPTIONS.map(m => m.key))} className="text-[10px] text-primary hover:underline">Marcar todos</button>
+                          <button type="button" onClick={() => setSelectedModules([])} className="text-[10px] text-muted-foreground hover:underline">Limpar</button>
+                        </div>
+                        <div className="max-h-[280px] space-y-2 overflow-y-auto rounded-md border p-2">
+                          {MODULE_GROUPS.map(group => (
+                            <div key={group}>
+                              <p className="mb-1 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">{group}</p>
+                              <div className="grid grid-cols-2 gap-1">
+                                {MODULE_OPTIONS.filter(m => m.group === group).map(m => (
+                                  <label key={m.key} className="flex items-center gap-1.5 text-xs cursor-pointer">
+                                    <Checkbox
+                                      checked={selectedModules.includes(m.key)}
+                                      onCheckedChange={() => toggleSelectedModule(m.key)}
+                                    />
+                                    {m.label}
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
                           ))}
                         </div>
                         <Button size="sm" className="gap-1" onClick={() => handleSaveModules(u.id)}>
