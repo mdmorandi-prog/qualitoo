@@ -228,7 +228,7 @@ const NonConformities = () => {
                   </div>
                   <div className="grid gap-2"><Label>Prazo</Label><Input type="date" value={form.deadline} onChange={e => setForm(f => ({ ...f, deadline: e.target.value }))} /></div>
                 </div>
-                <div className="grid gap-2"><Label>Setor</Label><Input value={form.sector} onChange={e => setForm(f => ({ ...f, sector: e.target.value }))} /></div>
+                <div className="grid gap-2"><Label>Setor</Label><SectorSelect value={form.sector} onChange={(v) => setForm(f => ({ ...f, sector: v }))} /></div>
                 <div className="grid gap-2"><Label>Descrição *</Label><Textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} className="min-h-[100px]" /></div>
                 <AiClassifyButton title={form.title} description={form.description} sector={form.sector} onApplySeverity={(sev) => setForm(f => ({ ...f, severity: sev as NcSeverity }))} />
                 <Button onClick={handleCreate} className="w-full">Registrar NC</Button>

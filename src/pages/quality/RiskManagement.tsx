@@ -16,6 +16,8 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { SectorSelect } from "@/components/SectorSelect";
+import { useSectors } from "@/hooks/useSectors";
 
 interface Risk {
   id: string; title: string; description: string | null; category: string | null;
@@ -148,7 +150,7 @@ const RiskManagement = () => {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2"><Label>Categoria</Label><Input value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))} placeholder="Operacional, Clínico..." /></div>
-                <div className="grid gap-2"><Label>Setor</Label><Input value={form.sector} onChange={e => setForm(f => ({ ...f, sector: e.target.value }))} /></div>
+                <div className="grid gap-2"><Label>Setor</Label><SectorSelect value={form.sector} onChange={(v) => setForm(f => ({ ...f, sector: v }))} /></div>
               </div>
               <div className="grid gap-2"><Label>Descrição</Label><Textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} /></div>
               <div className="grid gap-2"><Label>Controles Atuais</Label><Textarea value={form.current_controls} onChange={e => setForm(f => ({ ...f, current_controls: e.target.value }))} /></div>
@@ -175,15 +177,14 @@ const RiskManagement = () => {
           </div>
           <div className="flex items-center gap-2">
             <Label className="text-xs text-muted-foreground whitespace-nowrap">Visualizar por setor:</Label>
-            <Select value={selectedSector} onValueChange={setSelectedSector}>
-              <SelectTrigger className="h-9 w-56"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ALL_SECTORS}>Todos os setores (Institucional)</SelectItem>
-                {sectorsInUse.map(s => (
-                  <SelectItem key={s} value={s}>{s}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <SectorSelect
+              value={selectedSector}
+              onChange={setSelectedSector}
+              includeAll
+              allValue={ALL_SECTORS}
+              allLabel="Todos os setores (Institucional)"
+              className="h-9 w-56"
+            />
           </div>
         </div>
 

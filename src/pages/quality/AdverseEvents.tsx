@@ -202,7 +202,7 @@ const AdverseEvents = () => {
                 </div>
                 <div className="grid gap-2">
                   <Label>Setor</Label>
-                  <Input value={form.sector} onChange={e => setForm(f => ({ ...f, sector: e.target.value }))} placeholder="Ex: UTI, Centro Cirúrgico" />
+                  <SectorSelect value={form.sector} onChange={(v) => setForm(f => ({ ...f, sector: v }))} />
                 </div>
               </div>
               <div className="grid gap-2">
