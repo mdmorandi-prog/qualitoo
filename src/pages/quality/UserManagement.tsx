@@ -297,17 +297,23 @@ const UserManagement = () => {
                     </Select>
                   </TableCell>
                   <TableCell>
-                    {editingModules === u.id ? (
                       <div className="space-y-2">
-                        <div className="grid grid-cols-2 gap-1">
-                          {MODULE_OPTIONS.map(m => (
-                            <label key={m.key} className="flex items-center gap-1.5 text-xs cursor-pointer">
-                              <Checkbox
-                                checked={selectedModules.includes(m.key)}
-                                onCheckedChange={() => toggleSelectedModule(m.key)}
-                              />
-                              {m.label}
-                            </label>
+                        <div className="flex items-center gap-2">
+                          <button type="button" onClick={() => setSelectedModules(MODULE_OPTIONS.map(m => m.key))} className="text-[10px] text-primary hover:underline">Marcar todos</button>
+                          <button type="button" onClick={() => setSelectedModules([])} className="text-[10px] text-muted-foreground hover:underline">Limpar</button>
+                        </div>
+                        <div className="max-h-[280px] space-y-2 overflow-y-auto rounded-md border p-2">
+                          {MODULE_GROUPS.map(group => (
+                            <div key={group}>
+                              <p className="mb-1 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">{group}</p>
+                              <div className="grid grid-cols-2 gap-1">
+                                {MODULE_OPTIONS.filter(m => m.group === group).map(m => (
+                                  <label key={m.key} className="flex items-center gap-1.5 text-xs cursor-pointer">
+                                    <Checkbox
+                                      checked={selectedModules.includes(m.key)}
+                                      onCheckedChange={() => toggleSelectedModule(m.key)}
+                                    />
+                                    {m.label}
                           ))}
                         </div>
                         <Button size="sm" className="gap-1" onClick={() => handleSaveModules(u.id)}>
