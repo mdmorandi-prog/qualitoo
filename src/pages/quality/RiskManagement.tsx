@@ -48,6 +48,8 @@ const riskLabel = (level: number) => {
 const probLabels = ["Raro", "Improvável", "Possível", "Provável", "Quase Certo"];
 const impactLabels = ["Insignificante", "Pequeno", "Moderado", "Grande", "Catastrófico"];
 
+const ALL_SECTORS = "__all__";
+
 const RiskManagement = () => {
   const { user } = useAuth();
   const [risks, setRisks] = useState<Risk[]>([]);
@@ -56,6 +58,7 @@ const RiskManagement = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedCell, setSelectedCell] = useState<{ p: number; i: number } | null>(null);
   const [cellDialogOpen, setCellDialogOpen] = useState(false);
+  const [selectedSector, setSelectedSector] = useState<string>(ALL_SECTORS);
 
   const [form, setForm] = useState({
     title: "", description: "", category: "", sector: "", probability: "3", impact: "3",
@@ -91,9 +94,27 @@ const RiskManagement = () => {
     else { toast.success("Atualizado"); fetchData(); }
   };
 
-  const filtered = risks.filter(r => !search || r.title.toLowerCase().includes(search.toLowerCase()));
+  // Sectors present in current data
+  const sectorsInUse = Array.from(new Set(risks.map(r => (r.sector || "").trim()).filter(Boolean))).sort();
 
-  const cellRisks = selectedCell ? risks.filter(r => r.probability === selectedCell.p && r.impact === selectedCell.i) : [];
+  // Risks visible in matrix (filtered by sector)
+  const matrixRisks = selectedSector === ALL_SECTORS
+    ? risks
+    : risks.filter(r => (r.sector || "").trim() === selectedSector);
+
+  const filtered = matrixRisks.filter(r => !search || r.title.toLowerCase().includes(search.toLowerCase()));
+
+  const cellRisks = selectedCell ? matrixRisks.filter(r => r.probability === selectedCell.p && r.impact === selectedCell.i) : [];
+
+  const openNewRiskForCell = (p: number, i: number) => {
+    setForm(f => ({
+      ...f,
+      probability: String(p),
+      impact: String(i),
+      sector: selectedSector === ALL_SECTORS ? f.sector : selectedSector,
+    }));
+    setDialogOpen(true);
+  };
 
   return (
     <div className="space-y-6">
