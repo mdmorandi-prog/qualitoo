@@ -28,6 +28,7 @@ const heatGlow = (total: number, critical: number) => {
 };
 
 const SectorRiskHeatMap = () => {
+  const { sectors } = useSectors(true);
   const [sectorData, setSectorData] = useState<Record<string, SectorData>>({});
   const [loading, setLoading] = useState(true);
 
@@ -102,7 +103,8 @@ const SectorRiskHeatMap = () => {
         <div className="py-12 text-center text-sm text-muted-foreground">Carregando mapa...</div>
       ) : (
         <div className="grid grid-cols-4 gap-2">
-          {HOSPITAL_SECTORS_LAYOUT.map(({ name }) => {
+          {sectors.map((s) => {
+            const name = s.name;
             const d = findData(name);
             return (
               <Tooltip key={name}>
