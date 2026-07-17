@@ -13,15 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { logAuditEvent } from "@/lib/auditLog";
-
-const AVAILABLE_SECTORS = [
-  "Enfermagem", "Farmácia", "Nutrição", "Laboratório", "Radiologia",
-  "Fisioterapia", "Psicologia", "Serviço Social", "Centro Cirúrgico",
-  "UTI", "Pronto Socorro", "Internação", "Ambulatório",
-  "TI", "RH", "Financeiro", "Compras", "Jurídico", "Manutenção",
-  "Qualidade", "SESMT", "Hotelaria", "Faturamento", "Administração",
-  "Diretoria", "CCIH", "SAME", "Ouvidoria", "Marketing",
-];
+import { useSectors } from "@/hooks/useSectors";
 
 const PERMISSION_LABELS: Record<string, { label: string; color: string; description: string }> = {
   read: { label: "Leitura", color: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200", description: "Visualiza documentos e registros dos setores do grupo" },
