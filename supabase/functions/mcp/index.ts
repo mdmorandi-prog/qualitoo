@@ -25,7 +25,7 @@ var list_indicators_default = defineTool({
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async ({ limit }, ctx) => {
     if (!ctx.isAuthenticated()) return { content: [{ type: "text", text: "N\xE3o autenticado" }], isError: true };
-    const { data, error } = await client(ctx).from("indicators").select("*").order("created_at", { ascending: false }).limit(limit ?? 50);
+    const { data, error } = await client(ctx).from("quality_indicators").select("*").order("created_at", { ascending: false }).limit(limit ?? 50);
     if (error) return { content: [{ type: "text", text: error.message }], isError: true };
     return {
       content: [{ type: "text", text: JSON.stringify(data ?? [], null, 2) }],

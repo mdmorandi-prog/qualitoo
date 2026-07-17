@@ -20,7 +20,7 @@ export default defineTool({
   handler: async ({ limit }, ctx) => {
     if (!ctx.isAuthenticated()) return { content: [{ type: "text", text: "Não autenticado" }], isError: true };
     const { data, error } = await client(ctx)
-      .from("indicators")
+      .from("quality_indicators")
       .select("*")
       .order("created_at", { ascending: false })
       .limit(limit ?? 50);
