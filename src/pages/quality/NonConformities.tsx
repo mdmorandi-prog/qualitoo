@@ -19,6 +19,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { SectorSelect } from "@/components/SectorSelect";
 import { executeWorkflowRules } from "@/lib/workflowEngine";
 
 type NcSeverity = "baixa" | "media" | "alta" | "critica";
