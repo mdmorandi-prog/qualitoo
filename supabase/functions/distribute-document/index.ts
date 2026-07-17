@@ -1,6 +1,14 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { z } from "https://deno.land/x/zod@v3.23.8/mod.ts";
 import { requireAuth, corsHeaders, AuthError } from "../_shared/auth-helper.ts";
+
+const BodySchema = z.object({
+  documentId: z.string().uuid(),
+  documentTitle: z.string().min(1).max(300),
+  documentSector: z.string().max(120).optional().nullable(),
+  documentCode: z.string().max(60).optional().nullable(),
+});
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -14,14 +22,14 @@ serve(async (req) => {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    const { documentId, documentTitle, documentSector, documentCode } = await req.json();
-
-    if (!documentId || !documentTitle) {
-      return new Response(JSON.stringify({ error: "documentId and documentTitle are required" }), {
+    const parsed = BodySchema.safeParse(await req.json());
+    if (!parsed.success) {
+      return new Response(JSON.stringify({ error: parsed.error.flatten().fieldErrors }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    const { documentId, documentTitle, documentSector, documentCode } = parsed.data;
 
     const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 

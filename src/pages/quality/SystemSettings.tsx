@@ -76,56 +76,27 @@ const SystemSettings = () => {
             Integrações de Voz
           </CardTitle>
           <CardDescription>
-            Configure as chaves de API para serviços de transcrição por voz
+            Chaves de API são gerenciadas como segredos do projeto (não são armazenadas no banco de dados)
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="elevenlabs-key" className="text-sm font-medium">
-              ElevenLabs API Key
-            </Label>
-            <p className="text-xs text-muted-foreground">
-              Necessária para usar a transcrição premium (ElevenLabs STT) nas Atas de Reunião.
-              Obtenha sua chave em{" "}
-              <a
-                href="https://elevenlabs.io/app/settings/api-keys"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary underline"
-              >
-                elevenlabs.io
-              </a>
-            </p>
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <Input
-                  id="elevenlabs-key"
-                  type={showKey ? "text" : "password"}
-                  value={elevenLabsKey}
-                  onChange={(e) => setElevenLabsKey(e.target.value)}
-                  placeholder="sk_..."
-                  className="pr-10"
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 p-0"
-                  onClick={() => setShowKey(!showKey)}
-                >
-                  {showKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </Button>
-              </div>
-              <Button
-                onClick={() => saveSetting("elevenlabs_api_key", elevenLabsKey, "Chave da API ElevenLabs para transcrição STT")}
-                disabled={saving}
-                className="gap-2"
-              >
-                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                Salvar
-              </Button>
-            </div>
-          </div>
+        <CardContent className="space-y-2">
+          <p className="text-sm text-muted-foreground">
+            A chave <strong>ElevenLabs</strong> agora é configurada como segredo de backend
+            (variável de ambiente <code>ELEVENLABS_API_KEY</code>) e usada diretamente pelas Edge Functions.
+            Isso evita exposição em plaintext no banco de dados. Solicite ao administrador do projeto
+            para adicionar/rotacionar a chave via Configurações do Projeto → Segredos.
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Obtenha sua chave em{" "}
+            <a
+              href="https://elevenlabs.io/app/settings/api-keys"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary underline"
+            >
+              elevenlabs.io
+            </a>
+          </p>
         </CardContent>
       </Card>
 
