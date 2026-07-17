@@ -1,5 +1,13 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { z } from "https://deno.land/x/zod@v3.23.8/mod.ts";
+
+const BodySchema = z.object({
+  title: z.string().min(1).max(500),
+  description: z.string().min(1).max(5000),
+  severity: z.string().max(50).optional().nullable(),
+  sector: z.string().max(120).optional().nullable(),
+});
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
