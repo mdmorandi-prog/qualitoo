@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { AlertTriangle, ShieldAlert, TriangleAlert, Activity } from "lucide-react";
+import { AlertTriangle, ShieldAlert, TriangleAlert } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useSectors } from "@/hooks/useSectors";
 
 interface SectorData {
   sector: string;
@@ -11,25 +12,6 @@ interface SectorData {
   events: number;
   total: number;
 }
-
-const HOSPITAL_SECTORS_LAYOUT: { name: string; row: number; col: number; span?: number }[] = [
-  { name: "UTI", row: 0, col: 0 },
-  { name: "Centro Cirúrgico", row: 0, col: 1 },
-  { name: "Emergência", row: 0, col: 2 },
-  { name: "Farmácia", row: 0, col: 3 },
-  { name: "Enfermaria", row: 1, col: 0 },
-  { name: "Laboratório", row: 1, col: 1 },
-  { name: "Radiologia", row: 1, col: 2 },
-  { name: "Ambulatório", row: 1, col: 3 },
-  { name: "CME", row: 2, col: 0 },
-  { name: "Nutrição", row: 2, col: 1 },
-  { name: "Manutenção", row: 2, col: 2 },
-  { name: "TI", row: 2, col: 3 },
-  { name: "RH", row: 3, col: 0 },
-  { name: "Qualidade", row: 3, col: 1 },
-  { name: "Administração", row: 3, col: 2 },
-  { name: "SCIH", row: 3, col: 3 },
-];
 
 const heatColor = (total: number, critical: number) => {
   if (critical > 0 || total >= 8) return "bg-destructive/60 border-destructive/40 text-destructive-foreground";
