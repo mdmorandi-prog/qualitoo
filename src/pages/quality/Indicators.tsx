@@ -16,6 +16,9 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import ExportPdfButton from "@/components/ExportPdfButton";
+import { generateModuleReport } from "@/lib/pdfReport";
+import ControlChart from "@/components/spc/ControlChart";
 
 interface Indicator {
   id: string; name: string; description: string | null; unit: string;
@@ -102,8 +105,43 @@ const Indicators = () => {
           <h2 className="font-display text-2xl font-bold text-foreground">Indicadores de Qualidade</h2>
           <p className="text-sm text-muted-foreground">Monitoramento de KPIs e métricas de desempenho</p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild><Button className="gap-2"><Plus className="h-4 w-4" /> Novo Indicador</Button></DialogTrigger>
+        <div className="flex items-center gap-2">
+          <ExportPdfButton
+            onClick={() => {
+              const rows = indicators.map((ind) => {
+                const last = getLastValue(ind.id);
+                const trend = getTrend(ind.id, ind.target_value);
+                return {
+                  ...ind,
+                  last,
+                  trendLabel: trend === "up" ? "Na meta" : trend === "down" ? "Abaixo" : "Sem medição",
+                };
+              });
+              const inMeta = rows.filter((r) => r.trendLabel === "Na meta").length;
+              generateModuleReport({
+                title: "Indicadores de Qualidade",
+                subtitle: "Painel consolidado de KPIs monitorados",
+                filters: search ? `Busca: "${search}"` : "Todos os indicadores",
+                kpis: [
+                  { label: "Total", value: rows.length },
+                  { label: "Na meta", value: inMeta },
+                  { label: "Abaixo", value: rows.filter((r) => r.trendLabel === "Abaixo").length },
+                  { label: "Sem medição", value: rows.filter((r) => r.trendLabel === "Sem medição").length },
+                ],
+                columns: [
+                  { header: "Indicador", accessor: (r: any) => r.name },
+                  { header: "Setor", accessor: (r: any) => r.sector ?? "Geral" },
+                  { header: "Meta", accessor: (r: any) => `${r.target_value} ${r.unit}`, align: "right" },
+                  { header: "Último valor", accessor: (r: any) => (r.last !== null ? `${r.last} ${r.unit}` : "—"), align: "right" },
+                  { header: "Frequência", accessor: (r: any) => r.frequency },
+                  { header: "Status", accessor: (r: any) => r.trendLabel },
+                ],
+                rows,
+              });
+            }}
+          />
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild><Button className="gap-2"><Plus className="h-4 w-4" /> Novo Indicador</Button></DialogTrigger>
           <DialogContent className="sm:max-w-lg">
             <DialogHeader><DialogTitle className="font-display">Cadastrar Indicador</DialogTitle></DialogHeader>
             <div className="grid gap-4 py-4">
@@ -146,6 +184,7 @@ const Indicators = () => {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       <div className="relative"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar indicadores..." className="pl-10" /></div>
@@ -197,8 +236,30 @@ const Indicators = () => {
       </div>
 
       <Dialog open={measDialogOpen} onOpenChange={setMeasDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle className="font-display">Registrar Medição: {selectedInd?.name}</DialogTitle></DialogHeader>
+          {selectedInd && (() => {
+            const series = measurements
+              .filter(m => m.indicator_id === selectedInd.id)
+              .slice()
+              .sort((a, b) => a.period_date.localeCompare(b.period_date))
+              .map(m => ({
+                label: new Date(m.period_date).toLocaleDateString("pt-BR", { month: "short", year: "2-digit" }),
+                value: Number(m.value),
+              }));
+            return series.length >= 2 ? (
+              <div className="mb-4">
+                <ControlChart
+                  title="Gráfico de Controle (CEP)"
+                  description={`Evolução histórica de ${selectedInd.name}`}
+                  data={series}
+                  target={selectedInd.target_value}
+                  unit={selectedInd.unit}
+                  height={220}
+                />
+              </div>
+            ) : null;
+          })()}
           {selectedInd && (
             <div className="space-y-4">
               {measurements.filter(m => m.indicator_id === selectedInd.id).slice(0, 5).length > 0 && (

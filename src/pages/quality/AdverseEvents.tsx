@@ -20,6 +20,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { SectorSelect } from "@/components/SectorSelect";
+import ExportPdfButton from "@/components/ExportPdfButton";
+import { generateModuleReport, buildSpcSvg } from "@/lib/pdfReport";
+import ControlChart, { groupByMonth, computeSpcStats } from "@/components/spc/ControlChart";
 
 type EventSeverity = "leve" | "moderado" | "grave" | "sentinela";
 type EventType = "evento_adverso" | "near_miss" | "incidente" | "queixa_tecnica";
@@ -157,6 +160,36 @@ const AdverseEvents = () => {
           <h2 className="font-display text-2xl font-bold text-foreground">Eventos Adversos</h2>
           <p className="text-sm text-muted-foreground">Notificação e gestão de incidentes, near-misses e eventos sentinela</p>
         </div>
+        <div className="flex items-center gap-2">
+          <ExportPdfButton
+            onClick={() => {
+              const monthly = groupByMonth(filtered, (r: any) => r.created_at, 12);
+              const stats = computeSpcStats(monthly);
+              const chart = stats ? buildSpcSvg({ title: "Eventos por mês (CEP)", points: monthly, mean: stats.mean, ucl: stats.ucl, lcl: stats.lcl }) : "";
+              generateModuleReport({
+                title: "Relatório de Eventos Adversos",
+                subtitle: "Notificações, near-misses e eventos sentinela",
+                filters: `Severidade: ${filterSeverity}${search ? ` · Busca: "${search}"` : ""}`,
+                kpis: [
+                  { label: "Total", value: filtered.length },
+                  { label: "Graves/Sentinela abertos", value: filtered.filter((e: any) => (e.severity === "grave" || e.severity === "sentinela") && e.status !== "encerrado").length },
+                  { label: "Em investigação", value: filtered.filter((e: any) => e.status === "em_investigacao").length },
+                  { label: "Encerrados", value: filtered.filter((e: any) => e.status === "encerrado").length },
+                ],
+                columns: [
+                  { header: "Título", accessor: (r: any) => r.title },
+                  { header: "Tipo", accessor: (r: any) => r.event_type },
+                  { header: "Severidade", accessor: (r: any) => r.severity },
+                  { header: "Setor", accessor: (r: any) => r.sector ?? "—" },
+                  { header: "Status", accessor: (r: any) => r.status },
+                  { header: "Data", accessor: (r: any) => new Date(r.created_at).toLocaleDateString("pt-BR") },
+                ],
+                rows: filtered,
+                extraHtml: chart,
+                landscape: true,
+              });
+            }}
+          />
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button className="gap-2"><Plus className="h-4 w-4" /> Notificar Evento</Button>
@@ -236,6 +269,7 @@ const AdverseEvents = () => {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       {/* Filters */}
