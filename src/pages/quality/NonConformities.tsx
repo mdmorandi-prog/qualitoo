@@ -21,6 +21,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { SectorSelect } from "@/components/SectorSelect";
 import { executeWorkflowRules } from "@/lib/workflowEngine";
+import ExportPdfButton from "@/components/ExportPdfButton";
+import { generateModuleReport, buildSpcSvg } from "@/lib/pdfReport";
+import ControlChart, { groupByMonth, computeSpcStats } from "@/components/spc/ControlChart";
 
 type NcSeverity = "baixa" | "media" | "alta" | "critica";
 type NcStatus = "aberta" | "em_analise" | "plano_acao" | "em_execucao" | "verificacao" | "concluida";
