@@ -322,7 +322,8 @@ serve(async (req) => {
 
   // Auth: require scheduler secret header (used by pg_cron) OR admin JWT
   const provided = req.headers.get("x-scheduler-secret") ?? "";
-  const isCron = SCHEDULER_SECRET && provided === SCHEDULER_SECRET;
+  const token = await getSchedulerToken();
+  const isCron = token.length > 0 && provided === token;
 
   if (!isCron) {
     const authHeader = req.headers.get("Authorization");
