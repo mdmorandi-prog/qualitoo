@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useMemo } from "react";
 import DOMPurify from "dompurify";
-import { Plus, Search, Eye, Upload, FileUp, AlertTriangle, ArrowRight, CheckCircle2, FileText, Lock, FileSignature, Shield, ScrollText, Clock, XCircle, BookOpenCheck, FolderInput, History, LayoutTemplate, GitBranch, Pencil, Users } from "lucide-react";
+import { Plus, Search, Eye, Upload, FileUp, AlertTriangle, ArrowRight, CheckCircle2, FileText, Lock, FileSignature, Shield, ScrollText, Clock, XCircle, BookOpenCheck, FolderInput, History, LayoutTemplate, GitBranch, Pencil, Users, CalendarClock } from "lucide-react";
 import PdfWatermarkViewer from "@/components/documents/PdfWatermarkViewer";
 import SignatureDialog from "@/components/documents/SignatureDialog";
 import SignatureVerifier from "@/components/documents/SignatureVerifier";
