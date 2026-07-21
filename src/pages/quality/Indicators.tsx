@@ -105,8 +105,43 @@ const Indicators = () => {
           <h2 className="font-display text-2xl font-bold text-foreground">Indicadores de Qualidade</h2>
           <p className="text-sm text-muted-foreground">Monitoramento de KPIs e métricas de desempenho</p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild><Button className="gap-2"><Plus className="h-4 w-4" /> Novo Indicador</Button></DialogTrigger>
+        <div className="flex items-center gap-2">
+          <ExportPdfButton
+            onClick={() => {
+              const rows = indicators.map((ind) => {
+                const last = getLastValue(ind.id);
+                const trend = getTrend(ind.id, ind.target_value);
+                return {
+                  ...ind,
+                  last,
+                  trendLabel: trend === "up" ? "Na meta" : trend === "down" ? "Abaixo" : "Sem medição",
+                };
+              });
+              const inMeta = rows.filter((r) => r.trendLabel === "Na meta").length;
+              generateModuleReport({
+                title: "Indicadores de Qualidade",
+                subtitle: "Painel consolidado de KPIs monitorados",
+                filters: search ? `Busca: "${search}"` : "Todos os indicadores",
+                kpis: [
+                  { label: "Total", value: rows.length },
+                  { label: "Na meta", value: inMeta },
+                  { label: "Abaixo", value: rows.filter((r) => r.trendLabel === "Abaixo").length },
+                  { label: "Sem medição", value: rows.filter((r) => r.trendLabel === "Sem medição").length },
+                ],
+                columns: [
+                  { header: "Indicador", accessor: (r: any) => r.name },
+                  { header: "Setor", accessor: (r: any) => r.sector ?? "Geral" },
+                  { header: "Meta", accessor: (r: any) => `${r.target_value} ${r.unit}`, align: "right" },
+                  { header: "Último valor", accessor: (r: any) => (r.last !== null ? `${r.last} ${r.unit}` : "—"), align: "right" },
+                  { header: "Frequência", accessor: (r: any) => r.frequency },
+                  { header: "Status", accessor: (r: any) => r.trendLabel },
+                ],
+                rows,
+              });
+            }}
+          />
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild><Button className="gap-2"><Plus className="h-4 w-4" /> Novo Indicador</Button></DialogTrigger>
           <DialogContent className="sm:max-w-lg">
             <DialogHeader><DialogTitle className="font-display">Cadastrar Indicador</DialogTitle></DialogHeader>
             <div className="grid gap-4 py-4">
