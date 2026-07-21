@@ -332,7 +332,7 @@ Você possui conhecimento profundo sobre:
 Qualitoo possui os seguintes módulos integrados:
 1. **Não Conformidades** — Registro com Kanban, vinculação CAPA automática
 2. **Indicadores (KPIs)** — Compostos, tendências, alertas de meta
-3. **Controle de Documentos** — Pastas, versionamento, diff visual, assinatura SHA-256, workflows, permissões temporárias, busca Full-Text
+3. **Controle de Documentos** — Pastas, versionamento com diff visual, assinatura SHA-256, workflows, permissões temporárias, busca Full-Text, **Retenção & Descarte** (período em meses + base legal, Legal Hold para litígios/auditorias, descarte definitivo com método, motivo e trilha imutável em `document_disposal_log`)
 4. **Auditorias** — Planejamento, achados, **Checklists com pontuação por requisito e evidências** (fotos/vídeos/documentos), conformidade % por norma (ISO, ONA, JCI)
 5. **Planos de Ação (5W2H)** — Metodologia completa, **visualização Kanban com drag-and-drop**, rastreabilidade de origem
 6. **Gestão de Riscos** — Matriz 5×5, heat map, FMEA integrado
