@@ -160,8 +160,6 @@ const AdverseEvents = () => {
           <h2 className="font-display text-2xl font-bold text-foreground">Eventos Adversos</h2>
           <p className="text-sm text-muted-foreground">Notificação e gestão de incidentes, near-misses e eventos sentinela</p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
         <div className="flex items-center gap-2">
           <ExportPdfButton
             onClick={() => {
