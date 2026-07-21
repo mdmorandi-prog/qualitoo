@@ -8,6 +8,7 @@ import SignatureAuditLog from "@/components/documents/SignatureAuditLog";
 import DocumentSignatureBlock from "@/components/documents/DocumentSignatureBlock";
 import FolderTree from "@/components/documents/FolderTree";
 import DocumentVersionHistory from "@/components/documents/DocumentVersionHistory";
+import DocumentRetention from "@/components/documents/DocumentRetention";
 import DocumentTemplateSelector from "@/components/documents/DocumentTemplateSelector";
 import DocumentPermissions from "@/components/documents/DocumentPermissions";
 import DocumentWorkflowSteps from "@/components/documents/DocumentWorkflowSteps";
