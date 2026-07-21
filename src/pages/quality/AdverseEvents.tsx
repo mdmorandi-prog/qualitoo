@@ -162,6 +162,38 @@ const AdverseEvents = () => {
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
+        <div className="flex items-center gap-2">
+          <ExportPdfButton
+            onClick={() => {
+              const monthly = groupByMonth(filtered, (r: any) => r.created_at, 12);
+              const stats = computeSpcStats(monthly);
+              const chart = stats ? buildSpcSvg({ title: "Eventos por mês (CEP)", points: monthly, mean: stats.mean, ucl: stats.ucl, lcl: stats.lcl }) : "";
+              generateModuleReport({
+                title: "Relatório de Eventos Adversos",
+                subtitle: "Notificações, near-misses e eventos sentinela",
+                filters: `Severidade: ${filterSeverity}${search ? ` · Busca: "${search}"` : ""}`,
+                kpis: [
+                  { label: "Total", value: filtered.length },
+                  { label: "Graves/Sentinela abertos", value: filtered.filter((e: any) => (e.severity === "grave" || e.severity === "sentinela") && e.status !== "encerrado").length },
+                  { label: "Em investigação", value: filtered.filter((e: any) => e.status === "em_investigacao").length },
+                  { label: "Encerrados", value: filtered.filter((e: any) => e.status === "encerrado").length },
+                ],
+                columns: [
+                  { header: "Título", accessor: (r: any) => r.title },
+                  { header: "Tipo", accessor: (r: any) => r.event_type },
+                  { header: "Severidade", accessor: (r: any) => r.severity },
+                  { header: "Setor", accessor: (r: any) => r.sector ?? "—" },
+                  { header: "Status", accessor: (r: any) => r.status },
+                  { header: "Data", accessor: (r: any) => new Date(r.created_at).toLocaleDateString("pt-BR") },
+                ],
+                rows: filtered,
+                extraHtml: chart,
+                landscape: true,
+              });
+            }}
+          />
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DialogTrigger asChild>
             <Button className="gap-2"><Plus className="h-4 w-4" /> Notificar Evento</Button>
           </DialogTrigger>
           <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
