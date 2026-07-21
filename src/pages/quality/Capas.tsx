@@ -192,6 +192,7 @@ const Capas = () => {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       <div className="relative">
