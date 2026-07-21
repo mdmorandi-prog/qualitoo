@@ -1038,6 +1038,53 @@ export type Database = {
           },
         ]
       }
+      document_disposal_log: {
+        Row: {
+          action: string
+          created_at: string
+          document_id: string
+          id: string
+          ip_address: string | null
+          method: string | null
+          performed_by: string
+          reason: string | null
+          retention_snapshot: Json | null
+          user_agent: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          document_id: string
+          id?: string
+          ip_address?: string | null
+          method?: string | null
+          performed_by: string
+          reason?: string | null
+          retention_snapshot?: Json | null
+          user_agent?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          document_id?: string
+          id?: string
+          ip_address?: string | null
+          method?: string | null
+          performed_by?: string
+          reason?: string | null
+          retention_snapshot?: Json | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_disposal_log_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "quality_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_folders: {
         Row: {
           created_at: string
@@ -2087,11 +2134,21 @@ export type Database = {
           created_at: string
           created_by: string
           description: string | null
+          disposal_eligible_at: string | null
+          disposal_method: string | null
+          disposal_reason: string | null
+          disposed_at: string | null
+          disposed_by: string | null
           file_url: string | null
           folder_id: string | null
           id: string
           is_restricted: boolean
           is_signed: boolean
+          legal_hold: boolean
+          legal_hold_reason: string | null
+          retention_basis: string | null
+          retention_period_months: number | null
+          retention_start_date: string | null
           search_vector: unknown
           sector: string | null
           status: Database["public"]["Enums"]["doc_status"]
@@ -2111,11 +2168,21 @@ export type Database = {
           created_at?: string
           created_by: string
           description?: string | null
+          disposal_eligible_at?: string | null
+          disposal_method?: string | null
+          disposal_reason?: string | null
+          disposed_at?: string | null
+          disposed_by?: string | null
           file_url?: string | null
           folder_id?: string | null
           id?: string
           is_restricted?: boolean
           is_signed?: boolean
+          legal_hold?: boolean
+          legal_hold_reason?: string | null
+          retention_basis?: string | null
+          retention_period_months?: number | null
+          retention_start_date?: string | null
           search_vector?: unknown
           sector?: string | null
           status?: Database["public"]["Enums"]["doc_status"]
@@ -2135,11 +2202,21 @@ export type Database = {
           created_at?: string
           created_by?: string
           description?: string | null
+          disposal_eligible_at?: string | null
+          disposal_method?: string | null
+          disposal_reason?: string | null
+          disposed_at?: string | null
+          disposed_by?: string | null
           file_url?: string | null
           folder_id?: string | null
           id?: string
           is_restricted?: boolean
           is_signed?: boolean
+          legal_hold?: boolean
+          legal_hold_reason?: string | null
+          retention_basis?: string | null
+          retention_period_months?: number | null
+          retention_start_date?: string | null
           search_vector?: unknown
           sector?: string | null
           status?: Database["public"]["Enums"]["doc_status"]
@@ -3387,7 +3464,12 @@ export type Database = {
         | "verificacao_eficacia"
         | "encerrada"
       capa_type: "corretiva" | "preventiva" | "melhoria"
-      doc_status: "rascunho" | "em_revisao" | "aprovado" | "obsoleto"
+      doc_status:
+        | "rascunho"
+        | "em_revisao"
+        | "aprovado"
+        | "obsoleto"
+        | "descartado"
       event_severity: "leve" | "moderado" | "grave" | "sentinela"
       event_status:
         | "notificado"
@@ -3558,7 +3640,13 @@ export const Constants = {
         "encerrada",
       ],
       capa_type: ["corretiva", "preventiva", "melhoria"],
-      doc_status: ["rascunho", "em_revisao", "aprovado", "obsoleto"],
+      doc_status: [
+        "rascunho",
+        "em_revisao",
+        "aprovado",
+        "obsoleto",
+        "descartado",
+      ],
       event_severity: ["leve", "moderado", "grave", "sentinela"],
       event_status: [
         "notificado",

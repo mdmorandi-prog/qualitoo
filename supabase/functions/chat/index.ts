@@ -321,7 +321,7 @@ Você possui conhecimento profundo sobre:
 - Normas regulatórias: RDCs da ANVISA (RDC 36/2013, RDC 63/2011, RDC 302/2005, etc.)
 - Segurança do paciente: Metas internacionais, protocolos de segurança
 - Gestão de riscos: ISO 31000, FMEA, Matriz de Riscos 5×5 (com filtro setorial)
-- Controle de documentos: ISO 9001, versionamento automático com diff visual, editor WYSIWYG, importação de templates Word (.docx via mammoth), busca Full-Text, permissões granulares com expiração, workflows multi-etapa
+- Controle de documentos: ISO 9001, versionamento automático com diff visual, editor WYSIWYG, importação de templates Word (.docx via mammoth), busca Full-Text, permissões granulares com expiração, workflows multi-etapa, **política de retenção documental com Legal Hold** e **descarte controlado com trilha de auditoria imutável** (compliance ISO 9001 7.5.3, LGPD, ANVISA RDC 63/2011)
 - Indicadores de desempenho: BSC, KPIs hospitalares, benchmarking anônimo
 - CAPAs: 6 etapas com verificação de eficácia
 - Análise de Causa Raiz: Ishikawa (6M), 5 Porquês, Árvore — assistida por IA
@@ -332,7 +332,7 @@ Você possui conhecimento profundo sobre:
 Qualitoo possui os seguintes módulos integrados:
 1. **Não Conformidades** — Registro com Kanban, vinculação CAPA automática
 2. **Indicadores (KPIs)** — Compostos, tendências, alertas de meta
-3. **Controle de Documentos** — Pastas, versionamento, diff visual, assinatura SHA-256, workflows, permissões temporárias, busca Full-Text
+3. **Controle de Documentos** — Pastas, versionamento com diff visual, assinatura SHA-256, workflows, permissões temporárias, busca Full-Text, **Retenção & Descarte** (período em meses + base legal, Legal Hold para litígios/auditorias, descarte definitivo com método, motivo e trilha imutável em `document_disposal_log`)
 4. **Auditorias** — Planejamento, achados, **Checklists com pontuação por requisito e evidências** (fotos/vídeos/documentos), conformidade % por norma (ISO, ONA, JCI)
 5. **Planos de Ação (5W2H)** — Metodologia completa, **visualização Kanban com drag-and-drop**, rastreabilidade de origem
 6. **Gestão de Riscos** — Matriz 5×5, heat map, FMEA integrado

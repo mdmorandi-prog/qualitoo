@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useMemo } from "react";
 import DOMPurify from "dompurify";
-import { Plus, Search, Eye, Upload, FileUp, AlertTriangle, ArrowRight, CheckCircle2, FileText, Lock, FileSignature, Shield, ScrollText, Clock, XCircle, BookOpenCheck, FolderInput, History, LayoutTemplate, GitBranch, Pencil, Users } from "lucide-react";
+import { Plus, Search, Eye, Upload, FileUp, AlertTriangle, ArrowRight, CheckCircle2, FileText, Lock, FileSignature, Shield, ScrollText, Clock, XCircle, BookOpenCheck, FolderInput, History, LayoutTemplate, GitBranch, Pencil, Users, CalendarClock } from "lucide-react";
 import PdfWatermarkViewer from "@/components/documents/PdfWatermarkViewer";
 import SignatureDialog from "@/components/documents/SignatureDialog";
 import SignatureVerifier from "@/components/documents/SignatureVerifier";
@@ -8,6 +8,7 @@ import SignatureAuditLog from "@/components/documents/SignatureAuditLog";
 import DocumentSignatureBlock from "@/components/documents/DocumentSignatureBlock";
 import FolderTree from "@/components/documents/FolderTree";
 import DocumentVersionHistory from "@/components/documents/DocumentVersionHistory";
+import DocumentRetention from "@/components/documents/DocumentRetention";
 import DocumentTemplateSelector from "@/components/documents/DocumentTemplateSelector";
 import DocumentPermissions from "@/components/documents/DocumentPermissions";
 import DocumentWorkflowSteps from "@/components/documents/DocumentWorkflowSteps";
@@ -35,7 +36,7 @@ import {
   ResizableHandle, ResizablePanel, ResizablePanelGroup,
 } from "@/components/ui/resizable";
 
-type DocStatus = "rascunho" | "em_revisao" | "aprovado" | "obsoleto";
+type DocStatus = "rascunho" | "em_revisao" | "aprovado" | "obsoleto" | "descartado";
 
 interface Doc {
   id: string; title: string; code: string | null; description: string | null;
@@ -44,6 +45,7 @@ interface Doc {
   created_at: string; is_signed: boolean; file_url: string | null;
   folder_id: string | null; is_restricted?: boolean;
   content_html?: string | null; content_type?: string;
+  legal_hold?: boolean; disposal_eligible_at?: string | null; disposed_at?: string | null;
 }
 
 const statusConfig: Record<DocStatus, { label: string; color: string; icon: string }> = {
@@ -51,7 +53,9 @@ const statusConfig: Record<DocStatus, { label: string; color: string; icon: stri
   em_revisao: { label: "Em Revisão", color: "bg-warning/10 text-warning", icon: "🔍" },
   aprovado: { label: "Aprovado", color: "bg-safe/10 text-safe", icon: "✅" },
   obsoleto: { label: "Obsoleto", color: "bg-destructive/10 text-destructive", icon: "⛔" },
+  descartado: { label: "Descartado", color: "bg-destructive/20 text-destructive", icon: "🗑️" },
 };
+
 
 const workflowSteps: { status: DocStatus; label: string; color: string }[] = [
   { status: "rascunho", label: "Rascunho", color: "border-muted-foreground bg-muted" },
@@ -151,6 +155,7 @@ const workflowPermissions: Record<DocStatus, { from: DocStatus[]; requiredRole: 
   em_revisao: { from: ["rascunho"], requiredRole: "any" },
   aprovado: { from: ["em_revisao"], requiredRole: "admin" },
   obsoleto: { from: ["aprovado"], requiredRole: "admin" },
+  descartado: { from: ["obsoleto"], requiredRole: "admin" },
 };
 
 const canTransition = (currentStatus: DocStatus, newStatus: DocStatus, isAdmin: boolean, isAnalyst: boolean): boolean => {
@@ -235,6 +240,8 @@ const Documents = () => {
   const [editMode, setEditMode] = useState(false);
   const [editDoc, setEditDoc] = useState<Doc | null>(null);
   const [changeSummary, setChangeSummary] = useState("");
+  const [retentionOpen, setRetentionOpen] = useState(false);
+  const [retentionDoc, setRetentionDoc] = useState<Doc | null>(null);
 
   const [form, setForm] = useState({ ...initialForm });
 
@@ -826,6 +833,9 @@ const Documents = () => {
                 <Button variant="outline" size="sm" className="gap-2" onClick={() => { setDetailOpen(false); setPermissionsDoc(selected); setPermissionsOpen(true); }}>
                   <Users className="h-4 w-4" /> Permissões
                 </Button>
+                <Button variant="outline" size="sm" className="gap-2" onClick={() => { setDetailOpen(false); setRetentionDoc(selected); setRetentionOpen(true); }}>
+                  <CalendarClock className="h-4 w-4" /> Retenção & Descarte
+                </Button>
               </div>
             </div>
           )}
@@ -967,6 +977,17 @@ const Documents = () => {
           onToggleRestricted={r => toggleRestricted(permissionsDoc, r)}
         />
       )}
+
+      {retentionDoc && (
+        <DocumentRetention
+          open={retentionOpen}
+          onOpenChange={setRetentionOpen}
+          documentId={retentionDoc.id}
+          documentTitle={retentionDoc.title}
+          onUpdated={fetchData}
+        />
+      )}
+
 
       {workflowStepsDoc && (
         <DocumentWorkflowSteps
