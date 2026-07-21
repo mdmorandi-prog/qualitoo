@@ -833,6 +833,9 @@ const Documents = () => {
                 <Button variant="outline" size="sm" className="gap-2" onClick={() => { setDetailOpen(false); setPermissionsDoc(selected); setPermissionsOpen(true); }}>
                   <Users className="h-4 w-4" /> Permissões
                 </Button>
+                <Button variant="outline" size="sm" className="gap-2" onClick={() => { setDetailOpen(false); setRetentionDoc(selected); setRetentionOpen(true); }}>
+                  <CalendarClock className="h-4 w-4" /> Retenção & Descarte
+                </Button>
               </div>
             </div>
           )}
