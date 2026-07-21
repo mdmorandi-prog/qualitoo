@@ -15,7 +15,11 @@ const corsHeaders = {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-const SCHEDULER_SECRET = Deno.env.get("SCHEDULER_SECRET") ?? "";
+
+async function getSchedulerToken(): Promise<string> {
+  const { data } = await supabase.from("system_settings").select("value").eq("key", "scheduler_token").maybeSingle();
+  return (data?.value as string) ?? "";
+}
 
 const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 
