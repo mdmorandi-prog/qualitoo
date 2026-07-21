@@ -978,6 +978,17 @@ const Documents = () => {
         />
       )}
 
+      {retentionDoc && (
+        <DocumentRetention
+          open={retentionOpen}
+          onOpenChange={setRetentionOpen}
+          documentId={retentionDoc.id}
+          documentTitle={retentionDoc.title}
+          onUpdated={fetchData}
+        />
+      )}
+
+
       {workflowStepsDoc && (
         <DocumentWorkflowSteps
           open={workflowStepsOpen}
