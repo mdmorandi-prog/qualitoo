@@ -216,6 +216,43 @@ const NonConformities = () => {
           </div>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild><Button className="gap-2"><Plus className="h-4 w-4" /> Nova NC</Button></DialogTrigger>
+          <ExportPdfButton
+            onClick={() => {
+              const filteredRows = ncs.filter(n => (filterStatus === "all" || n.status === filterStatus) && (!search || n.title.toLowerCase().includes(search.toLowerCase())));
+              const monthly = groupByMonth(filteredRows, (r: any) => r.created_at, 12);
+              const stats = computeSpcStats(monthly);
+              const chart = stats
+                ? buildSpcSvg({
+                    title: "NCs registradas por mês (CEP)",
+                    points: monthly, mean: stats.mean, ucl: stats.ucl, lcl: stats.lcl,
+                  })
+                : "";
+              generateModuleReport({
+                title: "Relatório de Não Conformidades",
+                subtitle: "Registro e tratamento de não conformidades",
+                filters: `Status: ${filterStatus === "all" ? "todos" : statusLabels[filterStatus as NcStatus]}${search ? ` · Busca: "${search}"` : ""}`,
+                kpis: [
+                  { label: "Total", value: filteredRows.length },
+                  { label: "Abertas", value: filteredRows.filter(n => n.status !== "concluida").length },
+                  { label: "Críticas abertas", value: filteredRows.filter(n => (n.severity === "alta" || n.severity === "critica") && n.status !== "concluida").length },
+                  { label: "Concluídas", value: filteredRows.filter(n => n.status === "concluida").length },
+                ],
+                columns: [
+                  { header: "Título", accessor: (r: any) => r.title },
+                  { header: "Setor", accessor: (r: any) => r.sector ?? "—" },
+                  { header: "Severidade", accessor: (r: any) => sevConfig[r.severity as NcSeverity]?.label ?? r.severity },
+                  { header: "Status", accessor: (r: any) => statusLabels[r.status as NcStatus] ?? r.status },
+                  { header: "Prazo", accessor: (r: any) => r.deadline ? new Date(r.deadline).toLocaleDateString("pt-BR") : "—" },
+                  { header: "Aberta em", accessor: (r: any) => new Date(r.created_at).toLocaleDateString("pt-BR") },
+                ],
+                rows: filteredRows,
+                extraHtml: chart,
+                landscape: true,
+              });
+            }}
+          />
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild><Button className="gap-2"><Plus className="h-4 w-4" /> Nova NC</Button></DialogTrigger>
             <DialogContent className="sm:max-w-lg">
               <DialogHeader><DialogTitle className="font-display">Registrar Não Conformidade</DialogTitle></DialogHeader>
               <div className="grid gap-4 py-4">
