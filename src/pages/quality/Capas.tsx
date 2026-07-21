@@ -17,6 +17,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { executeWorkflowRules } from "@/lib/workflowEngine";
+import ExportPdfButton from "@/components/ExportPdfButton";
+import { generateModuleReport } from "@/lib/pdfReport";
 
 type CapaType = "corretiva" | "preventiva" | "melhoria";
 type CapaStatus = "identificacao" | "analise_causa" | "plano_acao" | "implementacao" | "verificacao_eficacia" | "encerrada";
