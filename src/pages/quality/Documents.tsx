@@ -240,6 +240,8 @@ const Documents = () => {
   const [editMode, setEditMode] = useState(false);
   const [editDoc, setEditDoc] = useState<Doc | null>(null);
   const [changeSummary, setChangeSummary] = useState("");
+  const [retentionOpen, setRetentionOpen] = useState(false);
+  const [retentionDoc, setRetentionDoc] = useState<Doc | null>(null);
 
   const [form, setForm] = useState({ ...initialForm });
 
