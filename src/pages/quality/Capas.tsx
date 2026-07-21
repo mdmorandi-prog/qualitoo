@@ -127,32 +127,33 @@ const Capas = () => {
           <h2 className="font-display text-2xl font-bold text-foreground">CAPA</h2>
           <p className="text-sm text-muted-foreground">Ações Corretivas e Preventivas com verificação de eficácia</p>
         </div>
+        <div className="flex items-center gap-2">
+        <ExportPdfButton
+          onClick={() => {
+            const rows = capas;
+            generateModuleReport({
+              title: "Relatório de CAPAs",
+              subtitle: "Ações Corretivas e Preventivas — verificação de eficácia",
+              kpis: [
+                { label: "Total", value: rows.length },
+                { label: "Abertas", value: rows.filter((c: any) => c.status !== "encerrada").length },
+                { label: "Em verificação", value: rows.filter((c: any) => c.status === "verificacao_eficacia").length },
+                { label: "Encerradas", value: rows.filter((c: any) => c.status === "encerrada").length },
+              ],
+              columns: [
+                { header: "Título", accessor: (r: any) => r.title },
+                { header: "Tipo", accessor: (r: any) => r.capa_type },
+                { header: "Origem", accessor: (r: any) => r.origin_type ?? "—" },
+                { header: "Status", accessor: (r: any) => r.status },
+                { header: "Criada em", accessor: (r: any) => new Date(r.created_at).toLocaleDateString("pt-BR") },
+              ],
+              rows,
+              landscape: true,
+            });
+          }}
+        />
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <ExportPdfButton
-              onClick={() => {
-                const rows = capas;
-                generateModuleReport({
-                  title: "Relatório de CAPAs",
-                  subtitle: "Ações Corretivas e Preventivas — verificação de eficácia",
-                  kpis: [
-                    { label: "Total", value: rows.length },
-                    { label: "Abertas", value: rows.filter((c: any) => c.status !== "encerrada").length },
-                    { label: "Em verificação", value: rows.filter((c: any) => c.status === "verificacao_eficacia").length },
-                    { label: "Encerradas", value: rows.filter((c: any) => c.status === "encerrada").length },
-                  ],
-                  columns: [
-                    { header: "Título", accessor: (r: any) => r.title },
-                    { header: "Tipo", accessor: (r: any) => r.capa_type },
-                    { header: "Origem", accessor: (r: any) => r.origin_type ?? "—" },
-                    { header: "Status", accessor: (r: any) => r.status },
-                    { header: "Criada em", accessor: (r: any) => new Date(r.created_at).toLocaleDateString("pt-BR") },
-                  ],
-                  rows,
-                  landscape: true,
-                });
-              }}
-            />
             <Button className="gap-2"><Plus className="h-4 w-4" /> Nova CAPA</Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-lg">
