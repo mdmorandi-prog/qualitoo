@@ -236,8 +236,30 @@ const Indicators = () => {
       </div>
 
       <Dialog open={measDialogOpen} onOpenChange={setMeasDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle className="font-display">Registrar Medição: {selectedInd?.name}</DialogTitle></DialogHeader>
+          {selectedInd && (() => {
+            const series = measurements
+              .filter(m => m.indicator_id === selectedInd.id)
+              .slice()
+              .sort((a, b) => a.period_date.localeCompare(b.period_date))
+              .map(m => ({
+                label: new Date(m.period_date).toLocaleDateString("pt-BR", { month: "short", year: "2-digit" }),
+                value: Number(m.value),
+              }));
+            return series.length >= 2 ? (
+              <div className="mb-4">
+                <ControlChart
+                  title="Gráfico de Controle (CEP)"
+                  description={`Evolução histórica de ${selectedInd.name}`}
+                  data={series}
+                  target={selectedInd.target_value}
+                  unit={selectedInd.unit}
+                  height={220}
+                />
+              </div>
+            ) : null;
+          })()}
           {selectedInd && (
             <div className="space-y-4">
               {measurements.filter(m => m.indicator_id === selectedInd.id).slice(0, 5).length > 0 && (
