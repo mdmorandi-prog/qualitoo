@@ -154,6 +154,7 @@ const workflowPermissions: Record<DocStatus, { from: DocStatus[]; requiredRole: 
   em_revisao: { from: ["rascunho"], requiredRole: "any" },
   aprovado: { from: ["em_revisao"], requiredRole: "admin" },
   obsoleto: { from: ["aprovado"], requiredRole: "admin" },
+  descartado: { from: ["obsoleto"], requiredRole: "admin" },
 };
 
 const canTransition = (currentStatus: DocStatus, newStatus: DocStatus, isAdmin: boolean, isAnalyst: boolean): boolean => {
