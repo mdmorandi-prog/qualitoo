@@ -20,6 +20,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { SectorSelect } from "@/components/SectorSelect";
+import ExportPdfButton from "@/components/ExportPdfButton";
+import { generateModuleReport, buildSpcSvg } from "@/lib/pdfReport";
+import ControlChart, { groupByMonth, computeSpcStats } from "@/components/spc/ControlChart";
 
 type EventSeverity = "leve" | "moderado" | "grave" | "sentinela";
 type EventType = "evento_adverso" | "near_miss" | "incidente" | "queixa_tecnica";
