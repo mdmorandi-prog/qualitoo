@@ -35,7 +35,7 @@ import {
   ResizableHandle, ResizablePanel, ResizablePanelGroup,
 } from "@/components/ui/resizable";
 
-type DocStatus = "rascunho" | "em_revisao" | "aprovado" | "obsoleto";
+type DocStatus = "rascunho" | "em_revisao" | "aprovado" | "obsoleto" | "descartado";
 
 interface Doc {
   id: string; title: string; code: string | null; description: string | null;
@@ -44,6 +44,7 @@ interface Doc {
   created_at: string; is_signed: boolean; file_url: string | null;
   folder_id: string | null; is_restricted?: boolean;
   content_html?: string | null; content_type?: string;
+  legal_hold?: boolean; disposal_eligible_at?: string | null; disposed_at?: string | null;
 }
 
 const statusConfig: Record<DocStatus, { label: string; color: string; icon: string }> = {
@@ -51,7 +52,9 @@ const statusConfig: Record<DocStatus, { label: string; color: string; icon: stri
   em_revisao: { label: "Em Revisão", color: "bg-warning/10 text-warning", icon: "🔍" },
   aprovado: { label: "Aprovado", color: "bg-safe/10 text-safe", icon: "✅" },
   obsoleto: { label: "Obsoleto", color: "bg-destructive/10 text-destructive", icon: "⛔" },
+  descartado: { label: "Descartado", color: "bg-destructive/20 text-destructive", icon: "🗑️" },
 };
+
 
 const workflowSteps: { status: DocStatus; label: string; color: string }[] = [
   { status: "rascunho", label: "Rascunho", color: "border-muted-foreground bg-muted" },
