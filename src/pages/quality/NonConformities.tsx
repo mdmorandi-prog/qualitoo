@@ -214,8 +214,6 @@ const NonConformities = () => {
               <TableIcon className="h-3.5 w-3.5" /> Tabela
             </Button>
           </div>
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild><Button className="gap-2"><Plus className="h-4 w-4" /> Nova NC</Button></DialogTrigger>
           <ExportPdfButton
             onClick={() => {
               const filteredRows = ncs.filter(n => (filterStatus === "all" || n.status === filterStatus) && (!search || n.title.toLowerCase().includes(search.toLowerCase())));
