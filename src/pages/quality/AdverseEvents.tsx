@@ -271,6 +271,7 @@ const AdverseEvents = () => {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       {/* Filters */}
