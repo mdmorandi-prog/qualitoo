@@ -16,6 +16,9 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import ExportPdfButton from "@/components/ExportPdfButton";
+import { generateModuleReport } from "@/lib/pdfReport";
+import ControlChart from "@/components/spc/ControlChart";
 
 interface Indicator {
   id: string; name: string; description: string | null; unit: string;
