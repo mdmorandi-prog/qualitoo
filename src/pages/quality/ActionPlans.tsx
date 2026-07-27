@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { Plus, Search, List, Columns } from "lucide-react";
+import ExportPdfButton from "@/components/ExportPdfButton";
+import { generateModuleReport } from "@/lib/pdfReport";
 import KanbanBoard from "@/components/kanban/KanbanBoard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
