@@ -165,6 +165,28 @@ const Suppliers = () => {
           <h2 className="font-display text-2xl font-bold text-foreground">Gestão de Fornecedores</h2>
           <p className="text-sm text-muted-foreground">Cadastro, avaliação e qualificação de fornecedores</p>
         </div>
+        <div className="flex gap-2">
+        <ExportPdfButton onClick={() => generateModuleReport({
+          title: "Relatório de Fornecedores",
+          subtitle: "Cadastro, avaliação e qualificação",
+          kpis: [
+            { label: "Total", value: suppliers.length },
+            { label: "Ativos", value: suppliers.filter((s: any) => s.status === "ativo").length },
+            { label: "Críticos", value: suppliers.filter((s: any) => s.criticality === "critica" || s.criticality === "alta").length },
+            { label: "Em Avaliação", value: suppliers.filter((s: any) => s.status === "em_avaliacao").length },
+          ],
+          columns: [
+            { header: "Nome", accessor: (r: any) => r.name },
+            { header: "CNPJ", accessor: (r: any) => r.cnpj ?? "—" },
+            { header: "Categoria", accessor: (r: any) => r.category ?? "—" },
+            { header: "Contato", accessor: (r: any) => r.contact_name ?? "—" },
+            { header: "E-mail", accessor: (r: any) => r.contact_email ?? "—" },
+            { header: "Criticidade", accessor: (r: any) => r.criticality ?? "—" },
+            { header: "Status", accessor: (r: any) => r.status ?? "—" },
+          ],
+          rows: suppliers,
+          landscape: true,
+        })} />
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button className="gap-2"><Plus className="h-4 w-4" /> Novo Fornecedor</Button>
