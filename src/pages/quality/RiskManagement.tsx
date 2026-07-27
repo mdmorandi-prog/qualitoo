@@ -124,6 +124,30 @@ const RiskManagement = () => {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div><h2 className="font-display text-2xl font-bold text-foreground">Gestão de Riscos</h2><p className="text-sm text-muted-foreground">Matriz de probabilidade × impacto (5×5)</p></div>
+        <div className="flex gap-2">
+        <ExportPdfButton onClick={() => generateModuleReport({
+          title: "Relatório de Gestão de Riscos",
+          subtitle: "Matriz 5×5 — probabilidade × impacto",
+          filters: selectedSector === ALL_SECTORS ? "Todos os setores" : `Setor: ${selectedSector}`,
+          kpis: [
+            { label: "Total", value: risks.length },
+            { label: "Críticos (≥15)", value: risks.filter(r => (r.risk_level ?? 0) >= 15).length },
+            { label: "Altos (10-14)", value: risks.filter(r => (r.risk_level ?? 0) >= 10 && (r.risk_level ?? 0) < 15).length },
+            { label: "Médios/Baixos", value: risks.filter(r => (r.risk_level ?? 0) < 10).length },
+          ],
+          columns: [
+            { header: "Título", accessor: (r: any) => r.title },
+            { header: "Categoria", accessor: (r: any) => r.category ?? "—" },
+            { header: "Setor", accessor: (r: any) => r.sector ?? "—" },
+            { header: "P", accessor: (r: any) => r.probability, align: "center" },
+            { header: "I", accessor: (r: any) => r.impact, align: "center" },
+            { header: "Nível", accessor: (r: any) => `${r.risk_level ?? 0} - ${riskLabel(r.risk_level ?? 0)}` },
+            { header: "Responsável", accessor: (r: any) => r.responsible ?? "—" },
+            { header: "Status", accessor: (r: any) => r.status },
+          ],
+          rows: risks,
+          landscape: true,
+        })} />
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild><Button className="gap-2"><Plus className="h-4 w-4" /> Novo Risco</Button></DialogTrigger>
           <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
