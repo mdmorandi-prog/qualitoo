@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { Plus, Search, Eye, Crosshair } from "lucide-react";
+import ExportPdfButton from "@/components/ExportPdfButton";
+import { generateModuleReport } from "@/lib/pdfReport";
 import { Button } from "@/components/ui/button";
 import AuditChecklist from "@/components/audit/AuditChecklist";
 import AiAuditBriefing from "@/components/innovations/AiAuditBriefing";
