@@ -106,6 +106,28 @@ const Audits = () => {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div><h2 className="font-display text-2xl font-bold text-foreground">Auditorias Internas</h2><p className="text-sm text-muted-foreground">Planejamento e execução de auditorias</p></div>
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+        <ExportPdfButton onClick={() => generateModuleReport({
+          title: "Relatório de Auditorias Internas",
+          subtitle: "Planejamento, execução e resultados",
+          kpis: [
+            { label: "Total", value: audits.length },
+            { label: "Planejadas", value: audits.filter(a => a.status === "planejada").length },
+            { label: "Em Andamento", value: audits.filter(a => a.status === "em_andamento").length },
+            { label: "Concluídas", value: audits.filter(a => a.status === "concluida").length },
+          ],
+          columns: [
+            { header: "Título", accessor: (r: any) => r.title },
+            { header: "Tipo", accessor: (r: any) => r.audit_type },
+            { header: "Setor", accessor: (r: any) => r.sector ?? "—" },
+            { header: "Escopo", accessor: (r: any) => r.scope ?? "—" },
+            { header: "Data Prevista", accessor: (r: any) => new Date(r.scheduled_date).toLocaleDateString("pt-BR") },
+            { header: "Concluída em", accessor: (r: any) => r.completed_date ? new Date(r.completed_date).toLocaleDateString("pt-BR") : "—" },
+            { header: "Status", accessor: (r: any) => r.status },
+          ],
+          rows: audits,
+          landscape: true,
+        })} />
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild><Button className="gap-2 w-full sm:w-auto"><Plus className="h-4 w-4" /> Nova Auditoria</Button></DialogTrigger>
           <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg w-[95vw]">
