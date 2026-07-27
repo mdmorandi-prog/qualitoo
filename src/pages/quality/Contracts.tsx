@@ -14,6 +14,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import ReactMarkdown from "react-markdown";
+import ExportPdfButton from "@/components/ExportPdfButton";
+import { generateModuleReport } from "@/lib/pdfReport";
 import {
   Plus, FileText, Upload, Calendar, AlertTriangle, Clock, Brain,
   Trash2, Download, Search, Filter, RefreshCw, CheckCircle, XCircle
