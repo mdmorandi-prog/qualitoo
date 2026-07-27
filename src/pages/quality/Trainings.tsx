@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { Plus, Search } from "lucide-react";
+import ExportPdfButton from "@/components/ExportPdfButton";
+import { generateModuleReport } from "@/lib/pdfReport";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
