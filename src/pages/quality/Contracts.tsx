@@ -347,6 +347,7 @@ const Contracts = () => {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       {/* Alerts */}
