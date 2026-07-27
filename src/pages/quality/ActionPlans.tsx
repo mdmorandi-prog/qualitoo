@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { Plus, Search, List, Columns } from "lucide-react";
+import ExportPdfButton from "@/components/ExportPdfButton";
+import { generateModuleReport } from "@/lib/pdfReport";
 import KanbanBoard from "@/components/kanban/KanbanBoard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -128,6 +130,27 @@ const ActionPlans = () => {
             <Button variant={viewMode === "lista" ? "default" : "ghost"} size="sm" className="rounded-none gap-1" onClick={() => setViewMode("lista")}><List className="h-3 w-3" /> Lista</Button>
             <Button variant={viewMode === "kanban" ? "default" : "ghost"} size="sm" className="rounded-none gap-1" onClick={() => setViewMode("kanban")}><Columns className="h-3 w-3" /> Kanban</Button>
           </div>
+        <ExportPdfButton onClick={() => generateModuleReport({
+          title: "Relatório de Planos de Ação (5W2H)",
+          subtitle: "Planejamento e execução de ações",
+          kpis: [
+            { label: "Total", value: plans.length },
+            { label: "Em execução", value: plans.filter(p => p.status === "em_execucao" || p.status === "em_andamento").length },
+            { label: "Concluídos", value: plans.filter(p => p.status === "concluido").length },
+            { label: "Progresso médio", value: plans.length ? `${Math.round(plans.reduce((s, p) => s + (p.progress || 0), 0) / plans.length)}%` : "0%" },
+          ],
+          columns: [
+            { header: "Título", accessor: (r: any) => r.title },
+            { header: "Origem", accessor: (r: any) => originLabels[r.origin_type ?? "manual"] ?? "Manual" },
+            { header: "Setor", accessor: (r: any) => r.sector ?? "—" },
+            { header: "Responsável", accessor: (r: any) => r.who ?? "—" },
+            { header: "Prazo", accessor: (r: any) => r.when_end ? new Date(r.when_end).toLocaleDateString("pt-BR") : "—" },
+            { header: "Status", accessor: (r: any) => r.status },
+            { header: "Progresso", accessor: (r: any) => `${r.progress ?? 0}%`, align: "right" },
+          ],
+          rows: plans,
+          landscape: true,
+        })} />
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild><Button className="gap-2"><Plus className="h-4 w-4" /> Novo Plano</Button></DialogTrigger>
           <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">

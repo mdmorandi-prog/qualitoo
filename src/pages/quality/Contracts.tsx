@@ -14,6 +14,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import ReactMarkdown from "react-markdown";
+import ExportPdfButton from "@/components/ExportPdfButton";
+import { generateModuleReport } from "@/lib/pdfReport";
 import {
   Plus, FileText, Upload, Calendar, AlertTriangle, Clock, Brain,
   Trash2, Download, Search, Filter, RefreshCw, CheckCircle, XCircle
@@ -248,6 +250,28 @@ const Contracts = () => {
           <h1 className="text-2xl font-bold text-foreground">Controle de Contratos</h1>
           <p className="text-sm text-muted-foreground">Gestão de contratos com alertas de vencimento e análise por IA</p>
         </div>
+        <div className="flex gap-2">
+        <ExportPdfButton onClick={() => generateModuleReport({
+          title: "Relatório de Contratos",
+          subtitle: "Gestão de contratos e alertas de vencimento",
+          kpis: [
+            { label: "Total", value: contracts.length },
+            { label: "Vigentes", value: contracts.filter(c => c.status === "vigente").length },
+            { label: "Vencendo", value: contracts.filter(c => c.status === "vencendo").length },
+            { label: "Vencidos", value: contracts.filter(c => c.status === "vencido").length },
+          ],
+          columns: [
+            { header: "Título", accessor: (r: any) => r.title },
+            { header: "Nº", accessor: (r: any) => r.contract_number ?? "—" },
+            { header: "Contraparte", accessor: (r: any) => r.counterparty ?? "—" },
+            { header: "Categoria", accessor: (r: any) => r.category },
+            { header: "Início", accessor: (r: any) => new Date(r.start_date).toLocaleDateString("pt-BR") },
+            { header: "Fim", accessor: (r: any) => new Date(r.end_date).toLocaleDateString("pt-BR") },
+            { header: "Status", accessor: (r: any) => STATUS_MAP[r.status]?.label ?? r.status },
+          ],
+          rows: contracts,
+          landscape: true,
+        })} />
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button><Plus className="mr-2 h-4 w-4" /> Novo Contrato</Button>
@@ -323,6 +347,7 @@ const Contracts = () => {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       {/* Alerts */}

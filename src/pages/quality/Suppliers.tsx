@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { Plus, Search, Star, Eye, TrendingUp } from "lucide-react";
+import ExportPdfButton from "@/components/ExportPdfButton";
+import { generateModuleReport } from "@/lib/pdfReport";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -163,6 +165,28 @@ const Suppliers = () => {
           <h2 className="font-display text-2xl font-bold text-foreground">Gestão de Fornecedores</h2>
           <p className="text-sm text-muted-foreground">Cadastro, avaliação e qualificação de fornecedores</p>
         </div>
+        <div className="flex gap-2">
+        <ExportPdfButton onClick={() => generateModuleReport({
+          title: "Relatório de Fornecedores",
+          subtitle: "Cadastro, avaliação e qualificação",
+          kpis: [
+            { label: "Total", value: suppliers.length },
+            { label: "Ativos", value: suppliers.filter((s: any) => s.status === "ativo").length },
+            { label: "Críticos", value: suppliers.filter((s: any) => s.criticality === "critica" || s.criticality === "alta").length },
+            { label: "Em Avaliação", value: suppliers.filter((s: any) => s.status === "em_avaliacao").length },
+          ],
+          columns: [
+            { header: "Nome", accessor: (r: any) => r.name },
+            { header: "CNPJ", accessor: (r: any) => r.cnpj ?? "—" },
+            { header: "Categoria", accessor: (r: any) => r.category ?? "—" },
+            { header: "Contato", accessor: (r: any) => r.contact_name ?? "—" },
+            { header: "E-mail", accessor: (r: any) => r.contact_email ?? "—" },
+            { header: "Criticidade", accessor: (r: any) => r.criticality ?? "—" },
+            { header: "Status", accessor: (r: any) => r.status ?? "—" },
+          ],
+          rows: suppliers,
+          landscape: true,
+        })} />
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button className="gap-2"><Plus className="h-4 w-4" /> Novo Fornecedor</Button>
@@ -199,6 +223,7 @@ const Suppliers = () => {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       <div className="relative"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar por nome ou CNPJ..." className="pl-10" /></div>
