@@ -80,6 +80,29 @@ const Trainings = () => {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div><h2 className="font-display text-2xl font-bold text-foreground">Treinamentos</h2><p className="text-sm text-muted-foreground">Gestão de capacitação e certificações</p></div>
+        <div className="flex gap-2">
+        <ExportPdfButton onClick={() => generateModuleReport({
+          title: "Relatório de Treinamentos",
+          subtitle: "Capacitação e certificações",
+          kpis: [
+            { label: "Total", value: trainings.length },
+            { label: "Concluídos", value: trainings.filter((t: any) => t.status === "concluido").length },
+            { label: "Vencendo (30d)", value: trainings.filter((t: any) => isExpiring(t.expiry_date)).length },
+            { label: "Horas totais", value: trainings.reduce((s: number, t: any) => s + (t.duration_hours || 0), 0) },
+          ],
+          columns: [
+            { header: "Título", accessor: (r: any) => r.title },
+            { header: "Categoria", accessor: (r: any) => r.category ?? "—" },
+            { header: "Setor", accessor: (r: any) => r.sector ?? "—" },
+            { header: "Instrutor", accessor: (r: any) => r.instructor ?? "—" },
+            { header: "Data", accessor: (r: any) => r.training_date ? new Date(r.training_date).toLocaleDateString("pt-BR") : "—" },
+            { header: "Validade", accessor: (r: any) => r.expiry_date ? new Date(r.expiry_date).toLocaleDateString("pt-BR") : "—" },
+            { header: "Horas", accessor: (r: any) => r.duration_hours ?? "—", align: "right" },
+            { header: "Status", accessor: (r: any) => r.status ?? "—" },
+          ],
+          rows: trainings,
+          landscape: true,
+        })} />
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild><Button className="gap-2"><Plus className="h-4 w-4" /> Novo Treinamento</Button></DialogTrigger>
           <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
