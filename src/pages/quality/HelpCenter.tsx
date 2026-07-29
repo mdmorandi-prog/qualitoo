@@ -224,10 +224,15 @@ const helpSections: HelpSection[] = [
     ],
   },
   {
-    id: "lgpd", title: "Conformidade LGPD", icon: ShieldCheck, description: "Proteção de dados pessoais",
+    id: "lgpd", title: "Conformidade LGPD", icon: ShieldCheck, description: "Mapeamento, consentimentos, direitos do titular e incidentes",
     faqs: [
-      { question: "Como mapear dados pessoais?", answer: "Clique em 'Novo Mapeamento', identifique o tipo de dado, categoria, finalidade, base legal, período de retenção e local de armazenamento." },
+      { question: "Como mapear dados pessoais?", answer: "Na aba 'Mapeamento de Dados', clique em 'Novo Mapeamento' e informe categoria, tipo de dado, finalidade, base legal, período de retenção, setor e local de armazenamento. Marque 'Dado Sensível' quando se aplicar o Art. 11 da LGPD. O relatório em PDF atende o registro de operações do Art. 37." },
       { question: "Quais bases legais são suportadas?", answer: "O sistema suporta todas as bases legais da LGPD: Consentimento, Obrigação Legal, Execução de Contrato, Legítimo Interesse, Proteção da Vida, Tutela da Saúde, entre outras." },
+      { question: "O que é o Portal do Titular?", answer: "É uma página pública (endereço /portal-lgpd, também linkada no rodapé do site) onde qualquer titular — paciente, colaborador ou terceiro — registra pedidos de acesso, correção, exclusão, portabilidade, anonimização, oposição ou revogação de consentimento. Ao enviar, o titular recebe um protocolo (LGPD-AAAAMMDD-XXXXXX) e pode acompanhar o status pela própria página, sem precisar de login." },
+      { question: "Como tratar uma solicitação de titular?", answer: "Na aba 'Solicitações do Titular', clique em 'Tratar'. Você vê os dados do titular, a descrição do pedido e o prazo legal de 15 dias (Art. 18, §1º), com contador de dias restantes e destaque em vermelho para pedidos atrasados. Atualize o status (Recebida, Em análise, Aguardando titular, Concluída, Recusada) e registre a resposta enviada ao titular." },
+      { question: "Como registrar consentimentos?", answer: "Na aba 'Consentimentos', registre titular, finalidade, base legal, canal de coleta, setor e o texto do consentimento apresentado. Isso constitui a prova de consentimento livre, informado e inequívoco exigida pelo Art. 8º. A revogação é feita em um clique e fica datada, preservando o histórico." },
+      { question: "Como registrar um incidente de segurança com dados pessoais?", answer: "Na aba 'Incidentes', informe descrição, data de ocorrência e detecção, dados afetados, número de titulares atingidos, nível de risco, medidas de contenção e corretivas. O sistema alerta quando existem incidentes de risco alto ou crítico ainda sem comunicação à ANPD (Art. 48) e registra as datas de comunicação à ANPD e aos titulares." },
+      { question: "Existem relatórios em PDF para LGPD?", answer: "Sim. Cada aba possui exportação em PDF padronizada Qualitoo: inventário de dados (Art. 37), solicitações de titulares com prazos e atrasos, registro de consentimentos ativos/revogados e relatório de incidentes com situação da comunicação à ANPD." },
     ],
   },
   {
