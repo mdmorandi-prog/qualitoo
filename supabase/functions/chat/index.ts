@@ -332,7 +332,7 @@ Você possui conhecimento profundo sobre:
 Qualitoo possui os seguintes módulos integrados:
 1. **Não Conformidades** — Registro com Kanban, vinculação CAPA automática
 2. **Indicadores (KPIs)** — Compostos, tendências, alertas de meta
-3. **Controle de Documentos** — Pastas, versionamento com diff visual, assinatura SHA-256, workflows, permissões temporárias, busca Full-Text, **Retenção & Descarte** (período em meses + base legal, Legal Hold para litígios/auditorias, descarte definitivo com método, motivo e trilha imutável em `document_disposal_log`)
+3. **Controle de Documentos** — Pastas, versionamento com diff visual, assinatura SHA-256, workflows, permissões temporárias, busca Full-Text, **Retenção & Descarte** (período em meses + base legal, Legal Hold para litígios/auditorias, descarte definitivo com método, motivo e trilha imutável em document_disposal_log)
 4. **Auditorias** — Planejamento, achados, **Checklists com pontuação por requisito e evidências** (fotos/vídeos/documentos), conformidade % por norma (ISO, ONA, JCI)
 5. **Planos de Ação (5W2H)** — Metodologia completa, **visualização Kanban com drag-and-drop**, rastreabilidade de origem
 6. **Gestão de Riscos** — Matriz 5×5, heat map, FMEA integrado
@@ -353,7 +353,7 @@ Qualitoo possui os seguintes módulos integrados:
 21. **Contratos** — Vigência, IA jurídica (Código Civil, LGPD, CDC, ANVISA)
 22. **Projetos e Gantt** — Tarefas, dependências, marcos, progresso visual
 23. **FMEA** — Severidade × Ocorrência × Detecção, RPN automático
-24. **Conformidade LGPD** — Mapeamento de dados, bases legais, RIPD
+24. **Conformidade LGPD** — 4 abas integradas: (a) **Mapeamento de Dados** (inventário Art. 37, categorias, finalidade, base legal, dado sensível Art. 11, retenção); (b) **Solicitações do Titular** — fila dos pedidos recebidos pelo **Portal do Titular público em /portal-lgpd** (acesso, correção, exclusão, portabilidade, anonimização, oposição, revogação de consentimento), com protocolo LGPD-AAAAMMDD-XXXXXX, prazo legal de 15 dias (Art. 18 §1º), contador de atraso, status e resposta formal ao titular; (c) **Consentimentos** — prova de consentimento livre e informado (Art. 8º) com finalidade, canal, texto apresentado e revogação datada; (d) **Incidentes de dados** — risco, titulares afetados, medidas de contenção/corretivas e controle de comunicação à ANPD e aos titulares (Art. 48), com alerta de pendências de risco alto/crítico. Todas as abas exportam relatório PDF padronizado. O titular acompanha o andamento pelo protocolo, sem login.
 25. **Portal do Colaborador** — Treinamentos, documentos, pendências pessoais
 26. **Dashboard Personalizado** — 20+ widgets drag-and-drop, persistência por usuário
 27. **Exportação BI** — CSV, JSON, Excel para Power BI e outras ferramentas

@@ -1678,6 +1678,63 @@ export type Database = {
           },
         ]
       }
+      lgpd_consents: {
+        Row: {
+          channel: string | null
+          consent_text: string | null
+          created_at: string
+          created_by: string | null
+          evidence_url: string | null
+          granted_at: string
+          id: string
+          legal_basis: string | null
+          notes: string | null
+          purpose: string
+          revoked_at: string | null
+          sector: string | null
+          subject_document: string | null
+          subject_email: string | null
+          subject_name: string
+          updated_at: string
+        }
+        Insert: {
+          channel?: string | null
+          consent_text?: string | null
+          created_at?: string
+          created_by?: string | null
+          evidence_url?: string | null
+          granted_at?: string
+          id?: string
+          legal_basis?: string | null
+          notes?: string | null
+          purpose: string
+          revoked_at?: string | null
+          sector?: string | null
+          subject_document?: string | null
+          subject_email?: string | null
+          subject_name: string
+          updated_at?: string
+        }
+        Update: {
+          channel?: string | null
+          consent_text?: string | null
+          created_at?: string
+          created_by?: string | null
+          evidence_url?: string | null
+          granted_at?: string
+          id?: string
+          legal_basis?: string | null
+          notes?: string | null
+          purpose?: string
+          revoked_at?: string | null
+          sector?: string | null
+          subject_document?: string | null
+          subject_email?: string | null
+          subject_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       lgpd_data_mappings: {
         Row: {
           created_at: string
@@ -1728,6 +1785,132 @@ export type Database = {
           sector?: string | null
           status?: string
           storage_location?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      lgpd_incidents: {
+        Row: {
+          affected_data: string | null
+          affected_subjects: number | null
+          anpd_notified: boolean
+          anpd_notified_at: string | null
+          containment_measures: string | null
+          corrective_measures: string | null
+          created_at: string
+          created_by: string | null
+          description: string
+          detected_at: string
+          id: string
+          occurred_at: string | null
+          responsible: string | null
+          risk: Database["public"]["Enums"]["lgpd_incident_risk"]
+          sector: string | null
+          status: string
+          subjects_notified: boolean
+          subjects_notified_at: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          affected_data?: string | null
+          affected_subjects?: number | null
+          anpd_notified?: boolean
+          anpd_notified_at?: string | null
+          containment_measures?: string | null
+          corrective_measures?: string | null
+          created_at?: string
+          created_by?: string | null
+          description: string
+          detected_at?: string
+          id?: string
+          occurred_at?: string | null
+          responsible?: string | null
+          risk?: Database["public"]["Enums"]["lgpd_incident_risk"]
+          sector?: string | null
+          status?: string
+          subjects_notified?: boolean
+          subjects_notified_at?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          affected_data?: string | null
+          affected_subjects?: number | null
+          anpd_notified?: boolean
+          anpd_notified_at?: string | null
+          containment_measures?: string | null
+          corrective_measures?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          detected_at?: string
+          id?: string
+          occurred_at?: string | null
+          responsible?: string | null
+          risk?: Database["public"]["Enums"]["lgpd_incident_risk"]
+          sector?: string | null
+          status?: string
+          subjects_notified?: boolean
+          subjects_notified_at?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      lgpd_requests: {
+        Row: {
+          assigned_to: string | null
+          created_at: string
+          description: string
+          due_date: string
+          id: string
+          protocol: string
+          relationship: string | null
+          request_type: Database["public"]["Enums"]["lgpd_request_type"]
+          requester_document: string | null
+          requester_email: string
+          requester_name: string
+          requester_phone: string | null
+          responded_at: string | null
+          response: string | null
+          status: Database["public"]["Enums"]["lgpd_request_status"]
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          created_at?: string
+          description: string
+          due_date?: string
+          id?: string
+          protocol?: string
+          relationship?: string | null
+          request_type: Database["public"]["Enums"]["lgpd_request_type"]
+          requester_document?: string | null
+          requester_email: string
+          requester_name: string
+          requester_phone?: string | null
+          responded_at?: string | null
+          response?: string | null
+          status?: Database["public"]["Enums"]["lgpd_request_status"]
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          created_at?: string
+          description?: string
+          due_date?: string
+          id?: string
+          protocol?: string
+          relationship?: string | null
+          request_type?: Database["public"]["Enums"]["lgpd_request_type"]
+          requester_document?: string | null
+          requester_email?: string
+          requester_name?: string
+          requester_phone?: string | null
+          responded_at?: string | null
+          response?: string | null
+          status?: Database["public"]["Enums"]["lgpd_request_status"]
           updated_at?: string
         }
         Relationships: []
@@ -3445,6 +3628,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      lookup_lgpd_request: {
+        Args: { p_protocol: string }
+        Returns: {
+          created_at: string
+          due_date: string
+          protocol: string
+          status: Database["public"]["Enums"]["lgpd_request_status"]
+        }[]
+      }
       lookup_report_by_protocol: {
         Args: { p_protocol: string }
         Returns: {
@@ -3488,6 +3680,22 @@ export type Database = {
         | "trimestral"
         | "anual"
       indicator_trend: "acima" | "abaixo" | "na_meta"
+      lgpd_incident_risk: "baixo" | "medio" | "alto" | "critico"
+      lgpd_request_status:
+        | "recebida"
+        | "em_analise"
+        | "aguardando_titular"
+        | "concluida"
+        | "recusada"
+      lgpd_request_type:
+        | "acesso"
+        | "correcao"
+        | "exclusao"
+        | "portabilidade"
+        | "revogacao_consentimento"
+        | "anonimizacao"
+        | "informacao_compartilhamento"
+        | "oposicao"
       nc_severity: "baixa" | "media" | "alta" | "critica"
       nc_status:
         | "aberta"
@@ -3668,6 +3876,24 @@ export const Constants = {
         "anual",
       ],
       indicator_trend: ["acima", "abaixo", "na_meta"],
+      lgpd_incident_risk: ["baixo", "medio", "alto", "critico"],
+      lgpd_request_status: [
+        "recebida",
+        "em_analise",
+        "aguardando_titular",
+        "concluida",
+        "recusada",
+      ],
+      lgpd_request_type: [
+        "acesso",
+        "correcao",
+        "exclusao",
+        "portabilidade",
+        "revogacao_consentimento",
+        "anonimizacao",
+        "informacao_compartilhamento",
+        "oposicao",
+      ],
       nc_severity: ["baixa", "media", "alta", "critica"],
       nc_status: [
         "aberta",
