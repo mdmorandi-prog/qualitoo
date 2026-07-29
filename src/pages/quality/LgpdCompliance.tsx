@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, Search, Shield, AlertTriangle } from "lucide-react";
+import { Plus, Search, Shield, AlertTriangle, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,11 +7,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import ExportPdfButton from "@/components/ExportPdfButton";
+import { generateModuleReport } from "@/lib/pdfReport";
+import LgpdRequests from "@/components/lgpd/LgpdRequests";
+import LgpdConsents from "@/components/lgpd/LgpdConsents";
+import LgpdIncidents from "@/components/lgpd/LgpdIncidents";
 
 interface LgpdMapping {
   id: string; data_category: string; data_type: string; purpose: string;
