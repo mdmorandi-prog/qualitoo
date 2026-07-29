@@ -12,7 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import ExportPdfButton from "@/components/ExportPdfButton";
 import { generateModuleReport } from "@/lib/pdfReport";
-import SectorSelect from "@/components/SectorSelect";
+import { SectorSelect } from "@/components/SectorSelect";
 
 interface Consent {
   id: string; subject_name: string; subject_document: string | null; subject_email: string | null;
