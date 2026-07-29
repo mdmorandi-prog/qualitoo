@@ -220,6 +220,8 @@ const LgpdCompliance = () => {
           </TableBody>
         </Table>
       </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
