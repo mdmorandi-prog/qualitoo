@@ -92,8 +92,55 @@ const LgpdCompliance = () => {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="font-display text-2xl font-bold text-foreground flex items-center gap-2"><Shield className="h-6 w-6" /> Conformidade LGPD</h2>
-          <p className="text-sm text-muted-foreground">Mapeamento de dados pessoais e bases legais</p>
+          <p className="text-sm text-muted-foreground">Mapeamento, consentimentos, direitos do titular e incidentes</p>
         </div>
+        <Button variant="outline" className="gap-2" asChild>
+          <a href="/portal-lgpd" target="_blank" rel="noopener noreferrer">
+            <ExternalLink className="h-4 w-4" /> Portal do Titular
+          </a>
+        </Button>
+      </div>
+
+      <Tabs defaultValue="mapeamento" className="space-y-6">
+        <TabsList className="flex-wrap">
+          <TabsTrigger value="mapeamento">Mapeamento de Dados</TabsTrigger>
+          <TabsTrigger value="solicitacoes">Solicitações do Titular</TabsTrigger>
+          <TabsTrigger value="consentimentos">Consentimentos</TabsTrigger>
+          <TabsTrigger value="incidentes">Incidentes</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="solicitacoes"><LgpdRequests /></TabsContent>
+        <TabsContent value="consentimentos"><LgpdConsents /></TabsContent>
+        <TabsContent value="incidentes"><LgpdIncidents /></TabsContent>
+
+        <TabsContent value="mapeamento" className="space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h3 className="font-display text-lg font-semibold text-foreground">Mapeamento de Dados Pessoais</h3>
+          <p className="text-sm text-muted-foreground">Inventário de dados e bases legais (Art. 37 — registro de operações)</p>
+        </div>
+        <div className="flex gap-2">
+        <ExportPdfButton onClick={() => generateModuleReport({
+          title: "Relatório de Mapeamento de Dados Pessoais (LGPD)",
+          subtitle: "Registro das operações de tratamento — Art. 37 da Lei 13.709/2018",
+          kpis: [
+            { label: "Total", value: mappings.length },
+            { label: "Dados sensíveis", value: sensitiveCount },
+            { label: "Categorias", value: new Set(mappings.map(m => m.data_category)).size },
+            { label: "Bases legais", value: new Set(mappings.map(m => m.legal_basis)).size },
+          ],
+          columns: [
+            { header: "Categoria", accessor: (r: any) => r.data_category },
+            { header: "Tipo", accessor: (r: any) => r.data_type ?? "—" },
+            { header: "Finalidade", accessor: (r: any) => r.purpose },
+            { header: "Base legal", accessor: (r: any) => r.legal_basis },
+            { header: "Setor", accessor: (r: any) => r.sector ?? "—" },
+            { header: "Sensível", accessor: (r: any) => r.is_sensitive ? "Sim" : "Não" },
+            { header: "Retenção", accessor: (r: any) => r.retention_period ?? "—" },
+          ],
+          rows: filtered,
+          landscape: true,
+        })} />
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild><Button className="gap-2"><Plus className="h-4 w-4" /> Novo Mapeamento</Button></DialogTrigger>
           <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
