@@ -10,8 +10,9 @@ const Footer = () => {
             <p>Gestão da Qualidade Hospitalar</p>
             <p className="mt-1">© {new Date().getFullYear()} DM Consultoria em TI Ltda. Todos os direitos reservados.</p>
           </div>
-          <div className="text-xs opacity-70">
-            Ref: DM-TI-SGQ-2025-001
+          <div className="flex items-center gap-4 text-xs opacity-70">
+            <a href="/portal-lgpd" className="underline underline-offset-4 hover:opacity-100">Portal do Titular (LGPD)</a>
+            <span>Ref: DM-TI-SGQ-2025-001</span>
           </div>
         </div>
       </div>
