@@ -148,15 +148,32 @@ export type Database = {
       adverse_events: {
         Row: {
           capa_id: string | null
+          causality: string | null
           created_at: string
           description: string
+          drug_dose: string | null
+          drug_indication: string | null
+          drug_route: string | null
           event_date: string
           event_type: Database["public"]["Enums"]["event_type"]
           id: string
           immediate_actions: string | null
           location: string | null
+          patient_birth_date: string | null
+          patient_gender: string | null
+          patient_initials: string | null
           patient_involved: boolean
           patient_outcome: string | null
+          patient_weight_kg: number | null
+          product_active_ingredient: string | null
+          product_batch: string | null
+          product_expiry_date: string | null
+          product_manufacturer: string | null
+          product_model: string | null
+          product_name: string | null
+          product_registry: string | null
+          product_serial: string | null
+          reaction_outcome: string | null
           reported_by: string
           responsible_id: string | null
           sector: string | null
@@ -164,18 +181,36 @@ export type Database = {
           status: Database["public"]["Enums"]["event_status"]
           title: string
           updated_at: string
+          vigilance_class: string
         }
         Insert: {
           capa_id?: string | null
+          causality?: string | null
           created_at?: string
           description: string
+          drug_dose?: string | null
+          drug_indication?: string | null
+          drug_route?: string | null
           event_date: string
           event_type?: Database["public"]["Enums"]["event_type"]
           id?: string
           immediate_actions?: string | null
           location?: string | null
+          patient_birth_date?: string | null
+          patient_gender?: string | null
+          patient_initials?: string | null
           patient_involved?: boolean
           patient_outcome?: string | null
+          patient_weight_kg?: number | null
+          product_active_ingredient?: string | null
+          product_batch?: string | null
+          product_expiry_date?: string | null
+          product_manufacturer?: string | null
+          product_model?: string | null
+          product_name?: string | null
+          product_registry?: string | null
+          product_serial?: string | null
+          reaction_outcome?: string | null
           reported_by: string
           responsible_id?: string | null
           sector?: string | null
@@ -183,18 +218,36 @@ export type Database = {
           status?: Database["public"]["Enums"]["event_status"]
           title: string
           updated_at?: string
+          vigilance_class?: string
         }
         Update: {
           capa_id?: string | null
+          causality?: string | null
           created_at?: string
           description?: string
+          drug_dose?: string | null
+          drug_indication?: string | null
+          drug_route?: string | null
           event_date?: string
           event_type?: Database["public"]["Enums"]["event_type"]
           id?: string
           immediate_actions?: string | null
           location?: string | null
+          patient_birth_date?: string | null
+          patient_gender?: string | null
+          patient_initials?: string | null
           patient_involved?: boolean
           patient_outcome?: string | null
+          patient_weight_kg?: number | null
+          product_active_ingredient?: string | null
+          product_batch?: string | null
+          product_expiry_date?: string | null
+          product_manufacturer?: string | null
+          product_model?: string | null
+          product_name?: string | null
+          product_registry?: string | null
+          product_serial?: string | null
+          reaction_outcome?: string | null
           reported_by?: string
           responsible_id?: string | null
           sector?: string | null
@@ -202,6 +255,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["event_status"]
           title?: string
           updated_at?: string
+          vigilance_class?: string
         }
         Relationships: [
           {
@@ -2510,6 +2564,74 @@ export type Database = {
           title?: string
         }
         Relationships: []
+      }
+      regulatory_submissions: {
+        Row: {
+          created_at: string
+          file_name: string | null
+          format: string
+          id: string
+          notes: string | null
+          period_end: string | null
+          period_start: string | null
+          protocol: string | null
+          records_count: number
+          report_id: string | null
+          report_type: string
+          submission_status: string
+          submitted_by: string
+          updated_at: string
+          validation_errors: Json
+          validation_status: string
+          validation_warnings: Json
+        }
+        Insert: {
+          created_at?: string
+          file_name?: string | null
+          format?: string
+          id?: string
+          notes?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          protocol?: string | null
+          records_count?: number
+          report_id?: string | null
+          report_type: string
+          submission_status?: string
+          submitted_by: string
+          updated_at?: string
+          validation_errors?: Json
+          validation_status?: string
+          validation_warnings?: Json
+        }
+        Update: {
+          created_at?: string
+          file_name?: string | null
+          format?: string
+          id?: string
+          notes?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          protocol?: string | null
+          records_count?: number
+          report_id?: string | null
+          report_type?: string
+          submission_status?: string
+          submitted_by?: string
+          updated_at?: string
+          validation_errors?: Json
+          validation_status?: string
+          validation_warnings?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "regulatory_submissions_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "regulatory_reports"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reports: {
         Row: {

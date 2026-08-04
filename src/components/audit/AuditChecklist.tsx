@@ -10,6 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { ONA_LEVELS, onaItemsUpTo, type OnaLevel } from "@/lib/onaChecklists";
+
 
 interface ChecklistItem {
   id: string;
@@ -78,12 +80,29 @@ export default function AuditChecklist({ auditId }: { auditId: string }) {
       audit_id: auditId, title: newTitle, standard: newStandard, created_by: user.id,
     } as any).select().single();
     if (error) { toast.error("Erro ao criar checklist"); return; }
-    toast.success("Checklist criado!");
+
+    // Modelo ONA: popula automaticamente os requisitos cumulativos do nível escolhido
+    if (newStandard.startsWith("ONA") && data) {
+      const level = newStandard.slice(-1) as OnaLevel;
+      const items = onaItemsUpTo(level).map((it, idx) => ({
+        checklist_id: (data as any).id,
+        requirement: it.requirement,
+        clause: it.clause,
+        display_order: idx,
+      }));
+      const { error: itemsError } = await supabase.from("audit_checklist_items").insert(items as any);
+      if (itemsError) toast.error("Checklist criado, mas houve erro ao aplicar o modelo ONA");
+      else toast.success(`Modelo ${ONA_LEVELS[level].label} aplicado com ${items.length} requisitos`);
+    } else {
+      toast.success("Checklist criado!");
+    }
+
     setCreateOpen(false);
     setNewTitle("");
     fetchChecklists();
     if (data) { setSelectedChecklist(data as any); fetchItems((data as any).id); }
   };
+
 
   const addItem = async () => {
     if (!selectedChecklist) return;
@@ -270,12 +289,20 @@ export default function AuditChecklist({ auditId }: { auditId: string }) {
                   <SelectItem value="ISO 9001">ISO 9001</SelectItem>
                   <SelectItem value="ISO 14001">ISO 14001</SelectItem>
                   <SelectItem value="ISO 45001">ISO 45001</SelectItem>
-                  <SelectItem value="ONA">ONA</SelectItem>
+                  <SelectItem value="ONA Nível 1">ONA Nível 1 — Segurança</SelectItem>
+                  <SelectItem value="ONA Nível 2">ONA Nível 2 — Gestão Integrada</SelectItem>
+                  <SelectItem value="ONA Nível 3">ONA Nível 3 — Excelência</SelectItem>
                   <SelectItem value="IATF 16949">IATF 16949</SelectItem>
                   <SelectItem value="Personalizado">Personalizado</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+            {newStandard.startsWith("ONA") && (
+              <p className="rounded-lg border bg-muted/40 p-2 text-xs text-muted-foreground">
+                O modelo ONA preenche automaticamente os requisitos cumulativos do Manual Brasileiro de Acreditação
+                ({onaItemsUpTo(newStandard.slice(-1) as OnaLevel).length} itens).
+              </p>
+            )}
             <Button onClick={handleCreateChecklist}>Criar Checklist</Button>
           </div>
         </DialogContent>

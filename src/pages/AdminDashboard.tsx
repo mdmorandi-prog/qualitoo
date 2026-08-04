@@ -69,6 +69,8 @@ import ManagementReview from "@/pages/quality/ManagementReview";
 import StrategicPlanning from "@/pages/quality/StrategicPlanning";
 import SupplierPortal from "@/pages/quality/SupplierPortal";
 import ScheduledReports from "@/pages/quality/ScheduledReports";
+import Pharmacovigilance from "@/pages/quality/Pharmacovigilance";
+import Technovigilance from "@/pages/quality/Technovigilance";
 
 const allTabs = [
   { key: "resumo", label: "Resumo", icon: LayoutDashboard },
@@ -87,6 +89,8 @@ const allTabs = [
   { key: "competencias", label: "Competências", icon: Users2 },
   { key: "fornecedores", label: "Fornecedores", icon: Truck },
   { key: "pesquisas", label: "Satisfação", icon: Heart },
+  { key: "farmacovigilancia", label: "Farmacovigilância", icon: ShieldAlert },
+  { key: "tecnovigilancia", label: "Tecnovigilância", icon: ShieldAlert },
   { key: "regulatorio", label: "Regulatório", icon: FileBarChart },
   { key: "processos", label: "Processos BPMN", icon: GitBranch },
   { key: "workflows", label: "Workflows", icon: Workflow },
@@ -117,6 +121,7 @@ const contentMap: Record<string, React.FC<any>> = {
   treinamentos: Trainings, atas: MeetingMinutes, eventos: AdverseEvents,
   capa: Capas, causa_raiz: RootCauseAnalysis, competencias: CompetencyMatrix,
   fornecedores: Suppliers, pesquisas: SatisfactionSurveys, regulatorio: RegulatoryReports,
+  farmacovigilancia: Pharmacovigilance, tecnovigilancia: Technovigilance,
   processos: ProcessMapping, workflows: WorkflowConfig,
   portal: EmployeePortal, metrologia: Metrology, mudancas: ChangeManagement, exportacao: DataExport,
   consultas: QueryBuilder, importacao: BulkImport, fmea: FmeaAnalysis, lgpd: LgpdCompliance, contratos: Contracts, projetos: Projects,
