@@ -29,6 +29,8 @@ const MODULE_OPTIONS: { key: string; label: string; group: string }[] = [
   { key: "fmea", label: "FMEA", group: "Riscos & Compliance" },
   { key: "mudancas", label: "Gestão de Mudanças", group: "Riscos & Compliance" },
   { key: "lgpd", label: "LGPD", group: "Riscos & Compliance" },
+  { key: "farmacovigilancia", label: "Farmacovigilância", group: "Riscos & Compliance" },
+  { key: "tecnovigilancia", label: "Tecnovigilância", group: "Riscos & Compliance" },
   { key: "regulatorio", label: "Relatórios Regulatórios", group: "Riscos & Compliance" },
   // Documentos
   { key: "documentos", label: "Documentos", group: "Documentos" },

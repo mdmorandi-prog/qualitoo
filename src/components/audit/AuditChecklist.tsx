@@ -289,12 +289,20 @@ export default function AuditChecklist({ auditId }: { auditId: string }) {
                   <SelectItem value="ISO 9001">ISO 9001</SelectItem>
                   <SelectItem value="ISO 14001">ISO 14001</SelectItem>
                   <SelectItem value="ISO 45001">ISO 45001</SelectItem>
-                  <SelectItem value="ONA">ONA</SelectItem>
+                  <SelectItem value="ONA Nível 1">ONA Nível 1 — Segurança</SelectItem>
+                  <SelectItem value="ONA Nível 2">ONA Nível 2 — Gestão Integrada</SelectItem>
+                  <SelectItem value="ONA Nível 3">ONA Nível 3 — Excelência</SelectItem>
                   <SelectItem value="IATF 16949">IATF 16949</SelectItem>
                   <SelectItem value="Personalizado">Personalizado</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+            {newStandard.startsWith("ONA") && (
+              <p className="rounded-lg border bg-muted/40 p-2 text-xs text-muted-foreground">
+                O modelo ONA preenche automaticamente os requisitos cumulativos do Manual Brasileiro de Acreditação
+                ({onaItemsUpTo(newStandard.slice(-1) as OnaLevel).length} itens).
+              </p>
+            )}
             <Button onClick={handleCreateChecklist}>Criar Checklist</Button>
           </div>
         </DialogContent>
