@@ -78,12 +78,29 @@ export default function AuditChecklist({ auditId }: { auditId: string }) {
       audit_id: auditId, title: newTitle, standard: newStandard, created_by: user.id,
     } as any).select().single();
     if (error) { toast.error("Erro ao criar checklist"); return; }
-    toast.success("Checklist criado!");
+
+    // Modelo ONA: popula automaticamente os requisitos cumulativos do nível escolhido
+    if (newStandard.startsWith("ONA") && data) {
+      const level = newStandard.slice(-1) as OnaLevel;
+      const items = onaItemsUpTo(level).map((it, idx) => ({
+        checklist_id: (data as any).id,
+        requirement: it.requirement,
+        clause: it.clause,
+        display_order: idx,
+      }));
+      const { error: itemsError } = await supabase.from("audit_checklist_items").insert(items as any);
+      if (itemsError) toast.error("Checklist criado, mas houve erro ao aplicar o modelo ONA");
+      else toast.success(`Modelo ${ONA_LEVELS[level].label} aplicado com ${items.length} requisitos`);
+    } else {
+      toast.success("Checklist criado!");
+    }
+
     setCreateOpen(false);
     setNewTitle("");
     fetchChecklists();
     if (data) { setSelectedChecklist(data as any); fetchItems((data as any).id); }
   };
+
 
   const addItem = async () => {
     if (!selectedChecklist) return;
