@@ -10,6 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { ONA_LEVELS, onaItemsUpTo, type OnaLevel } from "@/lib/onaChecklists";
+
 
 interface ChecklistItem {
   id: string;
