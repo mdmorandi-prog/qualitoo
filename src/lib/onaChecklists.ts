@@ -179,6 +179,33 @@ export const ONA_MANUAL_OPSS: Record<string, OnaSection> = {
         requirements: [
           { id: "6.2.1", requirement: "A produção de alimentos segue as boas práticas de fabricação (BPF) e vigilância sanitária.", level: 1 },
           { id: "6.2.2", requirement: "A assistência nutricional é integrada ao plano terapêutico do paciente.", level: 2 },
+          { id: "6.2.3", requirement: "A organização monitora a satisfação e o estado nutricional dos pacientes assistidos.", level: 3 },
+        ],
+      },
+      {
+        title: "6.3 Processamento de Roupas",
+        requirements: [
+          { id: "6.3.1", requirement: "O processamento de roupas (próprio ou terceirizado) segue as normas de segurança e higiene vigentes.", level: 1 },
+          { id: "6.3.2", requirement: "Existe controle de qualidade e fluxo unidirecional para evitar contaminação cruzada.", level: 1 },
+        ],
+      },
+    ],
+  },
+  "7": {
+    title: "7. Apoio Administrativo e Logística",
+    subsections: [
+      {
+        title: "7.1 Manutenção Predial e Utilidades",
+        requirements: [
+          { id: "7.1.1", requirement: "A organização garante o fornecimento ininterrupto de energia, água e gases medicinais (planos de contingência).", level: 1 },
+          { id: "7.1.2", requirement: "A manutenção preventiva da infraestrutura predial é executada e registrada.", level: 1 },
+        ],
+      },
+      {
+        title: "7.2 Segurança Patrimonial e Meio Ambiente",
+        requirements: [
+          { id: "7.2.1", requirement: "Existe plano de segurança patrimonial para proteção de pessoas e bens.", level: 1 },
+          { id: "7.2.2", requirement: "A organização demonstra ações de responsabilidade socioambiental.", level: 3 },
         ],
       },
     ],
