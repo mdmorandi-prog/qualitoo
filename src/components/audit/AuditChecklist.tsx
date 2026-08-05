@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { ONA_LEVELS, onaItemsUpTo, type OnaLevel } from "@/lib/onaChecklists";
+import { getOnaItemsFormatted } from "@/lib/onaChecklists";
 
 
 interface ChecklistItem {
@@ -83,16 +83,17 @@ export default function AuditChecklist({ auditId }: { auditId: string }) {
 
     // Modelo ONA: popula automaticamente os requisitos cumulativos do nível escolhido
     if (newStandard.startsWith("ONA") && data) {
-      const level = newStandard.slice(-1) as OnaLevel;
-      const items = onaItemsUpTo(level).map((it, idx) => ({
+      const level = Number(newStandard.slice(-1)) as 1 | 2 | 3;
+      const onaItems = getOnaItemsFormatted(level);
+      const itemsToInsert = onaItems.map((it, idx) => ({
         checklist_id: (data as any).id,
         requirement: it.requirement,
         clause: it.clause,
         display_order: idx,
       }));
-      const { error: itemsError } = await supabase.from("audit_checklist_items").insert(items as any);
+      const { error: itemsError } = await supabase.from("audit_checklist_items").insert(itemsToInsert as any);
       if (itemsError) toast.error("Checklist criado, mas houve erro ao aplicar o modelo ONA");
-      else toast.success(`Modelo ${ONA_LEVELS[level].label} aplicado com ${items.length} requisitos`);
+      else toast.success(`Modelo ONA Nível ${level} aplicado com ${onaItems.length} requisitos`);
     } else {
       toast.success("Checklist criado!");
     }
@@ -299,8 +300,7 @@ export default function AuditChecklist({ auditId }: { auditId: string }) {
             </div>
             {newStandard.startsWith("ONA") && (
               <p className="rounded-lg border bg-muted/40 p-2 text-xs text-muted-foreground">
-                O modelo ONA preenche automaticamente os requisitos cumulativos do Manual Brasileiro de Acreditação
-                ({onaItemsUpTo(newStandard.slice(-1) as OnaLevel).length} itens).
+                O modelo ONA preenche automaticamente os requisitos cumulativos do Manual Brasileiro de Acreditação (versão 2022).
               </p>
             )}
             <Button onClick={handleCreateChecklist}>Criar Checklist</Button>
