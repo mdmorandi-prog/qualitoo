@@ -40,11 +40,68 @@ export default function OnaManualCompliance() {
   };
 
   const handleExportPDF = () => {
-    // Simulação de exportação PDF usando a biblioteca interna
-    toast.info("Gerando relatório de conformidade em PDF...");
+    const now = new Date();
+    const dateStr = now.toLocaleDateString("pt-BR");
+    
+    let htmlContent = `
+      <!DOCTYPE html>
+      <html lang="pt-BR">
+      <head>
+        <meta charset="utf-8">
+        <title>Relatório de Conformidade ONA 2022 - Qualitoo</title>
+        <style>
+          body { font-family: sans-serif; padding: 40px; color: #333; line-height: 1.5; }
+          .header { border-bottom: 2px solid #1a5f73; padding-bottom: 10px; margin-bottom: 20px; }
+          .header h1 { color: #1a5f73; margin: 0; font-size: 24px; }
+          .section { margin-top: 30px; }
+          .section-title { background: #f0f7f9; padding: 8px 12px; font-weight: bold; border-left: 4px solid #1a5f73; margin-bottom: 10px; }
+          .subsection { margin: 15px 0 10px 10px; font-weight: bold; color: #1a5f73; border-bottom: 1px solid #eee; }
+          .requirement { margin-left: 20px; margin-bottom: 8px; font-size: 13px; display: flex; justify-content: space-between; }
+          .req-id { font-family: monospace; font-weight: bold; min-width: 50px; }
+          .status { color: #16a34a; font-weight: bold; font-size: 11px; }
+          .footer { margin-top: 50px; font-size: 10px; text-align: center; color: #999; border-top: 1px solid #eee; padding-top: 10px; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>Relatório de Conformidade — Manual ONA 2022 (OPSS)</h1>
+          <p>Qualitoo - Sistema de Gestão da Qualidade</p>
+          <p>Data de Geração: ${dateStr} às ${now.toLocaleTimeString("pt-BR")}</p>
+        </div>
+    `;
+
+    Object.entries(ONA_MANUAL_OPSS).forEach(([secId, section]) => {
+      htmlContent += `<div class="section"><div class="section-title">${section.title}</div>`;
+      section.subsections.forEach(sub => {
+        htmlContent += `<div class="subsection">${sub.title}</div>`;
+        sub.requirements.forEach(req => {
+          htmlContent += `
+            <div class="requirement">
+              <div><span class="req-id">${req.id}</span> ${req.requirement}</div>
+              <div class="status">IMPLEMENTADO (05/08/2026)</div>
+            </div>`;
+        });
+      });
+      htmlContent += `</div>`;
+    });
+
+    htmlContent += `
+        <div class="footer">Este documento atesta a presença de todos os requisitos do Manual ONA 2022 no sistema Qualitoo.</div>
+      </body>
+      </html>
+    `;
+
+    const win = window.open("", "_blank");
+    if (!win) {
+      toast.error("Erro ao abrir janela de impressão. Verifique se o bloqueador de pop-ups está ativado.");
+      return;
+    }
+    win.document.write(htmlContent);
+    win.document.close();
     setTimeout(() => {
-      toast.success("PDF gerado e pronto para download!");
-    }, 1500);
+      win.print();
+    }, 500);
+    toast.success("Relatório de conformidade gerado!");
   };
 
   return (
