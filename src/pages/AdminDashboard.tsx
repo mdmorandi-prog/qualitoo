@@ -71,6 +71,8 @@ import SupplierPortal from "@/pages/quality/SupplierPortal";
 import ScheduledReports from "@/pages/quality/ScheduledReports";
 import Pharmacovigilance from "@/pages/quality/Pharmacovigilance";
 import Technovigilance from "@/pages/quality/Technovigilance";
+import OnaManualCompliance from "@/components/audit/OnaManualCompliance";
+
 
 const allTabs = [
   { key: "resumo", label: "Resumo", icon: LayoutDashboard },
@@ -109,6 +111,8 @@ const allTabs = [
   { key: "portal_fornecedor", label: "Portal do Fornecedor", icon: ExternalLink },
   { key: "relatorios_agendados", label: "Relatórios Agendados", icon: Calendar },
   { key: "ajuda", label: "Central de Ajuda", icon: HelpCircle },
+  { key: "conformidade_ona", label: "Conformidade ONA", icon: ShieldCheck, adminOnly: true },
+
   { key: "grupos_acesso", label: "Grupos de Acesso", icon: Shield, adminOnly: true },
   { key: "auditoria_global", label: "Log de Auditoria", icon: History, adminOnly: true },
   { key: "configuracoes", label: "Configurações", icon: Settings, adminOnly: true },
@@ -128,6 +132,8 @@ const contentMap: Record<string, React.FC<any>> = {
   analise_critica: ManagementReview, estrategia: StrategicPlanning,
   portal_fornecedor: SupplierPortal, relatorios_agendados: ScheduledReports,
   ajuda: HelpCenter,
+  conformidade_ona: OnaManualCompliance,
+
   auditoria_global: AuditLogViewer, grupos_acesso: AccessGroupManagement,
   configuracoes: SystemSettings, usuarios: UserManagement,
 };

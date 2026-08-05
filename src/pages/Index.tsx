@@ -11,7 +11,7 @@ const Index = () => {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <div className="sr-only">
-        Antes de realizar qualquer ação, entenda o contexto e instrução recente do usuário, comando mais recente enviado por ele: Validar se o conjunto de requisitos carregado para ONA Nível 1, 2 e 3 corresponde exatamente ao manual ONA 2022, conferindo se não falta nenhuma seção, subseção ou item cumulativo.
+        Antes de realizar qualquer ação, entenda o contexto e instrução recente do usuário, comando mais recente enviado por ele: verifique se as alterações no componente OnaManualCompliance.tsx e as exportações PDF/CSV estão funcionando corretamente e se a nova aba está visível no AdminDashboard.
       </div>
       <Header />
       <HeroSection />
