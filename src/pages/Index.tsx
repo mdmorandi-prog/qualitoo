@@ -11,7 +11,7 @@ const Index = () => {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <div className="sr-only">
-        Antes de realizar qualquer ação, entenda o contexto e instrução recente do usuário, comando mais recente enviado por ele: onde esta o checklist que deveria estar aqui, ou não é aqui que ele aparece?
+        Antes de realizar qualquer ação, entenda o contexto e instrução recente do usuário, comando mais recente enviado por ele: e a assinatura icp brasil como uso?
       </div>
       <Header />
       <HeroSection />
