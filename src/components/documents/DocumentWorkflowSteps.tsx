@@ -72,9 +72,7 @@ const DocumentWorkflowSteps = ({ open, onOpenChange, documentId, documentTitle, 
   // workflow_approval_requests (module = "quality_documents").
   const MODULE = "quality_documents";
   const toUiStatus = (s: string) =>
-    s === "approved" ? "aprovado" : s === "rejected" ? "rejeitado" : s === "skipped" ? "pulado" : "pendente";
-  const toEngineStatus = (s: string) =>
-    s === "aprovado" ? "approved" : s === "rejeitado" ? "rejected" : s === "pulado" ? "skipped" : "pending";
+    ["aprovado", "rejeitado", "pulado"].includes(s) ? s : "pendente";
 
   const fetchSteps = async () => {
     setLoading(true);
@@ -125,7 +123,7 @@ const DocumentWorkflowSteps = ({ open, onOpenChange, documentId, documentTitle, 
       step_name: s.step_name,
       step_type: s.step_type,
       approver_role: s.assigned_role,
-      status: "pending",
+      status: "pendente",
       requested_by: user.id,
     }));
     const { error } = await supabase.from("workflow_approval_requests").insert(stepsToInsert as any);
@@ -139,7 +137,7 @@ const DocumentWorkflowSteps = ({ open, onOpenChange, documentId, documentTitle, 
     const { error } = await supabase
       .from("workflow_approval_requests")
       .update({
-        status: toEngineStatus(action),
+        status: action,
         decision_notes: actionComment || null,
         decided_at: new Date().toISOString(),
         decided_by: user.id,
