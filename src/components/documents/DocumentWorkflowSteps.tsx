@@ -68,14 +68,37 @@ const DocumentWorkflowSteps = ({ open, onOpenChange, documentId, documentTitle, 
     }
   }, [open, documentId]);
 
+  // Motor genérico de workflow: as etapas de documentos vivem em
+  // workflow_approval_requests (module = "quality_documents").
+  const MODULE = "quality_documents";
+  const toUiStatus = (s: string) =>
+    s === "approved" ? "aprovado" : s === "rejected" ? "rejeitado" : s === "skipped" ? "pulado" : "pendente";
+  const toEngineStatus = (s: string) =>
+    s === "aprovado" ? "approved" : s === "rejeitado" ? "rejected" : s === "pulado" ? "skipped" : "pending";
+
   const fetchSteps = async () => {
     setLoading(true);
     const { data } = await supabase
-      .from("document_workflow_steps")
+      .from("workflow_approval_requests")
       .select("*")
-      .eq("document_id", documentId)
+      .eq("module", MODULE)
+      .eq("record_id", documentId)
       .order("step_order");
-    setSteps((data as WorkflowStep[]) ?? []);
+    setSteps(
+      ((data as any[]) ?? []).map((r) => ({
+        id: r.id,
+        document_id: r.record_id,
+        step_order: r.step_order,
+        step_name: r.step_name ?? `Etapa ${r.step_order}`,
+        step_type: r.step_type ?? "approval",
+        assigned_to: r.assigned_to,
+        assigned_role: r.approver_role,
+        status: toUiStatus(r.status),
+        comments: r.decision_notes,
+        completed_at: r.decided_at,
+        completed_by: r.decided_by,
+      })),
+    );
     setLoading(false);
   };
 
@@ -89,16 +112,23 @@ const DocumentWorkflowSteps = ({ open, onOpenChange, documentId, documentTitle, 
 
   const applyTemplate = async (template: WorkflowTemplate) => {
     if (!user) return;
-    await supabase.from("document_workflow_steps").delete().eq("document_id", documentId);
+    await supabase
+      .from("workflow_approval_requests")
+      .delete()
+      .eq("module", MODULE)
+      .eq("record_id", documentId);
     const stepsToInsert = template.steps.map((s: any, i: number) => ({
-      document_id: documentId,
+      module: MODULE,
+      record_id: documentId,
+      record_title: documentTitle,
       step_order: i + 1,
       step_name: s.step_name,
       step_type: s.step_type,
-      assigned_role: s.assigned_role,
-      status: "pendente",
+      approver_role: s.assigned_role,
+      status: "pending",
+      requested_by: user.id,
     }));
-    const { error } = await supabase.from("document_workflow_steps").insert(stepsToInsert);
+    const { error } = await supabase.from("workflow_approval_requests").insert(stepsToInsert as any);
     if (error) { toast.error("Erro ao aplicar template"); console.error(error); }
     else { toast.success(`Template "${template.name}" aplicado!`); fetchSteps(); }
   };
@@ -107,12 +137,12 @@ const DocumentWorkflowSteps = ({ open, onOpenChange, documentId, documentTitle, 
     if (!user) return;
     setActingStepId(stepId);
     const { error } = await supabase
-      .from("document_workflow_steps")
+      .from("workflow_approval_requests")
       .update({
-        status: action,
-        comments: actionComment || null,
-        completed_at: new Date().toISOString(),
-        completed_by: user.id,
+        status: toEngineStatus(action),
+        decision_notes: actionComment || null,
+        decided_at: new Date().toISOString(),
+        decided_by: user.id,
       })
       .eq("id", stepId);
 
