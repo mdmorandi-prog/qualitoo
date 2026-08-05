@@ -2201,6 +2201,45 @@ export type Database = {
         }
         Relationships: []
       }
+      ona_compliance_evidence: {
+        Row: {
+          confirmed_at: string | null
+          created_at: string | null
+          evidence_name: string | null
+          evidence_url: string | null
+          id: string
+          level: number
+          notes: string | null
+          requirement_id: string
+          responsible_id: string | null
+          responsible_name: string | null
+        }
+        Insert: {
+          confirmed_at?: string | null
+          created_at?: string | null
+          evidence_name?: string | null
+          evidence_url?: string | null
+          id?: string
+          level: number
+          notes?: string | null
+          requirement_id: string
+          responsible_id?: string | null
+          responsible_name?: string | null
+        }
+        Update: {
+          confirmed_at?: string | null
+          created_at?: string | null
+          evidence_name?: string | null
+          evidence_url?: string | null
+          id?: string
+          level?: number
+          notes?: string | null
+          requirement_id?: string
+          responsible_id?: string | null
+          responsible_name?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
