@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Download, CheckCircle2, Search, FileText, Table as TableIcon, ChevronRight, ChevronDown } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Download, CheckCircle2, Search, FileText, Table as TableIcon, ChevronRight, ChevronDown, Upload, Paperclip, User, Calendar, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -7,10 +7,84 @@ import { Badge } from "@/components/ui/badge";
 import { ONA_MANUAL_OPSS } from "@/lib/onaChecklists";
 import { exportToCSV, exportToPDF } from "@/lib/exportUtils";
 import { toast } from "sonner";
+import { useOnaEvidence, OnaEvidence } from "@/hooks/useOnaEvidence";
+import { useAuth } from "@/hooks/useAuth";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function OnaManualCompliance() {
   const [searchTerm, setSearchTerm] = useState("");
   const [expandedSections, setExpandedSections] = useState<string[]>(Object.keys(ONA_MANUAL_OPSS));
+  const [evidenceMap, setEvidenceMap] = useState<Record<string, OnaEvidence[]>>({});
+  const { getEvidence, uploadEvidence, saveEvidence } = useOnaEvidence();
+  const { user } = useAuth();
+  
+  const [selectedReq, setSelectedReq] = useState<{id: string, level: number, text: string} | null>(null);
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [uploadNotes, setUploadNotes] = useState("");
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+
+  useEffect(() => {
+    loadAllEvidence();
+  }, []);
+
+  const loadAllEvidence = async () => {
+    try {
+      const allEvidences: Record<string, OnaEvidence[]> = {};
+      const promises = Object.values(ONA_MANUAL_OPSS).flatMap(section => 
+        section.subsections.flatMap(sub => 
+          sub.requirements.map(async (req) => {
+            const data = await getEvidence(req.id);
+            if (data && data.length > 0) {
+              allEvidences[req.id] = data;
+            }
+          })
+        )
+      );
+      await Promise.all(promises);
+      setEvidenceMap(allEvidences);
+    } catch (error) {
+      console.error("Error loading evidence:", error);
+    }
+  };
+
+  const handleFileUpload = async () => {
+    if (!selectedReq || !user) return;
+    
+    setIsUploading(true);
+    try {
+      let evidenceUrl = "";
+      let evidenceName = "";
+
+      if (uploadFile) {
+        const uploadResult = await uploadEvidence(uploadFile);
+        evidenceUrl = uploadResult.publicUrl;
+        evidenceName = uploadResult.fileName;
+      }
+
+      await saveEvidence({
+        requirement_id: selectedReq.id,
+        level: selectedReq.level,
+        responsible_id: user.id,
+        responsible_name: user.user_metadata?.full_name || user.email || "Usuário",
+        notes: uploadNotes,
+        evidence_url: evidenceUrl,
+        evidence_name: evidenceName
+      });
+
+      toast.success("Evidência vinculada com sucesso!");
+      setIsUploadOpen(false);
+      setUploadNotes("");
+      setUploadFile(null);
+      loadAllEvidence();
+    } catch (error: any) {
+      toast.error("Erro ao salvar evidência: " + error.message);
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const toggleSection = (id: string) => {
     setExpandedSections(prev => 
@@ -165,23 +239,120 @@ export default function OnaManualCompliance() {
                                 req.requirement.toLowerCase().includes(searchTerm.toLowerCase()) || 
                                 sub.title.toLowerCase().includes(searchTerm.toLowerCase())
                               )
-                              .map((req) => (
-                                <div key={req.id} className="flex items-start justify-between rounded-md border p-3 text-sm bg-background/50">
-                                  <div className="space-y-1">
-                                    <div className="flex items-center gap-2">
-                                      <span className="font-mono text-[10px] text-muted-foreground">{req.id}</span>
-                                      <Badge variant="outline" className="text-[10px] py-0">Nível {req.level}</Badge>
+                              .map((req) => {
+                                const evidences = evidenceMap[req.id] || [];
+                                const isConfirmed = evidences.length > 0;
+                                
+                                return (
+                                  <div key={req.id} className="flex items-start justify-between rounded-md border p-4 text-sm bg-background/50 hover:bg-background/80 transition-colors">
+                                    <div className="space-y-2 flex-grow">
+                                      <div className="flex items-center gap-2">
+                                        <span className="font-mono text-[10px] text-muted-foreground">{req.id}</span>
+                                        <Badge variant="outline" className="text-[10px] py-0">Nível {req.level}</Badge>
+                                      </div>
+                                      <p className="leading-relaxed pr-4">{req.requirement}</p>
+                                      
+                                      {isConfirmed && (
+                                        <div className="mt-2 space-y-2">
+                                          {evidences.map((ev) => (
+                                            <div key={ev.id} className="text-[11px] bg-accent/30 rounded p-2 border border-accent/20">
+                                              <div className="flex items-center justify-between mb-1">
+                                                <div className="flex items-center gap-2 text-muted-foreground">
+                                                  <User className="h-3 w-3" />
+                                                  <span>{ev.responsible_name}</span>
+                                                  <Calendar className="h-3 w-3 ml-1" />
+                                                  <span>{new Date(ev.confirmed_at).toLocaleDateString("pt-BR")}</span>
+                                                </div>
+                                                {ev.evidence_url && (
+                                                  <a 
+                                                    href={ev.evidence_url} 
+                                                    target="_blank" 
+                                                    rel="noopener noreferrer"
+                                                    className="flex items-center gap-1 text-primary hover:underline"
+                                                  >
+                                                    <Paperclip className="h-3 w-3" />
+                                                    {ev.evidence_name || "Anexo"}
+                                                    <ExternalLink className="h-2 w-2" />
+                                                  </a>
+                                                )}
+                                              </div>
+                                              {ev.notes && <p className="italic text-muted-foreground mt-1">"{ev.notes}"</p>}
+                                            </div>
+                                          ))}
+                                        </div>
+                                      )}
                                     </div>
-                                    <p className="leading-relaxed">{req.requirement}</p>
-                                  </div>
-                                  <div className="flex flex-col items-end gap-1 shrink-0 ml-4">
-                                    <div className="flex items-center gap-1 text-safe font-medium text-[11px]">
-                                      <CheckCircle2 className="h-3 w-3" /> Presente
+                                    <div className="flex flex-col items-end gap-2 shrink-0 ml-4">
+                                      {isConfirmed ? (
+                                        <div className="flex items-center gap-1 text-safe font-medium text-[11px]">
+                                          <CheckCircle2 className="h-3 w-3" /> Confirmado
+                                        </div>
+                                      ) : (
+                                        <div className="text-muted-foreground text-[11px]">Pendente</div>
+                                      )}
+                                      
+                                      <Dialog open={isUploadOpen && selectedReq?.id === req.id} onOpenChange={(open) => {
+                                        if (open) {
+                                          setSelectedReq({id: req.id, level: req.level, text: req.requirement});
+                                          setUploadNotes("");
+                                          setUploadFile(null);
+                                        } else {
+                                          setIsUploadOpen(false);
+                                        }
+                                      }}>
+                                        <DialogTrigger asChild>
+                                          <Button variant="outline" size="sm" className="h-7 px-2 text-[10px] gap-1">
+                                            <Upload className="h-3 w-3" /> Evidência
+                                          </Button>
+                                        </DialogTrigger>
+                                        <DialogContent className="sm:max-w-[500px]">
+                                          <DialogHeader>
+                                            <DialogTitle className="text-lg">Vincular Evidência</DialogTitle>
+                                            <CardDescription>
+                                              Confirme a presença do requisito: <span className="font-semibold">{req.id}</span>
+                                            </CardDescription>
+                                          </DialogHeader>
+                                          
+                                          <div className="grid gap-4 py-4">
+                                            <div className="bg-muted/30 p-3 rounded text-sm italic">
+                                              {req.requirement}
+                                            </div>
+                                            
+                                            <div className="grid gap-2">
+                                              <Label htmlFor="file">Documento / Anexo (Opcional)</Label>
+                                              <Input 
+                                                id="file" 
+                                                type="file" 
+                                                onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                                              />
+                                            </div>
+                                            
+                                            <div className="grid gap-2">
+                                              <Label htmlFor="notes">Notas de Implementação</Label>
+                                              <Textarea 
+                                                id="notes" 
+                                                placeholder="Descreva como este requisito está atendido..."
+                                                value={uploadNotes}
+                                                onChange={(e) => setUploadNotes(e.target.value)}
+                                              />
+                                            </div>
+                                          </div>
+                                          
+                                          <div className="flex justify-end gap-2">
+                                            <Button variant="outline" onClick={() => setIsUploadOpen(false)}>Cancelar</Button>
+                                            <Button 
+                                              onClick={handleFileUpload} 
+                                              disabled={isUploading}
+                                            >
+                                              {isUploading ? "Salvando..." : "Confirmar Presença"}
+                                            </Button>
+                                          </div>
+                                        </DialogContent>
+                                      </Dialog>
                                     </div>
-                                    <span className="text-[10px] text-muted-foreground">Conf. 05/08/2026</span>
                                   </div>
-                                </div>
-                              ))}
+                                );
+                              })}
                           </div>
                         </div>
                       ))}
