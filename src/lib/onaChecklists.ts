@@ -36,16 +36,26 @@ export const ONA_MANUAL_OPSS: Record<string, OnaSection> = {
       {
         title: "1.2 Planejamento e Organização",
         requirements: [
-          { id: "1.2.1", requirement: "O planejamento estratégico é desdobrado em planos de ação operacionais.", level: 2 },
+          { id: "1.2.1", requirement: "O planejamento estratégico é formalizado, comunicado e desdobrado em planos de ação operacionais por setor.", level: 2 },
           { id: "1.2.2", requirement: "A estrutura organizacional é compatível com o perfil assistencial e volume de serviços.", level: 1 },
+          { id: "1.2.3", requirement: "A organização demonstra processos de sucessão para cargos críticos de liderança.", level: 3 },
         ],
       },
       {
         title: "1.3 Gestão de Pessoas",
         requirements: [
-          { id: "1.3.1", requirement: "A organização dimensiona o quadro de pessoal conforme legislação e complexidade.", level: 1 },
-          { id: "1.3.2", requirement: "Existe um programa de integração e capacitação continuada para os colaboradores.", level: 1 },
-          { id: "1.3.3", requirement: "A organização monitora o desempenho e o clima organizacional.", level: 2 },
+          { id: "1.3.1", requirement: "A organização dimensiona o quadro de pessoal conforme legislação, complexidade e carga de trabalho.", level: 1 },
+          { id: "1.3.2", requirement: "Existe um programa de integração, treinamento e educação continuada para os colaboradores.", level: 1 },
+          { id: "1.3.3", requirement: "A organização monitora o desempenho individual e o clima organizacional periodicamente.", level: 2 },
+          { id: "1.3.4", requirement: "A organização possui política de retenção de talentos e desenvolvimento de competências.", level: 3 },
+        ],
+      },
+      {
+        title: "1.4 Gestão de Processos",
+        requirements: [
+          { id: "1.4.1", requirement: "Os processos principais da organização são mapeados e possuem fluxos definidos.", level: 2 },
+          { id: "1.4.2", requirement: "Existem indicadores de desempenho para os processos críticos com análise crítica periódica.", level: 2 },
+          { id: "1.4.3", requirement: "A organização utiliza benchmarking para comparar seus processos com referências de excelência.", level: 3 },
         ],
       },
     ],
@@ -56,24 +66,27 @@ export const ONA_MANUAL_OPSS: Record<string, OnaSection> = {
       {
         title: "2.1 Segurança do Paciente",
         requirements: [
-          { id: "2.1.1", requirement: "O Núcleo de Segurança do Paciente (NSP) está instituído e operante.", level: 1 },
-          { id: "2.1.2", requirement: "Os protocolos básicos de segurança (identificação, quedas, LP, cirurgia segura, etc) estão implantados.", level: 1 },
-          { id: "2.1.3", requirement: "Existe um sistema de notificação e análise de incidentes e eventos adversos.", level: 1 },
+          { id: "2.1.1", requirement: "O Núcleo de Segurança do Paciente (NSP) está instituído, atuante e com reuniões documentadas.", level: 1 },
+          { id: "2.1.2", requirement: "Protocolos básicos implantados: Identificação do Paciente, Quedas, Lesão por Pressão, Cirurgia Segura, Higiene das Mãos e Segurança na Prescrição, Uso e Administração de Medicamentos.", level: 1 },
+          { id: "2.1.3", requirement: "Existe um sistema de notificação, investigação e análise de causas de incidentes e eventos adversos.", level: 1 },
+          { id: "2.1.4", requirement: "A organização divulga os resultados da segurança do paciente para as equipes e lideranças.", level: 2 },
         ],
       },
       {
         title: "2.2 Gestão de Riscos",
         requirements: [
-          { id: "2.2.1", requirement: "A organização realiza o gerenciamento de riscos assistenciais e ocupacionais.", level: 1 },
-          { id: "2.2.2", requirement: "A gestão de riscos é integrada aos processos de tomada de decisão.", level: 2 },
-          { id: "2.2.3", requirement: "A organização utiliza ferramentas preditivas para mitigação de riscos críticos.", level: 3 },
+          { id: "2.2.1", requirement: "A organização realiza o gerenciamento de riscos assistenciais, ocupacionais e ambientais.", level: 1 },
+          { id: "2.2.2", requirement: "A gestão de riscos é integrada aos processos de tomada de decisão estratégica.", level: 2 },
+          { id: "2.2.3", requirement: "A organização utiliza ferramentas como FMEA para análise proativa de riscos em processos críticos.", level: 3 },
+          { id: "2.2.4", requirement: "Existe plano de contingência para os riscos críticos identificados e testado periodicamente.", level: 2 },
         ],
       },
       {
         title: "2.3 Gestão da Qualidade",
         requirements: [
-          { id: "2.3.1", requirement: "A organização utiliza indicadores para monitorar o desempenho dos processos.", level: 2 },
-          { id: "2.3.2", requirement: "São realizados ciclos de melhoria (PDCA) baseados em fatos e dados.", level: 3 },
+          { id: "2.3.1", requirement: "A organização utiliza indicadores de estrutura, processo e resultado para monitorar o desempenho.", level: 2 },
+          { id: "2.3.2", requirement: "São realizados ciclos de melhoria contínua (PDCA/DMAIC) baseados em evidências.", level: 3 },
+          { id: "2.3.3", requirement: "A organização realiza auditorias internas do sistema de gestão da qualidade periodicamente.", level: 2 },
         ],
       },
     ],
@@ -84,17 +97,27 @@ export const ONA_MANUAL_OPSS: Record<string, OnaSection> = {
       {
         title: "3.1 Gestão de Tecnologias e Infraestrutura",
         requirements: [
-          { id: "3.1.1", requirement: "A organização garante a manutenção preventiva e corretiva de equipamentos críticos.", level: 1 },
-          { id: "3.1.2", requirement: "Existe controle de calibração rastreável para equipamentos de medição.", level: 1 },
-          { id: "3.1.3", requirement: "A infraestrutura física atende às normas de segurança e vigilância sanitária.", level: 1 },
+          { id: "3.1.1", requirement: "A organização garante a manutenção preventiva e corretiva de equipamentos médicos e prediais.", level: 1 },
+          { id: "3.1.2", requirement: "Existe controle de calibração rastreável para equipamentos de medição e precisão.", level: 1 },
+          { id: "3.1.3", requirement: "A infraestrutura física atende às normas de segurança, acessibilidade e vigilância sanitária (RDC 50).", level: 1 },
+          { id: "3.1.4", requirement: "A gestão de tecnologias em saúde inclui a avaliação de custo-efetividade e segurança (Tecnovigilância).", level: 2 },
         ],
       },
       {
         title: "3.2 Gestão de Suprimentos e Farmácia",
         requirements: [
-          { id: "3.2.1", requirement: "O armazenamento de medicamentos e insumos garante a integridade e validade.", level: 1 },
-          { id: "3.2.2", requirement: "A organização possui processos para rastreabilidade de produtos para saúde.", level: 1 },
-          { id: "3.2.3", requirement: "A farmácia clínica atua na reconciliação medicamentosa e monitoramento de eventos.", level: 2 },
+          { id: "3.2.1", requirement: "O armazenamento de medicamentos e insumos garante a integridade, temperatura e validade.", level: 1 },
+          { id: "3.2.2", requirement: "A organização possui processos para rastreabilidade de medicamentos (lote e validade).", level: 1 },
+          { id: "3.2.3", requirement: "A farmácia clínica atua na análise de prescrição, reconciliação medicamentosa e farmacovigilância.", level: 2 },
+          { id: "3.2.4", requirement: "A organização avalia periodicamente o desempenho de seus fornecedores críticos.", level: 2 },
+        ],
+      },
+      {
+        title: "3.3 Prevenção e Controle de Infecções (SCIH)",
+        requirements: [
+          { id: "3.3.1", requirement: "Existe um Serviço de Controle de Infecção Hospitalar (SCIH) com programa de controle anual.", level: 1 },
+          { id: "3.3.2", requirement: "Monitoramento das taxas de infecção relacionada à assistência à saúde (IRAS).", level: 1 },
+          { id: "3.3.3", requirement: "Uso racional de antimicrobianos é monitorado e orientado pela CCIH.", level: 2 },
         ],
       },
     ],
@@ -103,12 +126,27 @@ export const ONA_MANUAL_OPSS: Record<string, OnaSection> = {
     title: "4. Atenção ao Paciente",
     subsections: [
       {
-        title: "4.1 Processo Assistencial",
+        title: "4.1 Acesso e Atendimento",
         requirements: [
-          { id: "4.1.1", requirement: "O atendimento respeita os direitos do paciente e seus familiares.", level: 1 },
-          { id: "4.1.2", requirement: "O registro em prontuário é completo, legível e temporal.", level: 1 },
-          { id: "4.1.3", requirement: "A transição de cuidado (handover) é padronizada e segura.", level: 2 },
-          { id: "4.1.4", requirement: "A organização monitora a experiência e o desfecho clínico do paciente.", level: 3 },
+          { id: "4.1.1", requirement: "O atendimento respeita os direitos e deveres do paciente e seus familiares.", level: 1 },
+          { id: "4.1.2", requirement: "Existe sistema de triagem/classificação de risco para o atendimento inicial.", level: 1 },
+          { id: "4.1.3", requirement: "A organização garante a privacidade e o sigilo das informações do paciente (LGPD).", level: 1 },
+        ],
+      },
+      {
+        title: "4.2 Prontuário e Documentação",
+        requirements: [
+          { id: "4.2.1", requirement: "O registro em prontuário (físico ou eletrônico) é completo, legível, datado e assinado.", level: 1 },
+          { id: "4.2.2", requirement: "O acesso ao prontuário é restrito a profissionais autorizados.", level: 1 },
+          { id: "4.2.3", requirement: "A organização utiliza protocolos clínicos baseados em diretrizes institucionais.", level: 2 },
+        ],
+      },
+      {
+        title: "4.3 Ciclo Assistencial",
+        requirements: [
+          { id: "4.3.1", requirement: "A transição de cuidado (handover) é padronizada e documentada entre turnos e setores.", level: 2 },
+          { id: "4.3.2", requirement: "O planejamento da alta hospitalar é iniciado precocemente e envolve o paciente/família.", level: 2 },
+          { id: "4.3.3", requirement: "A organização monitora a experiência do paciente (HCAHPS/NPS) e desfechos clínicos.", level: 3 },
         ],
       },
     ],
@@ -117,10 +155,30 @@ export const ONA_MANUAL_OPSS: Record<string, OnaSection> = {
     title: "5. Diagnóstico e Terapêutica",
     subsections: [
       {
-        title: "5.1 Métodos Diagnósticos",
+        title: "5.1 Métodos Diagnósticos (Laboratório, Imagem, etc.)",
         requirements: [
-          { id: "5.1.1", requirement: "Os laudos e resultados são liberados em tempo oportuno conforme criticidade.", level: 1 },
-          { id: "5.1.2", requirement: "Existe controle de qualidade (interno e externo) para exames laboratoriais/imagem.", level: 2 },
+          { id: "5.1.1", requirement: "Os laudos e resultados são liberados em tempo oportuno conforme criticidade (tempo de resposta).", level: 1 },
+          { id: "5.1.2", requirement: "Existe controle de qualidade interno e participação em programas de proficiência externa.", level: 2 },
+          { id: "5.1.3", requirement: "A comunicação de resultados críticos é padronizada, documentada e imediata.", level: 1 },
+        ],
+      },
+    ],
+  },
+  "6": {
+    title: "6. Apoio Técnico e Logística",
+    subsections: [
+      {
+        title: "6.1 Higiene e Limpeza",
+        requirements: [
+          { id: "6.1.1", requirement: "Os processos de limpeza e desinfecção de superfícies são padronizados e validados.", level: 1 },
+          { id: "6.1.2", requirement: "A gestão de resíduos (PGRSS) cumpre integralmente a legislação vigente.", level: 1 },
+        ],
+      },
+      {
+        title: "6.2 Nutrição e Dietética",
+        requirements: [
+          { id: "6.2.1", requirement: "A produção de alimentos segue as boas práticas de fabricação (BPF) e vigilância sanitária.", level: 1 },
+          { id: "6.2.2", requirement: "A assistência nutricional é integrada ao plano terapêutico do paciente.", level: 2 },
         ],
       },
     ],
