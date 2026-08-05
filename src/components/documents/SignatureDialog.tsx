@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { sha256, generateSignaturePayload } from "@/lib/crypto";
+import { parseCertificate, formatCpfCnpj, type IcpCertificateInfo } from "@/lib/icpBrasil";
 
 type SignatureRole = "elaborado" | "aprovado" | "validado";
 
@@ -46,6 +47,8 @@ const SignatureDialog = ({ open, onOpenChange, document, onSigned, defaultRole =
   const [selectedRole, setSelectedRole] = useState<SignatureRole>(defaultRole);
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [lockoutUntil, setLockoutUntil] = useState<Date | null>(null);
+  const [cert, setCert] = useState<IcpCertificateInfo | null>(null);
+  const [certError, setCertError] = useState<string | null>(null);
 
   const reset = () => {
     setStep("confirm");
@@ -53,6 +56,8 @@ const SignatureDialog = ({ open, onOpenChange, document, onSigned, defaultRole =
     setLoading(false);
     setSignatureResult(null);
     setSelectedRole(defaultRole);
+    setCert(null);
+    setCertError(null);
     // Don't reset failedAttempts/lockoutUntil on close to persist lockout
   };
 
@@ -74,6 +79,28 @@ const SignatureDialog = ({ open, onOpenChange, document, onSigned, defaultRole =
       details: details as any,
       document_hash: docHash || null,
     } as any);
+  };
+
+  const handleCertificateUpload = async (file: File | null) => {
+    if (!file) return;
+    setCertError(null);
+    try {
+      const info = parseCertificate(await file.arrayBuffer());
+      if (info.isExpired) {
+        setCert(null);
+        setCertError("Certificado fora do período de validade.");
+        return;
+      }
+      setCert(info);
+      await logAudit("certificate_attached", {
+        subject: info.subject, issuer: info.issuer, serial: info.serial, icp_brasil: info.isIcpBrasil,
+      });
+      toast.success(info.isIcpBrasil ? "Certificado ICP-Brasil validado!" : "Certificado X.509 carregado.");
+    } catch (e) {
+      console.error(e);
+      setCert(null);
+      setCertError("Não foi possível ler o certificado. Envie o arquivo público (.cer, .crt ou .pem).");
+    }
   };
 
   const handleVerifyIdentity = async () => {
@@ -148,15 +175,27 @@ const SignatureDialog = ({ open, onOpenChange, document, onSigned, defaultRole =
         signer_id: user.id,
         signer_name: signerName,
         signer_email: signerEmail,
-        signature_type: "eletronica",
+        signature_type: cert ? "icp_brasil" : "eletronica",
         document_hash: documentHash,
         signature_hash: signatureHash,
         user_agent: navigator.userAgent,
-        verification_method: "senha",
+        verification_method: cert ? "senha+certificado_digital" : "senha",
         is_verified: true,
         signed_at: timestamp,
         signature_role: selectedRole,
-        metadata: { payload_structure: "v1", algorithm: "SHA-256" } as any,
+        cert_subject: cert?.subject ?? null,
+        cert_issuer: cert?.issuer ?? null,
+        cert_serial: cert?.serial ?? null,
+        cert_cpf_cnpj: cert?.cpfCnpj ?? null,
+        cert_valid_from: cert?.validFrom ?? null,
+        cert_valid_to: cert?.validTo ?? null,
+        cert_policy: cert?.policy ?? null,
+        metadata: {
+          payload_structure: "v1",
+          algorithm: "SHA-256",
+          icp_brasil: cert?.isIcpBrasil ?? false,
+          cert_fingerprint: cert?.fingerprint ?? null,
+        } as any,
       } as any).select("id").maybeSingle();
 
       if (error) throw error;
@@ -217,6 +256,30 @@ const SignatureDialog = ({ open, onOpenChange, document, onSigned, defaultRole =
                 ))}
               </div>
             </div>
+            <div className="space-y-2 rounded-lg border p-4">
+              <p className="text-xs font-semibold text-muted-foreground">
+                Certificado digital ICP-Brasil <span className="font-normal">(opcional — recomendado para contratos)</span>
+              </p>
+              <Input
+                type="file"
+                accept=".cer,.crt,.pem,.der"
+                className="h-9 text-xs"
+                onChange={e => handleCertificateUpload(e.target.files?.[0] ?? null)}
+              />
+              {certError && <p className="text-xs text-destructive">{certError}</p>}
+              {cert && (
+                <div className="space-y-1 rounded-md bg-secondary/50 p-3 text-[11px]">
+                  <p><span className="text-muted-foreground">Titular:</span> {cert.subject}</p>
+                  <p><span className="text-muted-foreground">Emissor:</span> {cert.issuer}</p>
+                  <p><span className="text-muted-foreground">CPF/CNPJ:</span> {formatCpfCnpj(cert.cpfCnpj)}</p>
+                  <p><span className="text-muted-foreground">Validade:</span> {cert.validFrom} a {cert.validTo}</p>
+                  <p className={cert.isIcpBrasil ? "text-safe" : "text-warning"}>
+                    {cert.isIcpBrasil ? "Cadeia ICP-Brasil reconhecida (MP 2.200-2)" : "Certificado X.509 fora da cadeia ICP-Brasil"}
+                  </p>
+                </div>
+              )}
+            </div>
+
             <div className="space-y-2 rounded-lg border border-warning/30 bg-warning/5 p-4">
               <div className="flex items-center gap-2">
                 <Shield className="h-4 w-4 text-warning" />

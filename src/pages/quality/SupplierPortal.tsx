@@ -9,11 +9,21 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { logAuditEvent } from "@/lib/auditLog";
 
 interface PortalToken {
   id: string; supplier_id: string; token: string; email: string;
   is_active: boolean; last_accessed_at: string | null; expires_at: string | null; created_at: string;
+  access_count: number | null; last_ip: string | null; revoked_at: string | null;
 }
+
+interface AccessLogEntry {
+  id: string; token_id: string | null; supplier_id: string | null; action: string;
+  ip_address: string | null; created_at: string;
+}
+
+/** Política de segurança: tokens do portal expiram em no máximo 7 dias. */
+const TOKEN_TTL_DAYS = 7;
 
 interface PortalDoc {
   id: string; supplier_id: string; document_name: string; document_type: string;
@@ -29,6 +39,7 @@ const SupplierPortal = () => {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [tokens, setTokens] = useState<PortalToken[]>([]);
   const [docs, setDocs] = useState<PortalDoc[]>([]);
+  const [accessLog, setAccessLog] = useState<AccessLogEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
@@ -38,14 +49,16 @@ const SupplierPortal = () => {
 
   const fetchAll = async () => {
     setLoading(true);
-    const [supRes, tokRes, docRes] = await Promise.all([
+    const [supRes, tokRes, docRes, logRes] = await Promise.all([
       supabase.from("suppliers").select("id, name, contact_email").order("name"),
       supabase.from("supplier_portal_tokens").select("*").order("created_at", { ascending: false }),
       supabase.from("supplier_portal_documents").select("*").order("uploaded_at", { ascending: false }),
+      supabase.from("supplier_portal_access_log").select("*").order("created_at", { ascending: false }).limit(200),
     ]);
     setSuppliers((supRes.data as any[]) ?? []);
     setTokens((tokRes.data as any[]) ?? []);
     setDocs((docRes.data as any[]) ?? []);
+    setAccessLog((logRes.data as any[]) ?? []);
     setLoading(false);
   };
 
@@ -54,21 +67,30 @@ const SupplierPortal = () => {
       toast.error("Fornecedor precisa ter e-mail cadastrado");
       return;
     }
-    const token = crypto.randomUUID().replace(/-/g, "");
+    // Token forte (256 bits) com expiração forçada em 7 dias
+    const bytes = crypto.getRandomValues(new Uint8Array(32));
+    const token = Array.from(bytes).map(b => b.toString(16).padStart(2, "0")).join("");
     const expires = new Date();
-    expires.setMonth(expires.getMonth() + 6);
+    expires.setDate(expires.getDate() + TOKEN_TTL_DAYS);
 
-    const { error } = await supabase.from("supplier_portal_tokens").insert({
+    const { data: created, error } = await supabase.from("supplier_portal_tokens").insert({
       supplier_id: supplier.id, token, email: supplier.contact_email,
-      expires_at: expires.toISOString(),
-    } as any);
+      expires_at: expires.toISOString(), created_by: user?.id ?? null,
+    } as any).select("id").maybeSingle();
     if (error) { toast.error("Erro ao gerar token"); console.error(error); return; }
-    toast.success("Token de acesso gerado!");
+    await logAuditEvent({
+      action: "generate_supplier_token", module: "supplier_portal",
+      recordId: created?.id, details: { supplier: supplier.name, expires_at: expires.toISOString() },
+    });
+    toast.success(`Token gerado! Válido por ${TOKEN_TTL_DAYS} dias.`);
     fetchAll();
   };
 
   const revokeToken = async (tokenId: string) => {
-    await supabase.from("supplier_portal_tokens").update({ is_active: false } as any).eq("id", tokenId);
+    await supabase.from("supplier_portal_tokens")
+      .update({ is_active: false, revoked_at: new Date().toISOString() } as any)
+      .eq("id", tokenId);
+    await logAuditEvent({ action: "revoke_supplier_token", module: "supplier_portal", recordId: tokenId });
     toast.success("Token revogado");
     fetchAll();
   };
@@ -177,7 +199,11 @@ const SupplierPortal = () => {
                     <div>
                       <p className="text-xs font-mono">{t.token.slice(0, 6)}••••••{t.token.slice(-4)}</p>
                       <p className="text-[10px] text-muted-foreground">
-                        {t.is_active ? "Ativo" : "Revogado"} • Expira: {t.expires_at ? new Date(t.expires_at).toLocaleDateString("pt-BR") : "—"}
+                        {t.is_active ? "Ativo" : "Revogado"} • Expira: {t.expires_at ? new Date(t.expires_at).toLocaleString("pt-BR") : "—"}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground">
+                        Acessos: {t.access_count ?? 0} • Último: {t.last_accessed_at ? new Date(t.last_accessed_at).toLocaleString("pt-BR") : "nunca"}
+                        {t.last_ip ? ` • IP ${t.last_ip}` : ""}
                       </p>
                     </div>
                     <div className="flex gap-1">
@@ -193,6 +219,30 @@ const SupplierPortal = () => {
                 <Button variant="outline" size="sm" className="mt-2 gap-1" onClick={() => generateToken(selectedSupplier)}>
                   <Plus className="h-3 w-3" /> Gerar Novo Token
                 </Button>
+                <p className="mt-2 text-[10px] text-muted-foreground">
+                  Política de segurança: expiração forçada em {TOKEN_TTL_DAYS} dias, limite de 30 acessos por hora
+                  e registro de todos os acessos (data, IP e ação).
+                </p>
+              </div>
+
+              <div className="border-t pt-4">
+                <h4 className="text-sm font-semibold mb-2">Trilha de Acessos</h4>
+                {accessLog.filter(l => l.supplier_id === selectedSupplier.id).length === 0 ? (
+                  <p className="text-xs text-muted-foreground">Nenhum acesso registrado.</p>
+                ) : (
+                  <div className="max-h-52 space-y-1 overflow-y-auto">
+                    {accessLog.filter(l => l.supplier_id === selectedSupplier.id).map(l => (
+                      <div key={l.id} className="flex items-center justify-between rounded-md border px-3 py-1.5 text-[11px]">
+                        <span className={l.action === "rate_limited" ? "text-destructive font-medium" : "text-foreground"}>
+                          {l.action === "rate_limited" ? "Bloqueado por limite de acessos" : l.action}
+                        </span>
+                        <span className="text-muted-foreground">
+                          {new Date(l.created_at).toLocaleString("pt-BR")}{l.ip_address ? ` • ${l.ip_address}` : ""}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="border-t pt-4">

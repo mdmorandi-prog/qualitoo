@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { logAuditEvent } from "@/lib/auditLog";
 import { useSectors } from "@/hooks/useSectors";
+import { PERMISSION_ACTIONS, ACTION_LABELS, ACTIONS_BY_LEVEL, type PermissionAction } from "@/hooks/usePermissions";
 
 const PERMISSION_LABELS: Record<string, { label: string; color: string; description: string }> = {
   read: { label: "Leitura", color: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200", description: "Visualiza documentos e registros dos setores do grupo" },
@@ -37,6 +38,7 @@ interface GroupMember {
   username: string;
   display_name: string;
   permission_level: string;
+  permission_actions: PermissionAction[] | null;
   expires_at: string | null;
 }
 
@@ -135,6 +137,7 @@ const AccessGroupManagement = () => {
       group_id: groupId,
       user_id: selectedUserId,
       permission_level: selectedPermission,
+      permission_actions: ACTIONS_BY_LEVEL[selectedPermission] ?? ["read"],
       expires_at: selectedExpiry || null,
     });
     if (error || data?.error) {
@@ -157,8 +160,35 @@ const AccessGroupManagement = () => {
   };
 
   const handleUpdatePermission = async (groupId: string, userId: string, level: string) => {
-    await callEdge({ action: "update_member_permission", group_id: groupId, user_id: userId, permission_level: level });
+    await callEdge({
+      action: "update_member_permission",
+      group_id: groupId,
+      user_id: userId,
+      permission_level: level,
+      permission_actions: ACTIONS_BY_LEVEL[level] ?? ["read"],
+    });
+    await logAuditEvent({ action: "update_member_permission", module: "access_groups", recordId: groupId, details: { user: userId, level } });
     toast({ title: "Permissão atualizada" });
+    loadData();
+  };
+
+  const handleToggleAction = async (groupId: string, member: GroupMember, actionKey: PermissionAction) => {
+    const current = (member.permission_actions?.length ? member.permission_actions : ACTIONS_BY_LEVEL[member.permission_level]) ?? ["read"];
+    const next = current.includes(actionKey)
+      ? current.filter(a => a !== actionKey)
+      : [...current, actionKey];
+    if (next.length === 0) {
+      toast({ title: "Mantenha ao menos uma ação", variant: "destructive" });
+      return;
+    }
+    await callEdge({
+      action: "update_member_permission",
+      group_id: groupId,
+      user_id: member.user_id,
+      permission_actions: next,
+    });
+    await logAuditEvent({ action: "update_member_actions", module: "access_groups", recordId: groupId, details: { user: member.display_name, actions: next } });
+    toast({ title: "Ações atualizadas" });
     loadData();
   };
 
@@ -305,6 +335,7 @@ const AccessGroupManagement = () => {
                               <TableHead className="text-xs">Usuário</TableHead>
                               <TableHead className="text-xs">Nome</TableHead>
                               <TableHead className="text-xs">Permissão</TableHead>
+                              <TableHead className="text-xs">Ações permitidas</TableHead>
                               <TableHead className="text-xs">Expira</TableHead>
                               <TableHead className="text-xs w-16">Ações</TableHead>
                             </TableRow>
@@ -325,6 +356,27 @@ const AccessGroupManagement = () => {
                                       <SelectItem value="admin">Admin</SelectItem>
                                     </SelectContent>
                                   </Select>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex flex-wrap gap-1">
+                                    {PERMISSION_ACTIONS.map(a => {
+                                      const active = (m.permission_actions?.length ? m.permission_actions : ACTIONS_BY_LEVEL[m.permission_level] ?? ["read"]).includes(a);
+                                      return (
+                                        <button
+                                          key={a}
+                                          type="button"
+                                          onClick={() => handleToggleAction(group.id, m, a)}
+                                          className={`rounded-md border px-2 py-0.5 text-[10px] font-medium transition-colors ${
+                                            active
+                                              ? "border-primary bg-primary/10 text-primary"
+                                              : "border-muted-foreground/20 text-muted-foreground hover:border-primary/40"
+                                          }`}
+                                        >
+                                          {ACTION_LABELS[a]}
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
                                 </TableCell>
                                 <TableCell className="text-xs">
                                   {m.expires_at ? (

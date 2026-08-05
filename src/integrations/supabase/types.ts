@@ -1262,6 +1262,14 @@ export type Database = {
       }
       document_signatures: {
         Row: {
+          cert_cpf_cnpj: string | null
+          cert_file_url: string | null
+          cert_issuer: string | null
+          cert_policy: string | null
+          cert_serial: string | null
+          cert_subject: string | null
+          cert_valid_from: string | null
+          cert_valid_to: string | null
           created_at: string
           document_hash: string
           document_id: string
@@ -1284,6 +1292,14 @@ export type Database = {
           verification_method: string
         }
         Insert: {
+          cert_cpf_cnpj?: string | null
+          cert_file_url?: string | null
+          cert_issuer?: string | null
+          cert_policy?: string | null
+          cert_serial?: string | null
+          cert_subject?: string | null
+          cert_valid_from?: string | null
+          cert_valid_to?: string | null
           created_at?: string
           document_hash: string
           document_id: string
@@ -1306,6 +1322,14 @@ export type Database = {
           verification_method?: string
         }
         Update: {
+          cert_cpf_cnpj?: string | null
+          cert_file_url?: string | null
+          cert_issuer?: string | null
+          cert_policy?: string | null
+          cert_serial?: string | null
+          cert_subject?: string | null
+          cert_valid_from?: string | null
+          cert_valid_to?: string | null
           created_at?: string
           document_hash?: string
           document_id?: string
@@ -1422,59 +1446,6 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "document_versions_document_id_fkey"
-            columns: ["document_id"]
-            isOneToOne: false
-            referencedRelation: "quality_documents"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      document_workflow_steps: {
-        Row: {
-          assigned_role: string | null
-          assigned_to: string | null
-          comments: string | null
-          completed_at: string | null
-          completed_by: string | null
-          created_at: string
-          document_id: string
-          id: string
-          status: string
-          step_name: string
-          step_order: number
-          step_type: string
-        }
-        Insert: {
-          assigned_role?: string | null
-          assigned_to?: string | null
-          comments?: string | null
-          completed_at?: string | null
-          completed_by?: string | null
-          created_at?: string
-          document_id: string
-          id?: string
-          status?: string
-          step_name: string
-          step_order: number
-          step_type?: string
-        }
-        Update: {
-          assigned_role?: string | null
-          assigned_to?: string | null
-          comments?: string | null
-          completed_at?: string | null
-          completed_by?: string | null
-          created_at?: string
-          document_id?: string
-          id?: string
-          status?: string
-          step_name?: string
-          step_order?: number
-          step_type?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "document_workflow_steps_document_id_fkey"
             columns: ["document_id"]
             isOneToOne: false
             referencedRelation: "quality_documents"
@@ -3052,6 +3023,53 @@ export type Database = {
           },
         ]
       }
+      supplier_portal_access_log: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          ip_address: string | null
+          reason: string | null
+          success: boolean
+          supplier_id: string | null
+          token_id: string | null
+          token_prefix: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          reason?: string | null
+          success?: boolean
+          supplier_id?: string | null
+          token_id?: string | null
+          token_prefix?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          reason?: string | null
+          success?: boolean
+          supplier_id?: string | null
+          token_id?: string | null
+          token_prefix?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_portal_access_log_token_id_fkey"
+            columns: ["token_id"]
+            isOneToOne: false
+            referencedRelation: "supplier_portal_tokens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       supplier_portal_documents: {
         Row: {
           document_name: string
@@ -3101,32 +3119,44 @@ export type Database = {
       }
       supplier_portal_tokens: {
         Row: {
+          access_count: number
           created_at: string
+          created_by: string | null
           email: string
           expires_at: string | null
           id: string
           is_active: boolean | null
           last_accessed_at: string | null
+          last_ip: string | null
+          revoked_at: string | null
           supplier_id: string
           token: string
         }
         Insert: {
+          access_count?: number
           created_at?: string
+          created_by?: string | null
           email: string
           expires_at?: string | null
           id?: string
           is_active?: boolean | null
           last_accessed_at?: string | null
+          last_ip?: string | null
+          revoked_at?: string | null
           supplier_id: string
           token: string
         }
         Update: {
+          access_count?: number
           created_at?: string
+          created_by?: string | null
           email?: string
           expires_at?: string | null
           id?: string
           is_active?: boolean | null
           last_accessed_at?: string | null
+          last_ip?: string | null
+          revoked_at?: string | null
           supplier_id?: string
           token?: string
         }
@@ -3443,6 +3473,7 @@ export type Database = {
           granted_by: string
           group_id: string
           id: string
+          permission_actions: string[]
           permission_level: Database["public"]["Enums"]["permission_level"]
           updated_at: string
           user_id: string
@@ -3453,6 +3484,7 @@ export type Database = {
           granted_by: string
           group_id: string
           id?: string
+          permission_actions?: string[]
           permission_level?: Database["public"]["Enums"]["permission_level"]
           updated_at?: string
           user_id: string
@@ -3463,6 +3495,7 @@ export type Database = {
           granted_by?: string
           group_id?: string
           id?: string
+          permission_actions?: string[]
           permission_level?: Database["public"]["Enums"]["permission_level"]
           updated_at?: string
           user_id?: string
@@ -3521,9 +3554,12 @@ export type Database = {
       }
       workflow_approval_requests: {
         Row: {
+          approver_role: string | null
+          assigned_to: string | null
           decided_at: string | null
           decided_by: string | null
           decision_notes: string | null
+          due_at: string | null
           escalated_at: string | null
           id: string
           module: string
@@ -3531,14 +3567,20 @@ export type Database = {
           record_title: string | null
           requested_at: string
           requested_by: string | null
-          rule_id: string
+          rule_id: string | null
           status: string
-          step_id: string
+          step_id: string | null
+          step_name: string | null
+          step_order: number
+          step_type: string
         }
         Insert: {
+          approver_role?: string | null
+          assigned_to?: string | null
           decided_at?: string | null
           decided_by?: string | null
           decision_notes?: string | null
+          due_at?: string | null
           escalated_at?: string | null
           id?: string
           module: string
@@ -3546,14 +3588,20 @@ export type Database = {
           record_title?: string | null
           requested_at?: string
           requested_by?: string | null
-          rule_id: string
+          rule_id?: string | null
           status?: string
-          step_id: string
+          step_id?: string | null
+          step_name?: string | null
+          step_order?: number
+          step_type?: string
         }
         Update: {
+          approver_role?: string | null
+          assigned_to?: string | null
           decided_at?: string | null
           decided_by?: string | null
           decision_notes?: string | null
+          due_at?: string | null
           escalated_at?: string | null
           id?: string
           module?: string
@@ -3561,9 +3609,12 @@ export type Database = {
           record_title?: string | null
           requested_at?: string
           requested_by?: string | null
-          rule_id?: string
+          rule_id?: string | null
           status?: string
-          step_id?: string
+          step_id?: string | null
+          step_name?: string | null
+          step_order?: number
+          step_type?: string
         }
         Relationships: [
           {
@@ -3723,6 +3774,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_supplier_portal_rate_limit: {
+        Args: { _ip: string; _token_prefix: string }
+        Returns: boolean
+      }
+      get_user_actions: {
+        Args: { _user_id: string }
+        Returns: {
+          actions: string[]
+          sector: string
+        }[]
+      }
       get_user_sectors: {
         Args: { _user_id: string }
         Returns: {
@@ -3730,6 +3792,10 @@ export type Database = {
           permission_level: Database["public"]["Enums"]["permission_level"]
           sector: string
         }[]
+      }
+      has_action_permission: {
+        Args: { _action: string; _sector: string; _user_id: string }
+        Returns: boolean
       }
       has_role: {
         Args: {

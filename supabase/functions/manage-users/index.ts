@@ -1,6 +1,21 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { requireAuth, corsHeaders, AuthError } from "../_shared/auth-helper.ts";
 
+const ALLOWED_ACTIONS = ["read", "create", "update", "delete", "approve", "export"];
+const ACTIONS_BY_LEVEL: Record<string, string[]> = {
+  read: ["read"],
+  write: ["read", "create", "update", "export"],
+  admin: ALLOWED_ACTIONS,
+};
+function sanitizeActions(actions: unknown, level: string): string[] {
+  if (Array.isArray(actions) && actions.length > 0) {
+    const clean = actions.filter((a) => typeof a === "string" && ALLOWED_ACTIONS.includes(a));
+    if (clean.length > 0) return Array.from(new Set(clean));
+  }
+  return ACTIONS_BY_LEVEL[level] ?? ["read"];
+}
+
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -147,6 +162,7 @@ Deno.serve(async (req) => {
             username: profile?.username ?? "unknown",
             display_name: profile?.display_name ?? "",
             permission_level: m.permission_level,
+            permission_actions: m.permission_actions ?? [],
             expires_at: m.expires_at,
           };
         });
@@ -211,11 +227,12 @@ Deno.serve(async (req) => {
     }
 
     if (action === "add_group_member") {
-      const { group_id, user_id, permission_level, expires_at } = payload;
+      const { group_id, user_id, permission_level, permission_actions, expires_at } = payload;
       const { error: memberError } = await adminClient.from("user_group_access").insert({
         group_id,
         user_id,
         permission_level: permission_level || "read",
+        permission_actions: sanitizeActions(permission_actions, permission_level || "read"),
         granted_by: callerId,
         expires_at: expires_at || null,
       });
@@ -238,8 +255,13 @@ Deno.serve(async (req) => {
     }
 
     if (action === "update_member_permission") {
-      const { group_id, user_id, permission_level } = payload;
-      await adminClient.from("user_group_access").update({ permission_level }).eq("group_id", group_id).eq("user_id", user_id);
+      const { group_id, user_id, permission_level, permission_actions } = payload;
+      const update: Record<string, unknown> = {};
+      if (permission_level) update.permission_level = permission_level;
+      if (permission_actions || permission_level) {
+        update.permission_actions = sanitizeActions(permission_actions, permission_level || "read");
+      }
+      await adminClient.from("user_group_access").update(update).eq("group_id", group_id).eq("user_id", user_id);
       return new Response(JSON.stringify({ success: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
