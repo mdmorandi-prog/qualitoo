@@ -10,7 +10,7 @@ import whoami from "./tools/whoami";
 const projectRef = import.meta.env.VITE_SUPABASE_PROJECT_ID ?? "project-ref-unset";
 
 export default defineMcp({
-  name: "qualitoo-mcp",
+  name: "qualitoo",
   title: "Qualitoo",
   version: "0.1.0",
   instructions:
