@@ -11,7 +11,7 @@
   },
   "mcp": {
     "server": {
-      "name": "qualitoo-mcp",
+      "name": "qualitoo",
       "version": "0.1.0",
       "title": "Qualitoo"
     },

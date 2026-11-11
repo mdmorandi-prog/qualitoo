@@ -213,7 +213,7 @@ var whoami_default = defineTool7({
 // src/lib/mcp/index.ts
 var projectRef = "yedvaofwlaaydewnowuq";
 var mcp_default = defineMcp({
-  name: "qualitoo-mcp",
+  name: "qualitoo",
   title: "Qualitoo",
   version: "0.1.0",
   instructions: "Ferramentas do Qualitoo \u2014 Sistema de Gest\xE3o da Qualidade Hospitalar. Use as tools de leitura para consultar indicadores, n\xE3o conformidades, planos de a\xE7\xE3o, auditorias e riscos do usu\xE1rio autenticado. Use `create_nonconformity` para registrar uma nova NC. Todas as chamadas respeitam as permiss\xF5es (RLS) do usu\xE1rio.",
