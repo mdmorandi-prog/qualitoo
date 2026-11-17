@@ -11,6 +11,7 @@ import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import OAuthConsent from "./pages/OAuthConsent";
 import PortalLgpd from "./pages/PortalLgpd";
+import SupplierPortalPublic from "./pages/SupplierPortalPublic";
 import NotFound from "./pages/NotFound";
 import AIChatWidget from "./components/AIChatWidget";
 
@@ -30,6 +31,7 @@ const App = () => (
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/portal-lgpd" element={<PortalLgpd />} />
+            <Route path="/supplier-portal" element={<SupplierPortalPublic />} />
             <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

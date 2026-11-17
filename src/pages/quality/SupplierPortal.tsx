@@ -209,6 +209,7 @@ const SupplierPortal = () => {
                     <div className="flex gap-1">
                       {t.is_active && (
                         <>
+                          <Button variant="outline" size="sm" className="gap-1" onClick={() => { navigator.clipboard.writeText(`${portalUrl}?token=${t.token}`); toast.success("Link de acesso copiado! Envie ao fornecedor."); }} title="Copiar link de acesso"><ExternalLink className="h-3 w-3" /> Copiar link</Button>
                           <Button variant="ghost" size="sm" onClick={() => { navigator.clipboard.writeText(t.token); toast.success("Token copiado!"); }} title="Copiar token"><Copy className="h-3 w-3" /></Button>
                           <Button variant="outline" size="sm" onClick={() => revokeToken(t.id)} className="text-destructive">Revogar</Button>
                         </>
@@ -219,7 +220,10 @@ const SupplierPortal = () => {
                 <Button variant="outline" size="sm" className="mt-2 gap-1" onClick={() => generateToken(selectedSupplier)}>
                   <Plus className="h-3 w-3" /> Gerar Novo Token
                 </Button>
-                <p className="mt-2 text-[10px] text-muted-foreground">
+                <p className="mt-2 text-[11px] text-foreground">
+                  Envie o <strong>link de acesso</strong> ao fornecedor. Ele também pode abrir <span className="font-mono">{portalUrl}</span> e colar o token.
+                </p>
+                <p className="mt-1 text-[10px] text-muted-foreground">
                   Política de segurança: expiração forçada em {TOKEN_TTL_DAYS} dias, limite de 30 acessos por hora
                   e registro de todos os acessos (data, IP e ação).
                 </p>

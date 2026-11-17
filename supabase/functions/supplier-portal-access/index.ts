@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
 
     const { data: row } = await admin
       .from("supplier_portal_tokens")
-      .select("id, supplier_id, email, is_active, expires_at, access_count")
+      .select("id, supplier_id, email, is_active, expires_at, access_count, revoked_at")
       .eq("token", token)
       .maybeSingle();
 
@@ -72,6 +72,30 @@ Deno.serve(async (req) => {
       })
       .eq("id", row.id);
 
+    if (action === "upload") {
+      const name = typeof body.document_name === "string" ? body.document_name.trim().slice(0, 200) : "";
+      const type = typeof body.document_type === "string" ? body.document_type.trim().slice(0, 80) : "outros";
+      const fileName = typeof body.file_name === "string" ? body.file_name : "";
+      const b64 = typeof body.file_base64 === "string" ? body.file_base64 : "";
+      const contentType = typeof body.content_type === "string" ? body.content_type : "application/octet-stream";
+      const notes = typeof body.notes === "string" ? body.notes.slice(0, 1000) : null;
+      const allowed = ["application/pdf", "image/png", "image/jpeg", "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"];
+      if (!name || !b64 || !fileName) return json({ error: "Dados do documento incompletos" }, 400);
+      if (!allowed.includes(contentType)) return json({ error: "Tipo de arquivo não permitido (PDF, imagem ou Word)" }, 400);
+      const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+      if (bytes.length > 10 * 1024 * 1024) return json({ error: "Arquivo maior que 10 MB" }, 400);
+      const ext = (fileName.split(".").pop() ?? "bin").replace(/[^a-zA-Z0-9]/g, "").slice(0, 8);
+      const path = `${row.supplier_id}/${crypto.randomUUID()}.${ext}`;
+      const { error: upErr } = await admin.storage.from("supplier-docs").upload(path, bytes, { contentType });
+      if (upErr) { console.error(upErr); return json({ error: "Falha no envio do arquivo" }, 500); }
+      const { error: insErr } = await admin.from("supplier_portal_documents").insert({
+        supplier_id: row.supplier_id, document_name: name, document_type: type,
+        file_url: path, status: "pendente", notes,
+      });
+      if (insErr) { console.error(insErr); return json({ error: "Falha ao registrar documento" }, 500); }
+    }
+
     const { data: supplier } = await admin
       .from("suppliers").select("id, name").eq("id", row.supplier_id).maybeSingle();
     const { data: docs } = await admin
@@ -80,7 +104,7 @@ Deno.serve(async (req) => {
       .eq("supplier_id", row.supplier_id)
       .order("uploaded_at", { ascending: false });
 
-    return json({ supplier, documents: docs ?? [], email: row.email });
+    return json({ supplier, documents: docs ?? [], email: row.email, expires_at: row.expires_at });
   } catch (err) {
     console.error("supplier-portal-access error", err);
     return json({ error: "Erro interno" }, 500);
