@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, Search, ExternalLink, Eye, Send, FileText, Link2, Copy } from "lucide-react";
+import { Plus, Search, ExternalLink, Eye, Send, FileText, Link2, Copy, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -101,6 +101,16 @@ const SupplierPortal = () => {
     } as any).eq("id", docId);
     toast.success("Status atualizado");
     fetchAll();
+  };
+
+  const viewDoc = async (doc: PortalDoc, download = false) => {
+    if (!doc.file_url) { toast.error("Documento sem arquivo anexado"); return; }
+    const path = doc.file_url.replace(/^supplier-docs\//, "");
+    const { data, error } = await supabase.storage.from("supplier-docs")
+      .createSignedUrl(path, 300, download ? { download: doc.document_name } : undefined);
+    if (error || !data?.signedUrl) { toast.error("Não foi possível abrir o arquivo"); return; }
+    window.open(data.signedUrl, "_blank", "noopener");
+    logAuditEvent({ action: download ? "download_supplier_doc" : "view_supplier_doc", module: "supplier_portal", recordId: doc.id });
   };
 
   const openDetail = (supplier: Supplier) => {
@@ -266,6 +276,12 @@ const SupplierPortal = () => {
                       <Badge className={d.status === "aprovado" ? "bg-safe/10 text-safe" : d.status === "rejeitado" ? "bg-destructive/10 text-destructive" : "bg-warning/10 text-warning"}>
                         {d.status}
                       </Badge>
+                      {d.file_url && (
+                        <>
+                          <Button size="sm" variant="ghost" className="h-7 gap-1 text-xs" onClick={() => viewDoc(d)} title="Visualizar"><Eye className="h-3 w-3" /> Ver</Button>
+                          <Button size="sm" variant="ghost" className="h-7 px-2" onClick={() => viewDoc(d, true)} title="Baixar"><Download className="h-3 w-3" /></Button>
+                        </>
+                      )}
                       {d.status === "pendente" && (
                         <div className="flex gap-1">
                           <Button size="sm" variant="outline" className="h-7 text-xs text-safe" onClick={() => updateDocStatus(d.id, "aprovado")}>Aprovar</Button>

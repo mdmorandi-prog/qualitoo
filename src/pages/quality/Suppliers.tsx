@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, Search, Star, Eye, TrendingUp } from "lucide-react";
+import { Plus, Search, Star, Eye, TrendingUp, FileText, Download } from "lucide-react";
 import ExportPdfButton from "@/components/ExportPdfButton";
 import { generateModuleReport } from "@/lib/pdfReport";
 import { Button } from "@/components/ui/button";
@@ -81,7 +81,23 @@ const Suppliers = () => {
     setLoading(false);
   };
 
+  const [supplierDocs, setSupplierDocs] = useState<any[]>([]);
+  const fetchSupplierDocs = async (supplierId: string) => {
+    const { data } = await supabase.from("supplier_portal_documents").select("*")
+      .eq("supplier_id", supplierId).order("uploaded_at", { ascending: false });
+    setSupplierDocs((data as any[]) ?? []);
+  };
+  const openSupplierDoc = async (doc: any, download = false) => {
+    if (!doc.file_url) { toast.error("Documento sem arquivo anexado"); return; }
+    const path = String(doc.file_url).replace(/^supplier-docs\//, "");
+    const { data, error } = await supabase.storage.from("supplier-docs")
+      .createSignedUrl(path, 300, download ? { download: doc.document_name } : undefined);
+    if (error || !data?.signedUrl) { toast.error("Não foi possível abrir o arquivo"); return; }
+    window.open(data.signedUrl, "_blank", "noopener");
+  };
+
   const fetchEvaluations = async (supplierId: string) => {
+    fetchSupplierDocs(supplierId);
     const { data } = await supabase
       .from("supplier_evaluations")
       .select("*")
@@ -376,6 +392,34 @@ const Suppliers = () => {
                           <div>Custo: <span className="font-bold">{ev.cost_score}</span></div>
                         </div>
                         {ev.notes && <p className="mt-1 text-xs text-muted-foreground">{ev.notes}</p>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <h4 className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground"><FileText className="h-4 w-4" /> Dossiê de Documentos</h4>
+                {supplierDocs.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">Nenhum documento enviado pelo fornecedor.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {supplierDocs.map(d => (
+                      <div key={d.id} className="flex items-center justify-between gap-2 rounded-lg border p-3">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium">{d.document_name}</p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {d.document_type} • Enviado {new Date(d.uploaded_at).toLocaleDateString("pt-BR")}
+                            {d.reviewed_at ? ` • Revisado ${new Date(d.reviewed_at).toLocaleDateString("pt-BR")}` : ""}
+                          </p>
+                        </div>
+                        <div className="flex shrink-0 items-center gap-1">
+                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${d.status === "aprovado" ? "bg-safe/10 text-safe" : d.status === "rejeitado" ? "bg-destructive/10 text-destructive" : "bg-warning/10 text-warning"}`}>{d.status}</span>
+                          {d.file_url && (<>
+                            <Button size="sm" variant="ghost" className="h-7 px-2" onClick={() => openSupplierDoc(d)} title="Visualizar"><Eye className="h-3 w-3" /></Button>
+                            <Button size="sm" variant="ghost" className="h-7 px-2" onClick={() => openSupplierDoc(d, true)} title="Baixar"><Download className="h-3 w-3" /></Button>
+                          </>)}
+                        </div>
                       </div>
                     ))}
                   </div>
