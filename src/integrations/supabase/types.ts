@@ -3855,6 +3855,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_staff: { Args: { _user_id: string }; Returns: boolean }
       lookup_lgpd_request: {
         Args: { p_protocol: string }
         Returns: {
